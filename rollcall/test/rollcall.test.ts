@@ -160,6 +160,57 @@ describe('audit rules in isolation', () => {
     expect(summary(r)).toEqual(['error app-mismatch build']);
   });
 
+  describe('a path-filtered required check', () => {
+    const docs = { path: '.github/workflows/docs.yml', text: 'on: {pull_request: {paths: ["docs/**"]}}\njobs:\n  docs-check:\n    runs-on: x\n' };
+    const pr = (number: number, names: string[]) => ({ number, title: '', headSha: 's', state: 'merged' as const, mergedAt: `2026-01-0${number}T00:00:00Z`, checkRuns: names.map((n) => run(n)), statuses: [] });
+    const pulls = [pr(3, ['other']), pr(2, ['other']), pr(1, ['docs-check', 'other'])];
+    const base = { classic: { contexts: ['docs-check'], checks: [] }, pulls };
+
+    it('is explained by the filter, not reported as stopped', () => {
+      expect(summary(audit(snapshot({ ...base, workflows: [docs] })))).toEqual(['error path-filtered docs-check', 'warning merged-without docs-check']);
+    });
+
+    it('is still reported as stopped when no workflow produces it any more', () => {
+      expect(summary(audit(snapshot({ ...base, workflows: [] })))).toEqual(['error stopped-reporting docs-check']);
+    });
+
+    it('is still reported as stopped when the workflow has no path filter', () => {
+      const plain = { ...docs, text: 'on: pull_request\njobs:\n  docs-check:\n    runs-on: x\n' };
+      expect(summary(audit(snapshot({ ...base, workflows: [plain] })))).toEqual(['error stopped-reporting docs-check']);
+    });
+
+    it('is still reported as renamed when a similar name took over', () => {
+      const renamed = [pr(3, ['docs-checks']), pr(2, ['docs-checks']), pr(1, ['docs-check'])];
+      const r = audit(snapshot({ ...base, pulls: renamed, workflows: [docs] }));
+      expect(summary(r)).toContain('error renamed docs-check');
+      expect(summary(r)).not.toContain('error stopped-reporting docs-check');
+    });
+  });
+
+  describe('app pins across branch protection and rulesets', () => {
+    const both = (classicPin: number | undefined, rulesetPin: number | undefined) =>
+      snapshot({
+        classic: { contexts: ['build'], checks: [classicPin === undefined ? { context: 'build' } : { context: 'build', app_id: classicPin }] } as any,
+        branchRules: [{ type: 'required_status_checks', ruleset_id: 9, parameters: { required_status_checks: [rulesetPin === undefined ? { context: 'build' } : { context: 'build', integration_id: rulesetPin }] } }] as any,
+        rulesets: [{ id: 9, name: 'r', enforcement: 'active', rules: [] }] as any,
+        pulls: [{ number: 1, title: '', headSha: 's', checkRuns: [run('build')], statuses: [] }],
+      });
+
+    it('does not call the pin GitHub adds to a classic check drift', () => {
+      expect(summary(audit(both(15368, undefined)))).toEqual([]);
+    });
+
+    it('does not call a ruleset pin with no classic pin drift', () => {
+      expect(summary(audit(both(undefined, 15368)))).toEqual([]);
+    });
+
+    it('reports two pins that disagree', () => {
+      const r = audit(both(15368, 4242));
+      expect(summary(r)).toContain('warning protection-drift build');
+      expect(r.findings.find((f) => f.code === 'protection-drift')!.message).toContain('pinned to different apps');
+    });
+  });
+
   it('flags a required job whose workflow only runs on push, or not for PRs into this branch', () => {
     const wf = (on: string) => ({ path: '.github/workflows/x.yml', text: `on: ${on}\njobs:\n  build:\n    runs-on: x\n` });
     const base = { classic: { contexts: ['build'], checks: [] }, pulls: [{ number: 1, title: '', headSha: 's', checkRuns: [run('build')], statuses: [] }] };

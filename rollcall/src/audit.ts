@@ -85,6 +85,21 @@ function commitChecks(p: PullObservation): CommitChecks {
   };
 }
 
+function onlyPathFiltered(producers: JobInfo[], workflows: WorkflowInfo[]): boolean {
+  const filtered = (j: JobInfo) => workflows.find((w) => w.path === j.workflow)?.prTriggers.some((t) => t.paths || t.pathsIgnore) ?? false;
+  return producers.length > 0 && producers.every(filtered);
+}
+
+function mergedWithout(context: string, missing: number[]): Finding {
+  return {
+    code: 'merged-without',
+    severity: 'warning',
+    context,
+    message: `${missing.length} merged PR(s) have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
+    evidence: missing.slice(0, 10),
+  };
+}
+
 export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
   const stoppedAfter = opts.stoppedAfter ?? 2;
   const ignore = new Set([...(opts.ignore ?? []), CHECK_NAME]);
@@ -133,8 +148,9 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
           message: `\`${r.context}\` is required by ${inC ? 'branch protection only' : `${r.sources.map(sourceLabel).join(', ')} only`}; the other layer does not list it`,
         });
       else {
-        const pins = new Set(r.sources.map((x) => String(x.appId ?? 'any')));
-        if (pins.size > 1)
+        // Only two explicit pins can disagree. GitHub pins a check named in classic protection to
+        // the app that recently reported it, and both layers must pass, so one pin still holds.
+        if (new Set(pinnedApps(r.sources)).size > 1)
           findings.push({
             code: 'protection-drift',
             severity: 'warning',
@@ -236,7 +252,10 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
         const older = obs.slice(streak);
         const appeared = [...seenNames.keys()].filter((n) => !requiredNames.has(n) && recent.every((x) => x.names.has(n)) && !older.some((x) => x.names.has(n)));
         const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).sort((a, b) => b.s - a.s)[0];
-        findings.push({
+        // The job still exists behind a path filter, and path-filtered below reports that as an error.
+        if (!best && onlyPathFiltered(producers, workflows)) {
+          if (mergedBy.missing.length) findings.push(mergedWithout(r.context, mergedBy.missing));
+        } else findings.push({
           code: best ? 'renamed' : 'stopped-reporting',
           severity: 'error',
           context: r.context,
@@ -246,14 +265,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
           evidence: recent.map((x) => x.p.number),
           hint: best ? `Replace \`${r.context}\` with \`${best.n}\` in ${r.sources.map(sourceLabel).join(' and ')}.` : undefined,
         });
-      } else if (mergedBy.missing.length)
-        findings.push({
-          code: 'merged-without',
-          severity: 'warning',
-          context: r.context,
-          message: `${mergedBy.missing.length} merged PR(s) have no \`${r.context}\` result on their head commit (${prList(mergedBy.missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
-          evidence: mergedBy.missing.slice(0, 10),
-        });
+      } else if (mergedBy.missing.length) findings.push(mergedWithout(r.context, mergedBy.missing));
     }
 
     if (by.skipped.length)
