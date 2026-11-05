@@ -129,7 +129,7 @@ describe("runAction", () => {
       expect(body.conclusion).toBe("neutral");
       expect(body.output.title).toContain("1 error");
       expect(body.output.annotations).toHaveLength(1);
-      expect(body.output.summary).toContain("**Report-only:** these findings did not fail the job");
+      expect(body.output.summary).toContain("**Report-only:** these findings did not fail the job. Set `fail-on: error`");
       expect(outputs.findings).toBe("1");
     });
 

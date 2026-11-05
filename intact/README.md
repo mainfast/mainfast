@@ -169,9 +169,10 @@ jobs:
   workflow-command annotations instead.
 - **Report-only by default.** Findings appear as annotations and a neutral check run, and
   the job passes. Many flagged merges are harmless (code rewritten or moved in the same
-  file), so read a few before you block on them. To fail the job, set `fail-on: error`, or
-  `warning` to include dropped version bumps and generated files. A merge that could not
-  be analysed fails either way, and so does a `fail-on` value Intact doesn't recognise.
+  file), so read a few before you block on them. `fail-on: error` fails the job on changes
+  dropped outright. `fail-on: warning` also fails it on evil merges, partial drops, and
+  dropped version bumps and generated files. A merge that could not be analysed fails
+  either way, and so does a `fail-on` value Intact doesn't recognise.
 - Inputs: `fail-on` (`off` by default), `main-branch`, `config` (a file from the checkout instead of the
   base's `.mainfast.yml`), `config-token` (reads a private `extends:` repository),
   `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`

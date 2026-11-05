@@ -9528,7 +9528,7 @@ async function runAction() {
   setOutput("status", code === 0 ? "pass" : code === 1 ? "fail" : "error");
   setOutput("findings", String(report.summary.findings.error + report.summary.findings.warning + report.summary.findings.notice));
   const unenforced = !failed && report.summary.findings.error + report.summary.findings.warning > 0;
-  const enforcement = !unenforced ? "" : failOn === "off" ? "**Report-only:** these findings did not fail the job. Set `fail-on: error` to block on them." : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
+  const enforcement = !unenforced ? "" : failOn === "off" ? `**Report-only:** these findings did not fail the job. Set \`fail-on: ${report.summary.findings.error > 0 ? "error" : "warning"}\` to block on them.` : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
   appendSummary(formatMarkdown(report) + (enforcement ? `
 
 ${enforcement}

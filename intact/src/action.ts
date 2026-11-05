@@ -197,7 +197,7 @@ export async function runAction(): Promise<number> {
   const enforcement = !unenforced
     ? ""
     : failOn === "off"
-      ? "**Report-only:** these findings did not fail the job. Set `fail-on: error` to block on them."
+      ? `**Report-only:** these findings did not fail the job. Set \`fail-on: ${report.summary.findings.error > 0 ? "error" : "warning"}\` to block on them.`
       : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
   appendSummary(formatMarkdown(report) + (enforcement ? `\n\n${enforcement}\n` : ""));
 
