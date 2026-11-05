@@ -36,7 +36,7 @@ mainfast check --fail-on error       # warnings do not fail
 ```
 
 Exit codes: `0` intact, `1` findings at `--fail-on` level or above (default
-`warning`), `2` could not analyse.
+`warning` for the CLI; the Action defaults to `off`), `2` could not analyse.
 
 ```
 FAIL  d3be58f Merge branch 'main' into feat
@@ -109,7 +109,7 @@ The human report folds repeated lockfile hunks into one line per file.
 
 ### Dropped changes reported as warnings
 
-A dropped main change normally fails the check. Two kinds are reported as warnings instead,
+A dropped main change is normally an error. Two kinds are reported as warnings instead,
 because they are usually harmless, and the finding says which one applied:
 
 - **Version bumps:** the change only differs in `x.y.z` version numbers or full commit ids.
@@ -117,9 +117,9 @@ because they are usually harmless, and the finding says which one applied:
   `.gitattributes`, or a generated-code header such as `@generated` or `DO NOT EDIT`.
 
 Lockfiles, `.github/` and Docker image files stay errors. If every line of a dropped change
-appears elsewhere in the merge, the finding notes it may have been moved, but it still fails,
-because the merge author wrote those lines. A dropped version bump can still be a security
-fix, so to make these fail on paths you care about, add a `severity` entry:
+appears elsewhere in the merge, the finding notes it may have been moved, but it stays an
+error, because the merge author wrote those lines. A dropped version bump can still be a
+security fix, so to raise these to errors on paths you care about, add a `severity` entry:
 
 ```yaml
 intact:
@@ -167,10 +167,17 @@ jobs:
 - Needs only `GITHUB_TOKEN`. With `checks: write` it posts a check run with
   annotations; without it (fork PRs) it writes the job summary and
   workflow-command annotations instead.
-- Inputs: `fail-on`, `main-branch`, `config` (a file from the checkout instead of the
+- **Report-only by default.** Findings appear as annotations and a neutral check run, and
+  the job passes. Many flagged merges are harmless (code rewritten or moved in the same
+  file), so read a few before you block on them. `fail-on: error` fails the job on changes
+  dropped outright. `fail-on: warning` also fails it on evil merges, partial drops, and
+  dropped version bumps and generated files. A merge that could not be analysed fails
+  either way, and so does a `fail-on` value Intact doesn't recognise.
+- Inputs: `fail-on` (`off` by default), `main-branch`, `config` (a file from the checkout instead of the
   base's `.mainfast.yml`), `config-token` (reads a private `extends:` repository),
-  `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`,
-  `findings`, `report` (JSON path).
+  `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`
+  (whether anything reached `fail-on`), `findings` (the count, whatever `fail-on` is),
+  `report` (JSON path).
 - On a private repository with more than 5 active contributors and no `license`, the job
   summary and the check run get one notice about Pro. The result never changes.
 - A shallow checkout is unshallowed automatically; `fetch-depth: 0` is faster.

@@ -6,6 +6,7 @@ import { mockFetch } from "@mainfast/shared/mockfetch";
 import { resetPlanCache } from "@mainfast/shared/plan";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { runAction, targetFor } from "../src/action.ts";
+import { exitCodeFor } from "../src/check.ts";
 import { Git } from "../src/git.ts";
 import { cleanupAll, makeRepo, mergeInto, tenLines, type Repo } from "./helpers.ts";
 
@@ -72,6 +73,7 @@ describe("runAction", () => {
     const { repo, before, fix } = droppedFixRepo();
     const { summary, output } = actionEnv(repo, "push", { before, after: repo.head(), repository: { default_branch: "main" } });
     process.env.INPUT_TOKEN = "";
+    process.env["INPUT_FAIL-ON"] = "warning";
     const logs: string[] = [];
     vi.spyOn(process.stdout, "write").mockImplementation((s) => { logs.push(String(s)); return true; });
     const code = await runAction();
@@ -87,6 +89,7 @@ describe("runAction", () => {
     const { repo, before } = droppedFixRepo();
     actionEnv(repo, "push", { before, after: repo.head(), repository: { default_branch: "main", private: false } });
     process.env.INPUT_TOKEN = "ghs_test";
+    process.env["INPUT_FAIL-ON"] = "warning";
     const calls: Array<{ url: string; body: any }> = [];
     vi.stubGlobal("fetch", async (url: string, init: { body: string }) => {
       calls.push({ url, body: JSON.parse(init.body) });
@@ -104,6 +107,62 @@ describe("runAction", () => {
     expect(body.output.annotations).toHaveLength(1);
     expect(body.output.annotations[0]).toMatchObject({ path: "config.txt", start_line: 5, annotation_level: "failure" });
     expect(logs.join("")).not.toContain("::error");
+  });
+
+  describe("fail-on", () => {
+    const run = async (failOn: string | undefined, fixture = droppedFixRepo()) => {
+      const { repo, before } = fixture;
+      const { output } = actionEnv(repo, "push", { before, after: repo.head(), repository: { default_branch: "main", private: false } });
+      process.env.INPUT_TOKEN = "ghs_test";
+      if (failOn === undefined) delete process.env["INPUT_FAIL-ON"];
+      else process.env["INPUT_FAIL-ON"] = failOn;
+      const fetch = mockFetch({ "POST /repos/acme/widgets/check-runs": { status: 201, body: { id: 7 } } });
+      vi.stubGlobal("fetch", fetch);
+      vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+      const code = await runAction();
+      return { code, body: fetch.calls.find((c) => c.method === "POST")!.body, outputs: parseOutputs(readFileSync(output, "utf8")) };
+    };
+
+    it("reports a dropped change without failing by default", async () => {
+      const { code, body, outputs } = await run(undefined);
+      expect(code).toBe(0);
+      expect(body.conclusion).toBe("neutral");
+      expect(body.output.title).toContain("1 error");
+      expect(body.output.annotations).toHaveLength(1);
+      expect(body.output.summary).toContain("**Report-only:** these findings did not fail the job. Set `fail-on: error`");
+      expect(outputs.findings).toBe("1");
+    });
+
+    it("fails when asked to", async () => {
+      const { code, body } = await run("error");
+      expect(code).toBe(1);
+      expect(body.conclusion).toBe("failure");
+      expect(body.output.summary).not.toContain("did not fail the job");
+    });
+
+    it("blocks on a mistyped value instead of silently never blocking", async () => {
+      expect((await run("eror")).code).toBe(1);
+    });
+
+    it("shows warnings when they do not reach the fail-on level", async () => {
+      const fixture = droppedFixRepo();
+      writeFileSync(join(fixture.repo.dir, "intact-test.yml"), "intact:\n  severity:\n    config.txt: warning\n");
+      process.env.INPUT_CONFIG = "intact-test.yml";
+      try {
+        const { code, body } = await run("error", fixture);
+        expect(code).toBe(0);
+        expect(body.conclusion).toBe("neutral");
+        expect(body.output.title).toContain("1 warning");
+        expect(body.output.summary).toContain("below `fail-on: error`");
+      } finally {
+        delete process.env.INPUT_CONFIG;
+      }
+    });
+
+    it("still fails when a merge could not be analysed", () => {
+      const report = { summary: { errors: 1, findings: { error: 0, warning: 0, notice: 0 } } } as any;
+      expect(exitCodeFor(report, "off")).toBe(2);
+    });
   });
 
   it("passes a pull request whose merges are intact", async () => {
@@ -129,6 +188,7 @@ describe("runAction", () => {
     const { repo, before } = droppedFixRepo();
     const { summary } = actionEnv(repo, "push", { before, after: repo.head(), repository: { default_branch: "main", private: true } });
     process.env.INPUT_TOKEN = "ghs_test";
+    process.env["INPUT_FAIL-ON"] = "warning";
     const recent = new Date(Date.now() - 86_400_000).toISOString();
     const fetch = mockFetch({
       "GET /repos/acme/widgets/pulls": { body: ["ana", "bo", "cy", "dee", "eli", "fay"].map((login) => ({ created_at: recent, user: { login, type: "User" } })) },

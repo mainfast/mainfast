@@ -42,6 +42,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: mainfast/intact@v0
+        # Report-only by default. `with: { fail-on: warning }` fails the job on dropped changes and evil merges.
 ```
 
 ```yaml

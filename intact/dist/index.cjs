@@ -9446,7 +9446,8 @@ async function postCheckRun(gh, repo, headSha, report, failed, notice) {
   const findings = allFindings(report).filter((f) => ANNOTATION_LEVEL[f.level]);
   const annotations = findings.map(annotationFor);
   const s = report.summary;
-  const title = failed ? `${s.findings.error} error, ${s.findings.warning} warning in ${s.withFindings} merge commit(s)` : `${s.merges} merge commit(s) intact`;
+  const reportable = s.findings.error + s.findings.warning > 0;
+  const title = failed || reportable ? `${s.findings.error} error, ${s.findings.warning} warning in ${s.withFindings} merge commit(s)` : `${s.merges} merge commit(s) intact`;
   const summary = (formatMarkdown(report) + (notice ? `
 
 ${notice}
@@ -9458,7 +9459,7 @@ ${notice}
       name: BRAND.checkName,
       head_sha: headSha,
       status: "completed",
-      conclusion: failed ? "failure" : s.findings.notice > 0 ? "neutral" : "success",
+      conclusion: failed ? "failure" : reportable || s.findings.notice > 0 ? "neutral" : "success",
       output: { title, summary, annotations: first }
     })).data;
   } catch (e) {
@@ -9486,7 +9487,7 @@ function workflowAnnotations(report) {
 async function runAction() {
   const workspace = input("working-directory", process.env.GITHUB_WORKSPACE ?? process.cwd());
   const token = input("token", process.env.GITHUB_TOKEN ?? "");
-  const failOnRaw = input("fail-on", "warning");
+  const failOnRaw = input("fail-on", "off");
   const failOn = LEVELS.includes(failOnRaw) ? failOnRaw : "warning";
   const useCheckRun = input("check-run", "auto");
   const event = process.env.GITHUB_EVENT_NAME ?? "push";
@@ -9526,13 +9527,18 @@ async function runAction() {
   setOutput("report", reportPath);
   setOutput("status", code === 0 ? "pass" : code === 1 ? "fail" : "error");
   setOutput("findings", String(report.summary.findings.error + report.summary.findings.warning + report.summary.findings.notice));
-  appendSummary(formatMarkdown(report));
+  const unenforced = !failed && report.summary.findings.error + report.summary.findings.warning > 0;
+  const enforcement = !unenforced ? "" : failOn === "off" ? `**Report-only:** these findings did not fail the job. Set \`fail-on: ${report.summary.findings.error > 0 ? "error" : "warning"}\` to block on them.` : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
+  appendSummary(formatMarkdown(report) + (enforcement ? `
+
+${enforcement}
+` : ""));
   const [owner = "", name = ""] = repo.split("/");
   const plan = repo ? await planGate({ gh, owner, repo: name, event: payload, productName: BRAND.productName }) : void 0;
   let posted = false;
   if (useCheckRun !== "false" && token && repo && report.merges.length > 0) {
     try {
-      posted = await postCheckRun(gh, repo, target.headSha, report, failed, plan?.notice);
+      posted = await postCheckRun(gh, repo, target.headSha, report, failed, [enforcement, plan?.notice].filter(Boolean).join("\n\n") || void 0);
     } catch (e) {
       log(`check run failed: ${e.message}`);
     }

@@ -20,6 +20,8 @@ jobs:
           fetch-depth: 0                                   # the check needs both parents and the merge base
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: mainfast/intact@v0
-        with:
-          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors
-          fail-on: warning
+        # Report-only by default. To block, uncomment with: and fail-on (error fails on dropped
+        # changes; warning also fails on evil merges and partial drops).
+        # with:
+        #   fail-on: warning
+        #   license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors
