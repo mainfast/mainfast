@@ -9527,13 +9527,18 @@ async function runAction() {
   setOutput("report", reportPath);
   setOutput("status", code === 0 ? "pass" : code === 1 ? "fail" : "error");
   setOutput("findings", String(report.summary.findings.error + report.summary.findings.warning + report.summary.findings.notice));
-  appendSummary(formatMarkdown(report));
+  const unenforced = !failed && report.summary.findings.error + report.summary.findings.warning > 0;
+  const enforcement = !unenforced ? "" : failOn === "off" ? "**Report-only:** these findings did not fail the job. Set `fail-on: error` to block on them." : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
+  appendSummary(formatMarkdown(report) + (enforcement ? `
+
+${enforcement}
+` : ""));
   const [owner = "", name = ""] = repo.split("/");
   const plan = repo ? await planGate({ gh, owner, repo: name, event: payload, productName: BRAND.productName }) : void 0;
   let posted = false;
   if (useCheckRun !== "false" && token && repo && report.merges.length > 0) {
     try {
-      posted = await postCheckRun(gh, repo, target.headSha, report, failed, plan?.notice);
+      posted = await postCheckRun(gh, repo, target.headSha, report, failed, [enforcement, plan?.notice].filter(Boolean).join("\n\n") || void 0);
     } catch (e) {
       log(`check run failed: ${e.message}`);
     }

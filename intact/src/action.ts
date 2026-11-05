@@ -192,7 +192,14 @@ export async function runAction(): Promise<number> {
   setOutput("status", code === 0 ? "pass" : code === 1 ? "fail" : "error");
   setOutput("findings", String(report.summary.findings.error + report.summary.findings.warning + report.summary.findings.notice));
 
-  appendSummary(formatMarkdown(report));
+  // Findings on a passing job must say that nothing was enforced.
+  const unenforced = !failed && report.summary.findings.error + report.summary.findings.warning > 0;
+  const enforcement = !unenforced
+    ? ""
+    : failOn === "off"
+      ? "**Report-only:** these findings did not fail the job. Set `fail-on: error` to block on them."
+      : `These findings are below \`fail-on: ${failOn}\`, so they did not fail the job.`;
+  appendSummary(formatMarkdown(report) + (enforcement ? `\n\n${enforcement}\n` : ""));
 
   // Plan notice for large private repositories (job summary + check run); never changes the result.
   const [owner = "", name = ""] = repo.split("/");
@@ -201,7 +208,7 @@ export async function runAction(): Promise<number> {
   let posted = false;
   if (useCheckRun !== "false" && token && repo && report.merges.length > 0) {
     try {
-      posted = await postCheckRun(gh, repo, target.headSha, report, failed, plan?.notice);
+      posted = await postCheckRun(gh, repo, target.headSha, report, failed, [enforcement, plan?.notice].filter(Boolean).join("\n\n") || undefined);
     } catch (e) {
       log(`check run failed: ${(e as Error).message}`);
     }

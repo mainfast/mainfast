@@ -129,6 +129,7 @@ describe("runAction", () => {
       expect(body.conclusion).toBe("neutral");
       expect(body.output.title).toContain("1 error");
       expect(body.output.annotations).toHaveLength(1);
+      expect(body.output.summary).toContain("**Report-only:** these findings did not fail the job");
       expect(outputs.findings).toBe("1");
     });
 
@@ -136,6 +137,7 @@ describe("runAction", () => {
       const { code, body } = await run("error");
       expect(code).toBe(1);
       expect(body.conclusion).toBe("failure");
+      expect(body.output.summary).not.toContain("did not fail the job");
     });
 
     it("blocks on a mistyped value instead of silently never blocking", async () => {
@@ -151,6 +153,7 @@ describe("runAction", () => {
         expect(code).toBe(0);
         expect(body.conclusion).toBe("neutral");
         expect(body.output.title).toContain("1 warning");
+        expect(body.output.summary).toContain("below `fail-on: error`");
       } finally {
         delete process.env.INPUT_CONFIG;
       }
