@@ -1,0 +1,631 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/mainfast/mainfast/main/schema/mainfast.schema.json",
+  "title": ".mainfast.yml",
+  "description": "One config file for every Mainfast check. Each product reads only its own section and ignores the others; unknown top-level keys are rejected. Products read the file as committed on the base branch (the pull request's base), so a pull request cannot loosen its own check. Prose: docs/config.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "File format version. Only 1."
+    },
+    "extends": {
+      "type": "string",
+      "description": "Pro: merge an org-wide shared config under this file. owner/repo[:path][@ref] (path defaults to .mainfast.yml, ref to that repository's default branch) or ./path in this repository. Lists add up, mappings merge with this file's keys first, scalars from this file win. One level (the shared file may not extend again). Honoured by Mainfast Intact today; the other checks will follow.",
+      "pattern": "^(\\./[^\\s]+|[A-Za-z0-9-]+/[A-Za-z0-9._-]+(:[^@\\s]+)?(@\\S+)?)$",
+      "examples": [
+        "acme/.github:mainfast/base.yml@main",
+        "acme/policies",
+        "./config/mainfast-shared.yml"
+      ]
+    },
+    "intact": {
+      "type": "object",
+      "description": "Mainfast Intact: merge-integrity guard.",
+      "additionalProperties": false,
+      "properties": {
+        "main_branch": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Branch whose changes must survive merges. Default: origin/HEAD, then main, master."
+        },
+        "use_default_ignores": {
+          "type": "boolean",
+          "default": false,
+          "description": "true ignores the common lockfiles (package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lock(b), Cargo.lock, poetry.lock, uv.lock, Gemfile.lock, composer.lock, go.sum, npm-shrinkwrap.json). Default false: lockfiles are checked, because a dropped lockfile bump can be a lost security fix."
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "gitignore-style globs never reported."
+        },
+        "severity": {
+          "type": "object",
+          "description": "Path glob -> level, first match wins.",
+          "additionalProperties": {
+            "enum": [
+              "error",
+              "warning",
+              "notice",
+              "off"
+            ]
+          }
+        }
+      }
+    },
+    "migrations": {
+      "type": "object",
+      "description": "Mainfast Migrations: database migration guard.",
+      "additionalProperties": false,
+      "properties": {
+        "frameworks": {
+          "anyOf": [
+            {
+              "const": "auto"
+            },
+            {
+              "enum": [
+                "alembic",
+                "django",
+                "prisma",
+                "rails",
+                "flyway",
+                "drizzle"
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "alembic",
+                  "django",
+                  "prisma",
+                  "rails",
+                  "flyway",
+                  "drizzle"
+                ]
+              }
+            }
+          ],
+          "default": "auto",
+          "description": "Frameworks to run; auto detects them from the tree."
+        },
+        "paths": {
+          "type": "object",
+          "description": "Explicit migration directories per framework; replaces autodetect for that framework.",
+          "propertyNames": {
+            "enum": [
+              "alembic",
+              "django",
+              "prisma",
+              "rails",
+              "flyway",
+              "drizzle"
+            ]
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "ignore": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Globs of migration directories to skip."
+        },
+        "outOfOrder": {
+          "anyOf": [
+            {
+              "enum": [
+                "error",
+                "warning",
+                "off"
+              ],
+              "description": "One severity for every framework."
+            },
+            {
+              "type": "object",
+              "description": "Severity per framework; frameworks left out keep their default.",
+              "propertyNames": {
+                "enum": [
+                  "alembic",
+                  "django",
+                  "prisma",
+                  "rails",
+                  "flyway",
+                  "drizzle"
+                ]
+              },
+              "additionalProperties": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "off"
+                ]
+              }
+            }
+          ],
+          "default": {
+            "alembic": "error",
+            "django": "error",
+            "prisma": "error",
+            "rails": "warning",
+            "flyway": "warning",
+            "drizzle": "error"
+          },
+          "description": "Severity of an ordering conflict: a branch migration that is not newer than main's latest (Prisma, Rails, Flyway) or a Drizzle journal fork. One value for all frameworks, or a map per framework. Defaults: Rails and Flyway warning (both can be told to apply out-of-order migrations), Alembic, Django, Prisma and Drizzle error."
+        },
+        "label": {
+          "type": "string",
+          "default": "mainfast: migrations stale",
+          "description": "Label put on open PRs that went stale when main moved."
+        }
+      }
+    },
+    "rollcall": {
+      "type": "object",
+      "description": "Mainfast Rollcall: required-check integrity audit (read from the default branch).",
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "type": "string",
+          "description": "Protected branch to audit. Default: the repository default branch."
+        },
+        "pulls": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20,
+          "description": "Recently merged PRs to sample."
+        },
+        "openPulls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 10,
+          "description": "Open PRs to sample as well (heads that reported nothing yet are skipped); 0 = merged PRs only."
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "description": "Required check contexts to leave out."
+        },
+        "stoppedAfter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 2,
+          "description": "Missing on this many newest sampled PRs in a row = stopped reporting; 0 = off."
+        },
+        "failOn": {
+          "enum": [
+            "error",
+            "warning",
+            "never"
+          ],
+          "default": "error",
+          "description": "Lowest finding level that fails the job (and the check run), or never."
+        },
+        "issueOn": {
+          "enum": [
+            "error",
+            "warning",
+            "never"
+          ],
+          "default": "error",
+          "description": "Lowest finding level that opens (or keeps open) the one tracking issue; it is closed when the audit drops below it. never = no issue."
+        }
+      }
+    },
+    "owners": {
+      "type": "object",
+      "description": "Mainfast Owners: CODEOWNERS drift check.",
+      "additionalProperties": false,
+      "properties": {
+        "dormantDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650,
+          "default": 180,
+          "description": "Scheduled audit: no PR review in this many days = dormant owner. 0 turns the check off. Never checked on pull requests."
+        },
+        "maxSearches": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100,
+          "description": "Search API requests one audit may make for the dormancy check (30 a minute allowed; a capped run notes it and rotates the order weekly)."
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "description": "Paths that need no owner (globs)."
+        },
+        "skipOwners": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "description": "Owners (as written, e.g. @org/bots) the audit does not validate."
+        },
+        "requireOwners": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fail a PR that touches unowned files."
+        },
+        "expandTeams": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also check each team member for dormancy (one search per member; needs org-token)."
+        },
+        "failOn": {
+          "enum": [
+            "error",
+            "warning",
+            "never"
+          ],
+          "default": "error",
+          "description": "Lowest finding level that fails the job, or never."
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Mainfast Evidence: proof, not review, for pull requests written by coding agents. Unknown keys are reported in the evidence card rather than failing.",
+      "additionalProperties": false,
+      "properties": {
+        "apply_to": {
+          "enum": [
+            "agents",
+            "all"
+          ],
+          "default": "agents"
+        },
+        "agents": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "use_defaults": {
+              "type": "boolean",
+              "default": true
+            },
+            "authors": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "branch_prefixes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "trailers": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "Regexes matched against each commit message."
+            },
+            "emails": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "flags": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "tests_not_run_on_head",
+              "tests_failed",
+              "tests_skipped",
+              "tests_empty",
+              "required_check_missing",
+              "required_check_skipped",
+              "required_check_failed",
+              "coverage_below_threshold",
+              "coverage_missing",
+              "touched_workflows",
+              "touched_codeowners",
+              "touched_lockfiles",
+              "touched_tests",
+              "touched_test_config",
+              "touched_policy",
+              "tests_deleted",
+              "tests_removed",
+              "assertions_dropped",
+              "assertions_commented_out",
+              "skip_added",
+              "focus_added",
+              "trivial_assertion_added",
+              "claim_tests_added_unbacked",
+              "claim_tests_pass_unbacked",
+              "diff_too_large",
+              "secret_like_string",
+              "diff_unanalyzed"
+            ]
+          },
+          "additionalProperties": {
+            "enum": [
+              "fail",
+              "warn",
+              "off",
+              false
+            ]
+          },
+          "description": "Per-flag severity."
+        },
+        "test_checks": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Check names that count as tests. Plain text = case-insensitive substring; /re/ = regex."
+        },
+        "required_checks": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "ignore_checks": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "min_changed_lines": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 80
+            }
+          }
+        },
+        "diff": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_lines": {
+              "type": "number",
+              "minimum": 0,
+              "default": 1500
+            },
+            "max_files": {
+              "type": "number",
+              "minimum": 0,
+              "default": 60
+            },
+            "exclude": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "paths": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "workflows": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "codeowners": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "lockfiles": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "tests": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "test_config": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allow": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "warn_conclusion": {
+          "enum": [
+            "success",
+            "neutral"
+          ],
+          "default": "success"
+        }
+      }
+    }
+  }
+}

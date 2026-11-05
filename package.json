@@ -1,0 +1,39 @@
+{
+  "name": "mainfast-suite",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mainfast: GitHub checks that stop merges from silently breaking main.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "intact",
+    "migrations",
+    "rollcall",
+    "owners",
+    "evidence"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "brand:sync": "node scripts/sync-brand.mjs",
+    "brand:check": "node scripts/sync-brand.mjs --check",
+    "typecheck": "npm run typecheck --workspaces && tsc --noEmit -p .",
+    "test": "npm test --workspaces && npm run test:suite",
+    "test:suite": "vitest run --root .",
+    "build": "npm run build --workspaces --if-present",
+    "lint:actions": "actionlint intact/examples/*.yml migrations/examples/*.yml rollcall/examples/*.yml owners/examples/*.yml evidence/examples/workflows/*.yml",
+    "all": "npm run brand:check && npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "ajv": "^8.17.1",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  }
+}

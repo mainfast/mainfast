@@ -1,0 +1,25 @@
+# Copy to .github/workflows/mainfast-intact.yml
+name: Mainfast Intact
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main            # your default branch: PR merges into it are clean by construction
+
+permissions:
+  contents: read
+  checks: write         # optional: without it the action reports via job summary + annotations
+
+jobs:
+  intact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0                                   # the check needs both parents and the merge base
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: mainfast/intact@v0
+        with:
+          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors
+          fail-on: warning

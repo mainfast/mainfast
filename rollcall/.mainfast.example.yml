@@ -1,0 +1,9 @@
+rollcall:
+  branch: main          # default: repository default branch
+  pulls: 20             # recently merged PRs to sample (1..100)
+  openPulls: 10         # open PRs to sample too (0..100; heads with nothing reported yet are skipped)
+  ignore:               # required contexts to leave out
+    - "legacy/jenkins"
+  stoppedAfter: 2       # missing on this many newest sampled PRs in a row = stopped reporting (0 = off)
+  failOn: error         # error | warning | never: when the job and the check run fail
+  issueOn: error        # error | warning | never: when the tracking issue is opened (closed again when clean)

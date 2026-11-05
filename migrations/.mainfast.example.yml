@@ -1,0 +1,13 @@
+# Example `migrations:` section of .mainfast.yml (read from main, never from the PR).
+migrations:
+  frameworks: auto            # or a list: [alembic, django, prisma, rails, flyway, drizzle]
+  paths:                      # optional; replaces autodetect for that framework
+    alembic: [services/api/alembic/versions]
+    drizzle: [packages/db/migrations]
+  ignore:                     # migration dirs to skip
+    - legacy/**
+  outOfOrder:                 # or one value for all: error | warning | off
+    rails: warning            # defaults: rails, flyway warning; prisma, drizzle (alembic, django) error
+    flyway: error
+    prisma: error
+  label: "mainfast: migrations stale"

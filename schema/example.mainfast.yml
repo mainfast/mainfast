@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mainfast/mainfast/main/schema/mainfast.schema.json
+# .mainfast.yml at the repository root: one file for every Mainfast check. Each check reads
+# only its own section; an unknown top-level key is an error. Read from the base branch, so a
+# pull request cannot loosen its own check. Full reference: docs/config.md.
+version: 1
+
+# Pro: start from an org-wide shared config (another repository, or ./path in this one).
+# extends: acme/.github:mainfast/base.yml@main
+
+intact:
+  main_branch: main
+  use_default_ignores: false     # default: lockfiles are checked
+  ignore:
+    - "dist/"
+    - "**/*.generated.ts"
+  severity:
+    "docs/**": notice
+    "migrations/**": error
+
+migrations:
+  frameworks: auto
+  paths:
+    alembic: [services/api/alembic/versions]
+  ignore: [legacy/**]
+  outOfOrder:                    # or one value for every framework: error | warning | off
+    rails: warning               # defaults: rails + flyway warning, the others error
+    flyway: error
+  label: "mainfast: migrations stale"
+
+rollcall:
+  branch: main
+  pulls: 20
+  openPulls: 10
+  ignore: ["legacy/jenkins"]
+  stoppedAfter: 2
+  failOn: error
+  issueOn: error
+
+owners:
+  dormantDays: 180
+  maxSearches: 100
+  ignore: ["docs/**"]
+  skipOwners: ["@acme/release-bot"]
+  requireOwners: true
+  expandTeams: false
+  failOn: error
+
+evidence:
+  apply_to: agents
+  agents:
+    use_defaults: true
+    branch_prefixes: [ai/]
+  test_checks: ["test"]
+  coverage:
+    files: [coverage/lcov.info]
+    min_changed_lines: 80
+  diff:
+    max_lines: 1500
+    max_files: 60
+    exclude: ["**/*.snap"]
+  flags:
+    touched_lockfiles: warn
+  warn_conclusion: success

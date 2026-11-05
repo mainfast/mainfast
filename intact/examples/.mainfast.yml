@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mainfast/mainfast/main/schema/mainfast.schema.json
+# .mainfast.yml at the repository root. Intact reads the `intact:` section; the other Mainfast
+# checks read theirs from the same file. The Action reads the file as committed at the base of
+# the change (the PR's base commit), so a PR cannot loosen its own check.
+version: 1
+
+# Pro: start from an org-wide shared config. owner/repo[:path][@ref], or ./path in this repo.
+# extends: acme/.github:mainfast/base.yml@main
+
+intact:
+  # Branch whose changes must survive merges. Default: origin/HEAD, then main, master.
+  main_branch: main
+
+  # Lockfiles are CHECKED by default: a merge that drops main's lockfile bump can drop a
+  # security fix. true ignores package-lock.json, yarn.lock, pnpm-lock.yaml, Cargo.lock, go.sum, ...
+  use_default_ignores: false
+
+  # Never report these (gitignore-style globs; no slash = any directory).
+  ignore:
+    - "dist/"
+    - "**/*.generated.ts"
+    - "packages/generated-proto/**"
+
+  # Override the level of findings by path. First match wins.
+  # Levels: error, warning, notice (reported, does not fail by default), off.
+  severity:
+    "docs/**": notice
+    "**/*.md": notice
+    "migrations/**": error

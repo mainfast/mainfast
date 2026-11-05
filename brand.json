@@ -1,0 +1,109 @@
+{
+  "_comment": "Single source of every brand string in the Mainfast suite. Edit here, then run `npm run brand:sync` at the suite root: it rewrites each package's action.yml, package.json, plugin.json and example workflows. TypeScript reads this file directly through @mainfast/shared/brand. Prose (README.md, docs/, SKILL.md) is not rewritten: grep for the old value after a rename. `npm run brand:check` (and test/brand.test.ts) fails when a generated file drifts.",
+  "suite": {
+    "name": "Mainfast",
+    "version": "0.1.0",
+    "author": "Mainfast authors",
+    "copyrightYear": "2026",
+    "license": "MIT",
+    "githubOrg": "mainfast",
+    "githubRepo": "mainfast",
+    "homepageUrl": "https://github.com/mainfast/mainfast",
+    "docsUrl": "https://github.com/mainfast/mainfast#readme",
+    "issuesUrl": "https://github.com/mainfast/mainfast/issues",
+    "pricingUrl": "https://github.com/mainfast/mainfast#free-and-pro",
+    "npmScope": "@mainfast",
+    "configFile": ".mainfast.yml",
+    "configFileAlt": ".mainfast.yaml",
+    "schemaUrl": "https://raw.githubusercontent.com/mainfast/mainfast/main/schema/mainfast.schema.json",
+    "envPrefix": "MAINFAST",
+    "licenseEnv": "MAINFAST_LICENSE",
+    "plan": {
+      "freeActiveContributors": 5,
+      "windowDays": 30,
+      "proPricePerContributorMonth": "$4",
+      "_benefitIds": "Polar licence-key benefit id of each plan (sandbox until launch): a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro). tools/dev-sites/polar.mjs --apply prints the sandbox ids.",
+      "benefitIds": {
+        "free": "77fcbd42-f163-444e-9931-c98610f8063f",
+        "pro": "9f2bb2ac-6b53-4c17-9cae-a2e2eccfad32"
+      }
+    },
+    "polar": {
+      "_comment": "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. Until launch `api`, organizationId and the benefit ids are the Polar SANDBOX ones (29 Oct 2026); at launch put production Polar and its ids here. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      "api": "https://sandbox-api.polar.sh",
+      "sandboxApi": "https://sandbox-api.polar.sh",
+      "organizationId": "f450cee3-327c-452e-a949-2557a22a7692",
+      "apiEnv": "MAINFAST_POLAR_API",
+      "orgEnv": "MAINFAST_POLAR_ORG",
+      "timeoutMs": 3000
+    }
+  },
+  "products": {
+    "intact": {
+      "productName": "Mainfast Intact",
+      "tagline": "prove merge commits did not silently drop changes from main",
+      "description": "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      "npmName": "@mainfast/intact",
+      "cliName": "mainfast",
+      "configSection": "intact",
+      "checkName": "Mainfast Intact",
+      "commentMarker": "<!-- mainfast-intact:sticky -->",
+      "actionRef": "mainfast/intact@v0",
+      "branding": { "icon": "git-merge", "color": "blue" },
+      "plugin": {
+        "name": "mainfast",
+        "description": "Mainfast Intact: check merge commits for dropped main changes before you push."
+      }
+    },
+    "migrations": {
+      "productName": "Mainfast Migrations",
+      "tagline": "database migration guard",
+      "description": "Fails a PR whose database migrations would fork the migration history once merged into main (Alembic, Django, Prisma, Rails, Flyway, Drizzle), and re-checks open PRs with a blocking commit status when main moves.",
+      "npmName": "@mainfast/migrations",
+      "cliName": "mainfast-migrations",
+      "configSection": "migrations",
+      "checkName": "Mainfast Migrations",
+      "commentMarker": "<!-- mainfast-migrations:sticky -->",
+      "statusContext": "mainfast/migrations",
+      "staleLabel": "mainfast: migrations stale",
+      "actionRef": "mainfast/migrations@v0",
+      "branding": { "icon": "database", "color": "blue" }
+    },
+    "rollcall": {
+      "productName": "Mainfast Rollcall",
+      "tagline": "required-check integrity audit",
+      "description": "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported — never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift — and keeps one tracking issue open while something is wrong.",
+      "npmName": "@mainfast/rollcall",
+      "cliName": "mainfast-rollcall",
+      "configSection": "rollcall",
+      "checkName": "Mainfast Rollcall",
+      "commentMarker": "<!-- mainfast-rollcall:sticky -->",
+      "actionRef": "mainfast/rollcall@v0",
+      "branding": { "icon": "check-square", "color": "blue" }
+    },
+    "owners": {
+      "productName": "Mainfast Owners",
+      "tagline": "CODEOWNERS drift check",
+      "description": "CODEOWNERS drift — unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      "npmName": "@mainfast/owners",
+      "cliName": "mainfast-owners",
+      "configSection": "owners",
+      "checkName": "Mainfast Owners",
+      "commentMarker": "<!-- mainfast-owners:sticky -->",
+      "actionRef": "mainfast/owners@v0",
+      "branding": { "icon": "users", "color": "blue" }
+    },
+    "evidence": {
+      "productName": "Mainfast Evidence",
+      "tagline": "proof, not review, for pull requests written by coding agents",
+      "description": "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      "npmName": "@mainfast/evidence",
+      "cliName": "mainfast-evidence",
+      "configSection": "evidence",
+      "checkName": "Mainfast Evidence",
+      "commentMarker": "<!-- mainfast-evidence:sticky -->",
+      "actionRef": "mainfast/evidence@v0",
+      "branding": { "icon": "check-square", "color": "green" }
+    }
+  }
+}

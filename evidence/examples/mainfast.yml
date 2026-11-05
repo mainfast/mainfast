@@ -1,0 +1,45 @@
+# Example .mainfast.yml. Evidence reads only the `evidence:` section, from the PR's BASE commit,
+# so a PR cannot loosen its own gate. Other Mainfast products read their own sections.
+evidence:
+  # agents = only PRs with an agent signal are gated; all = every PR.
+  apply_to: agents
+
+  agents:
+    use_defaults: true            # Claude Code, Copilot coding agent, Codex, Cursor, Devin, Dawnpatch, Aider
+    authors: [release-robot]      # extra GitHub logins that count as agents
+    branch_prefixes: [ai/]
+    labels: [ai-generated]
+    trailers: ["^Agent-Session: "]  # regexes matched against commit messages
+    emails: []
+
+  # Which checks count as "tests". Plain text = case-insensitive substring; /re/ = regex.
+  test_checks: ["test", "/^ci\\/circleci: (unit|integration)$/"]
+  # Required checks beyond what the base branch's rulesets / protection report.
+  required_checks: [test]
+  ignore_checks: ["codecov/patch"]
+
+  coverage:
+    files: [coverage/lcov.info]
+    min_changed_lines: 80         # percent of instrumented changed lines
+
+  diff:
+    max_lines: 1500
+    max_files: 60
+    exclude: ["**/*.snap", "**/generated/**"]
+
+  # Each list replaces the built-in defaults for that category.
+  # paths:
+  #   tests: ["spec/**", "**/*_spec.rb"]
+
+  secrets:
+    allow: ["^AKIAIOSFODNN7EXAMPLE$"]  # regexes matched against the secret value only (not the line)
+
+  # fail = check fails, warn = listed but passes, off = not reported.
+  flags:
+    touched_lockfiles: off
+    touched_tests: warn
+    required_check_failed: fail
+    coverage_below_threshold: warn
+    diff_too_large: warn
+
+  warn_conclusion: success        # or neutral

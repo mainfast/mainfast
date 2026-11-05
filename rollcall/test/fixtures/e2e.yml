@@ -1,0 +1,10 @@
+name: E2E
+on:
+  pull_request:
+    paths:
+      - "web/**"
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npx playwright test

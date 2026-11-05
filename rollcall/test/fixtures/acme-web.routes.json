@@ -1,0 +1,1839 @@
+{
+ "GET /repos/acme/web": {
+  "id": 1,
+  "full_name": "acme/web",
+  "default_branch": "main"
+ },
+ "GET /repos/acme/web/branches/main": {
+  "name": "main",
+  "commit": {
+   "sha": "ffffffffffffffffffffffffffffffffffffffff"
+  },
+  "protected": true,
+  "protection": {
+   "enabled": true,
+   "required_status_checks": {
+    "enforcement_level": "non_admins",
+    "contexts": [
+     "build",
+     "test",
+     "lint",
+     "e2e",
+     "ci/circleci: build"
+    ],
+    "checks": [
+     {
+      "context": "build",
+      "app_id": 15368
+     },
+     {
+      "context": "test",
+      "app_id": 15368
+     },
+     {
+      "context": "lint",
+      "app_id": 15368
+     },
+     {
+      "context": "e2e",
+      "app_id": 15368
+     },
+     {
+      "context": "ci/circleci: build",
+      "app_id": null
+     }
+    ],
+    "strict": false
+   }
+  },
+  "protection_url": "https://api.github.com/repos/acme/web/branches/main/protection"
+ },
+ "GET /repos/acme/web/rules/branches/main": [
+  {
+   "type": "deletion",
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "acme/web",
+   "ruleset_id": 101
+  },
+  {
+   "type": "pull_request",
+   "parameters": {
+    "required_approving_review_count": 1,
+    "dismiss_stale_reviews_on_push": true,
+    "require_code_owner_review": false,
+    "require_last_push_approval": false,
+    "required_review_thread_resolution": false
+   },
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "acme/web",
+   "ruleset_id": 101
+  },
+  {
+   "type": "required_status_checks",
+   "parameters": {
+    "strict_required_status_checks_policy": true,
+    "do_not_enforce_on_create": false,
+    "required_status_checks": [
+     {
+      "context": "build",
+      "integration_id": 15368
+     },
+     {
+      "context": "test",
+      "integration_id": 15368
+     },
+     {
+      "context": "typecheck",
+      "integration_id": 15368
+     }
+    ]
+   },
+   "ruleset_source_type": "Repository",
+   "ruleset_source": "acme/web",
+   "ruleset_id": 101
+  }
+ ],
+ "GET /repos/acme/web/rulesets": [
+  {
+   "id": 101,
+   "name": "main protection",
+   "target": "branch",
+   "source_type": "Repository",
+   "source": "acme/web",
+   "enforcement": "active",
+   "node_id": "RRS_1",
+   "_links": {
+    "self": {
+     "href": "https://api.github.com/repos/acme/web/rulesets/101"
+    }
+   }
+  },
+  {
+   "id": 102,
+   "name": "security (trial)",
+   "target": "branch",
+   "source_type": "Repository",
+   "source": "acme/web",
+   "enforcement": "evaluate",
+   "node_id": "RRS_2"
+  }
+ ],
+ "GET /repos/acme/web/rulesets/101": {
+  "id": 101,
+  "name": "main protection",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "acme/web",
+  "enforcement": "active",
+  "conditions": {
+   "ref_name": {
+    "include": [
+     "~DEFAULT_BRANCH"
+    ],
+    "exclude": []
+   }
+  },
+  "bypass_actors": [
+   {
+    "actor_id": 5,
+    "actor_type": "RepositoryRole",
+    "bypass_mode": "always"
+   }
+  ],
+  "current_user_can_bypass": "never",
+  "rules": [
+   {
+    "type": "deletion"
+   },
+   {
+    "type": "required_status_checks",
+    "parameters": {
+     "strict_required_status_checks_policy": true,
+     "required_status_checks": [
+      {
+       "context": "build",
+       "integration_id": 15368
+      },
+      {
+       "context": "test",
+       "integration_id": 15368
+      },
+      {
+       "context": "typecheck",
+       "integration_id": 15368
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "GET /repos/acme/web/rulesets/102": {
+  "id": 102,
+  "name": "security (trial)",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "acme/web",
+  "enforcement": "evaluate",
+  "conditions": {
+   "ref_name": {
+    "include": [
+     "~DEFAULT_BRANCH"
+    ],
+    "exclude": []
+   }
+  },
+  "rules": [
+   {
+    "type": "required_status_checks",
+    "parameters": {
+     "strict_required_status_checks_policy": false,
+     "required_status_checks": [
+      {
+       "context": "codeql"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000065/check-runs": {
+  "total_count": 6,
+  "check_runs": [
+   {
+    "id": 10101,
+    "name": "setup",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10101",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10102,
+    "name": "build",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10102",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10103,
+    "name": "test (20)",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10103",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10104,
+    "name": "test (22)",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10104",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10105,
+    "name": "lint",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10105",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10106,
+    "name": "typecheck",
+    "head_sha": "0000000000000000000000000000000000000065",
+    "node_id": "CR_10106",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-10T11:00:00Z",
+    "completed_at": "2026-10-10T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 101
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000065/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "0000000000000000000000000000000000000065",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000066/check-runs": {
+  "total_count": 7,
+  "check_runs": [
+   {
+    "id": 10201,
+    "name": "setup",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10201",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10202,
+    "name": "build",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10202",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10203,
+    "name": "test (20)",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10203",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10204,
+    "name": "test (22)",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10204",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10205,
+    "name": "lint",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10205",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10206,
+    "name": "e2e",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10206",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10207,
+    "name": "typecheck",
+    "head_sha": "0000000000000000000000000000000000000066",
+    "node_id": "CR_10207",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-11T11:00:00Z",
+    "completed_at": "2026-10-11T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 102
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000066/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "0000000000000000000000000000000000000066",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000067/check-runs": {
+  "total_count": 6,
+  "check_runs": [
+   {
+    "id": 10301,
+    "name": "setup",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10301",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10302,
+    "name": "build",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10302",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10303,
+    "name": "test (20)",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10303",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10304,
+    "name": "test (22)",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10304",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10305,
+    "name": "lint",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10305",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10306,
+    "name": "typecheck",
+    "head_sha": "0000000000000000000000000000000000000067",
+    "node_id": "CR_10306",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-12T11:00:00Z",
+    "completed_at": "2026-10-12T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 103
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000067/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "0000000000000000000000000000000000000067",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000068/check-runs": {
+  "total_count": 7,
+  "check_runs": [
+   {
+    "id": 10401,
+    "name": "setup",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10401",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10402,
+    "name": "build",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10402",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10403,
+    "name": "test (20)",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10403",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10404,
+    "name": "test (22)",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10404",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10405,
+    "name": "lint",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10405",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10406,
+    "name": "e2e",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10406",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10407,
+    "name": "typecheck",
+    "head_sha": "0000000000000000000000000000000000000068",
+    "node_id": "CR_10407",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-13T11:00:00Z",
+    "completed_at": "2026-10-13T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 104
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000068/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "0000000000000000000000000000000000000068",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000069/check-runs": {
+  "total_count": 6,
+  "check_runs": [
+   {
+    "id": 10501,
+    "name": "setup",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10501",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10502,
+    "name": "build",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10502",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10503,
+    "name": "test (20)",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10503",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10504,
+    "name": "test (22)",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10504",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10505,
+    "name": "lint",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10505",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10506,
+    "name": "typecheck",
+    "head_sha": "0000000000000000000000000000000000000069",
+    "node_id": "CR_10506",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-10-14T11:00:00Z",
+    "completed_at": "2026-10-14T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 105
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/0000000000000000000000000000000000000069/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "0000000000000000000000000000000000000069",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006a/check-runs": {
+  "total_count": 7,
+  "check_runs": [
+   {
+    "id": 10601,
+    "name": "setup",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10601",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10602,
+    "name": "build",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10602",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10603,
+    "name": "test (20)",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10603",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10604,
+    "name": "test (22)",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10604",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10605,
+    "name": "eslint",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10605",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10606,
+    "name": "e2e",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10606",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10607,
+    "name": "typecheck",
+    "head_sha": "000000000000000000000000000000000000006a",
+    "node_id": "CR_10607",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-15T11:00:00Z",
+    "completed_at": "2026-10-15T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 106
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006a/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "000000000000000000000000000000000000006a",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006b/check-runs": {
+  "total_count": 6,
+  "check_runs": [
+   {
+    "id": 10701,
+    "name": "setup",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10701",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10702,
+    "name": "build",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10702",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10703,
+    "name": "test (20)",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10703",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10704,
+    "name": "test (22)",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10704",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10705,
+    "name": "eslint",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10705",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10706,
+    "name": "typecheck",
+    "head_sha": "000000000000000000000000000000000000006b",
+    "node_id": "CR_10706",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-16T11:00:00Z",
+    "completed_at": "2026-10-16T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 107
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006b/status": {
+  "state": "pending",
+  "statuses": [],
+  "sha": "000000000000000000000000000000000000006b",
+  "total_count": 0,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006c/check-runs": {
+  "total_count": 7,
+  "check_runs": [
+   {
+    "id": 10801,
+    "name": "setup",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10801",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10802,
+    "name": "build",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10802",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10803,
+    "name": "test (20)",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10803",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10804,
+    "name": "test (22)",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10804",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10805,
+    "name": "eslint",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10805",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10806,
+    "name": "e2e",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10806",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   },
+   {
+    "id": 10807,
+    "name": "typecheck",
+    "head_sha": "000000000000000000000000000000000000006c",
+    "node_id": "CR_10807",
+    "external_id": "",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-17T11:00:00Z",
+    "completed_at": "2026-10-17T11:05:00Z",
+    "output": {
+     "title": null,
+     "summary": null,
+     "text": null,
+     "annotations_count": 0
+    },
+    "app": {
+     "id": 15368,
+     "slug": "github-actions",
+     "name": "GitHub Actions"
+    },
+    "check_suite": {
+     "id": 108
+    },
+    "pull_requests": []
+   }
+  ]
+ },
+ "GET /repos/acme/web/commits/000000000000000000000000000000000000006c/status": {
+  "state": "success",
+  "statuses": [
+   {
+    "id": 108,
+    "node_id": "S",
+    "state": "success",
+    "context": "netlify/deploy",
+    "description": "Deploy preview ready",
+    "target_url": "https://example.invalid",
+    "created_at": "2026-10-01T00:00:00Z",
+    "updated_at": "2026-10-01T00:00:00Z",
+    "url": "x",
+    "avatar_url": null
+   }
+  ],
+  "sha": "000000000000000000000000000000000000006c",
+  "total_count": 1,
+  "commit_url": "x",
+  "url": "x"
+ },
+ "GET /repos/acme/web/pulls": [
+  {
+   "number": 101,
+   "title": "Change 101",
+   "state": "closed",
+   "head": {
+    "ref": "feature-101",
+    "sha": "0000000000000000000000000000000000000065"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-10T12:00:00Z",
+   "closed_at": "2026-10-10T12:00:00Z",
+   "updated_at": "2026-10-10T12:00:00Z"
+  },
+  {
+   "number": 102,
+   "title": "Change 102",
+   "state": "closed",
+   "head": {
+    "ref": "feature-102",
+    "sha": "0000000000000000000000000000000000000066"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-11T12:00:00Z",
+   "closed_at": "2026-10-11T12:00:00Z",
+   "updated_at": "2026-10-11T12:00:00Z"
+  },
+  {
+   "number": 103,
+   "title": "Change 103",
+   "state": "closed",
+   "head": {
+    "ref": "feature-103",
+    "sha": "0000000000000000000000000000000000000067"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-12T12:00:00Z",
+   "closed_at": "2026-10-12T12:00:00Z",
+   "updated_at": "2026-10-12T12:00:00Z"
+  },
+  {
+   "number": 104,
+   "title": "Change 104",
+   "state": "closed",
+   "head": {
+    "ref": "feature-104",
+    "sha": "0000000000000000000000000000000000000068"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-13T12:00:00Z",
+   "closed_at": "2026-10-13T12:00:00Z",
+   "updated_at": "2026-10-13T12:00:00Z"
+  },
+  {
+   "number": 105,
+   "title": "Change 105",
+   "state": "closed",
+   "head": {
+    "ref": "feature-105",
+    "sha": "0000000000000000000000000000000000000069"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-14T12:00:00Z",
+   "closed_at": "2026-10-14T12:00:00Z",
+   "updated_at": "2026-10-14T12:00:00Z"
+  },
+  {
+   "number": 106,
+   "title": "Change 106",
+   "state": "closed",
+   "head": {
+    "ref": "feature-106",
+    "sha": "000000000000000000000000000000000000006a"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-15T12:00:00Z",
+   "closed_at": "2026-10-15T12:00:00Z",
+   "updated_at": "2026-10-15T12:00:00Z"
+  },
+  {
+   "number": 107,
+   "title": "Change 107",
+   "state": "closed",
+   "head": {
+    "ref": "feature-107",
+    "sha": "000000000000000000000000000000000000006b"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-16T12:00:00Z",
+   "closed_at": "2026-10-16T12:00:00Z",
+   "updated_at": "2026-10-16T12:00:00Z"
+  },
+  {
+   "number": 108,
+   "title": "Change 108",
+   "state": "closed",
+   "head": {
+    "ref": "feature-108",
+    "sha": "000000000000000000000000000000000000006c"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": "2026-10-17T12:00:00Z",
+   "closed_at": "2026-10-17T12:00:00Z",
+   "updated_at": "2026-10-17T12:00:00Z"
+  },
+  {
+   "number": 99,
+   "title": "abandoned",
+   "state": "closed",
+   "head": {
+    "ref": "x",
+    "sha": "9999999999999999999999999999999999999999"
+   },
+   "base": {
+    "ref": "main"
+   },
+   "merged_at": null,
+   "closed_at": "2026-10-20T00:00:00Z",
+   "updated_at": "2026-10-20T00:00:00Z"
+  }
+ ],
+ "GET /repos/acme/web/contents/.github/workflows": [
+  {
+   "name": "ci.yml",
+   "path": ".github/workflows/ci.yml",
+   "type": "file",
+   "sha": "a"
+  },
+  {
+   "name": "e2e.yml",
+   "path": ".github/workflows/e2e.yml",
+   "type": "file",
+   "sha": "b"
+  },
+  {
+   "name": "README.md",
+   "path": ".github/workflows/README.md",
+   "type": "file",
+   "sha": "c"
+  }
+ ],
+ "GET /repos/acme/web/contents/.github/workflows/ci.yml": {
+  "name": "ci.yml",
+  "path": ".github/workflows/ci.yml",
+  "type": "file",
+  "encoding": "base64",
+  "content": "bmFtZTogQ0kKb246CiAgcHVsbF9yZXF1ZXN0OgogIHB1c2g6CiAgICBicmFuY2hlczogW21haW5dCmpvYnM6CiAgc2V0dXA6CiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBzdGVwczoKICAgICAgLSBydW46IG5wbSBjaQogIGJ1aWxkOgogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgc3RlcHM6CiAgICAgIC0gcnVuOiBucG0gcnVuIGJ1aWxkCiAgdGVzdDoKICAgIHN0cmF0ZWd5OgogICAgICBtYXRyaXg6CiAgICAgICAgbm9kZTogWzIwLCAyMl0KICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIHN0ZXBzOgogICAgICAtIHJ1bjogbnBtIHRlc3QKICBlc2xpbnQ6CiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICBzdGVwczoKICAgICAgLSBydW46IG5wbSBydW4gbGludAogIHR5cGVjaGVjazoKICAgIG5lZWRzOiBbc2V0dXBdCiAgICBpZjogZ2l0aHViLmV2ZW50LnB1bGxfcmVxdWVzdC5kcmFmdCA9PSBmYWxzZQogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgc3RlcHM6CiAgICAgIC0gcnVuOiBucHggdHNjIC0tbm9FbWl0Cg=="
+ },
+ "GET /repos/acme/web/contents/.github/workflows/e2e.yml": {
+  "name": "e2e.yml",
+  "path": ".github/workflows/e2e.yml",
+  "type": "file",
+  "encoding": "base64",
+  "content": "bmFtZTogRTJFCm9uOgogIHB1bGxfcmVxdWVzdDoKICAgIHBhdGhzOgogICAgICAtICJ3ZWIvKioiCmpvYnM6CiAgZTJlOgogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgc3RlcHM6CiAgICAgIC0gcnVuOiBucHggcGxheXdyaWdodCB0ZXN0Cg=="
+ }
+}

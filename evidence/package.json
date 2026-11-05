@@ -1,0 +1,41 @@
+{
+  "name": "@mainfast/evidence",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mainfast Evidence: proof, not review, for pull requests written by coding agents.",
+  "license": "MIT",
+  "author": "Mainfast authors",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mainfast-evidence": "dist/cli.cjs"
+  },
+  "main": "dist/lib.cjs",
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "build": "node build.mjs",
+    "all": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@mainfast/shared": "0.1.0",
+    "yaml": "^2.9.1"
+  },
+  "homepage": "https://github.com/mainfast/mainfast/tree/main/evidence#readme",
+  "bugs": {
+    "url": "https://github.com/mainfast/mainfast/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mainfast/mainfast.git",
+    "directory": "evidence"
+  }
+}

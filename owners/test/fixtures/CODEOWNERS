@@ -1,0 +1,24 @@
+# Default owners for everything not matched below
+*                       @acme/platform
+
+# Frontend
+/web/                   @acme/web @alice
+/web/legacy/            @bob
+*.css                   @carol
+
+# Backend
+/api/                   @acme/gone
+/api/payments/          @ghost @acme/readers
+/api/search/            @dave
+
+# Moved in the last reorg; nothing lives here any more
+/services/billing/      @alice
+
+# Docs: direct children only
+/docs/*                 @other/writers docs@acme.example
+
+# Generated files have no owner on purpose
+/web/generated/
+
+/web/                   @acme/web
+!/web/vendor/           @alice

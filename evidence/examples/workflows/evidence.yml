@@ -1,0 +1,77 @@
+# Copy to .github/workflows/evidence.yml.
+#
+# Two jobs on purpose:
+#  - pr (pull_request, same-repository PRs): re-evaluates on every push, edit and label change.
+#    Runs with the PR's own workflow file and an ordinary token; checks out the PR head only to
+#    diff it locally (nothing from it is run).
+#  - ci (workflow_run): re-evaluates once your CI finishes, so "tests ran on THIS sha" sees the
+#    final result, and gives fork PRs a card. workflow_run always runs THIS file from the default
+#    branch with a write token, so it never checks out or runs PR code: the diff, the policy
+#    (.mainfast.yml at the PR's base commit) and the checks all come from the API. The coverage
+#    artifact is data the PR's CI run produced: parsed, never executed.
+# Make the "Mainfast Evidence" check required in your ruleset to gate merges on it.
+# Never put ${{ github.event.* }} text (branch names, titles, commit messages) into a `run:` step.
+name: Evidence
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
+  workflow_run:
+    workflows: [CI] # the name of your test workflow
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  pr:
+    # Fork PRs get a read-only token here and could not post; the ci job covers them.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      statuses: read # commit statuses (e.g. ci/circleci: …) count as checks
+    concurrency:
+      group: evidence-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0 # full history: local diff without GitHub's patch truncation, plus git-ai notes
+          ref: ${{ github.event.pull_request.head.sha }}
+          # credentials stay so the Action can fetch refs/notes/ai (git-ai) in a private repo
+      - uses: mainfast/evidence@v0
+        with:
+          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors
+          # Give CI a few minutes so the first card is not "no tests ran".
+          wait-for-checks: "600"
+
+  ci:
+    if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      statuses: read # commit statuses (e.g. ci/circleci: …) count as checks
+      actions: read # download the coverage artifact from the CI run
+    concurrency:
+      group: evidence-ci-${{ github.event.workflow_run.head_sha }}
+      cancel-in-progress: true
+    steps:
+      # No actions/checkout: this job holds a write token, so PR code never lands on its disk.
+      # Optional: changed-line coverage from the CI run's artifact (data only).
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: coverage
+          path: coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - uses: mainfast/evidence@v0
+        with:
+          # license: ${{ secrets.MAINFAST_LICENSE }}
+          coverage-files: coverage/lcov.info
+          local-diff: "false" # no checkout in this job: the diff comes from the API

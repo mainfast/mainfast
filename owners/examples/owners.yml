@@ -1,0 +1,30 @@
+# Copy to .github/workflows/owners.yml.
+# No checkout step: Owners reads CODEOWNERS, .mainfast.yml and the tree through the API at the
+# right refs (the PR's base branch, the PR's head when it edits CODEOWNERS, the default branch
+# for the weekly audit), never from a checkout.
+name: Code owners
+on:
+  pull_request: # changed files judged with the base CODEOWNERS; a CODEOWNERS edit is linted on its own
+  schedule:
+    - cron: "23 6 * * 1" # weekly full audit, with dormant owners (180 days by default)
+  workflow_dispatch:
+
+permissions:
+  contents: read # CODEOWNERS, .mainfast.yml, git tree
+  pull-requests: write # PR files + the one sticky comment
+
+concurrency:
+  group: mainfast-owners-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  owners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mainfast/owners@v0
+        with:
+          # Optional: org membership, team existence and team access. GITHUB_TOKEN cannot read
+          # them; a fine-grained token (or GitHub App token) with Organization > Members: read
+          # can. Without it those checks are skipped with one note. Never used on fork PRs.
+          org-token: ${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}
+          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors

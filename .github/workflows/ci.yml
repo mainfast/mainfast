@@ -1,0 +1,24 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run all
+      - name: Committed bundles match the source
+        run: git diff --exit-code -- '*/dist/' intact/plugin/scripts/
+      - name: Lint example workflows
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color intact/examples/mainfast-intact.yml migrations/examples/mainfast-migrations.yml rollcall/examples/rollcall.yml owners/examples/owners.yml owners/examples/owners-app-token.yml evidence/examples/workflows/evidence.yml

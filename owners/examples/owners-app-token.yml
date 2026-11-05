@@ -1,0 +1,26 @@
+# Variant: the org-token comes from a GitHub App (Organization > Members: read, Repository >
+# Metadata: read) instead of a personal token, so it does not expire with a person's account.
+name: Code owners (app token)
+on:
+  pull_request:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  owners:
+    runs-on: ubuntu-latest
+    steps:
+      - id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.OWNERS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.OWNERS_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+      - uses: mainfast/owners@v0
+        with:
+          org-token: ${{ steps.app.outputs.token }}

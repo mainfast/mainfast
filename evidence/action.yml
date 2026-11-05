@@ -1,0 +1,62 @@
+# Generated fields (name, description, author, branding, runs.main) come from ../brand.json via `npm run brand:sync`.
+name: "Mainfast Evidence"
+description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit."
+author: "Mainfast authors"
+branding:
+  icon: "check-square"
+  color: "green"
+inputs:
+  token:
+    description: Token with checks:write and pull-requests:write (the default GITHUB_TOKEN works for same-repo PRs).
+    default: ${{ github.token }}
+  pr-number:
+    description: "PR to evaluate. Defaults to the PR of the triggering event: pull_request, check_suite, or workflow_run (fork PRs, which workflow_run does not list, are found by head sha and checked against the PR record)."
+    required: false
+  coverage-files:
+    description: Comma or newline separated lcov / Cobertura files (paths relative to working-directory). Optional.
+    required: false
+  comment:
+    description: "Sticky PR comment: always | on-flags | never."
+    default: always
+  comment-author:
+    description: "Login the token posts comments as, used to find the sticky comment (only comments by this identity are ever updated). Default: the token's own user when it can read GET /user, else github-actions[bot]. Set it to <app-slug>[bot] when token is a GitHub App installation token."
+    required: false
+  wait-for-checks:
+    description: Seconds to wait for test checks on the head commit to appear and finish. 0 = evaluate now.
+    default: "0"
+  poll-interval:
+    description: Seconds between polls while waiting (minimum 5).
+    default: "20"
+  fail-job:
+    description: "true = fail this job when evidence fails; auto = only when the check run could not be posted; false = never."
+    default: auto
+  local-diff:
+    description: "auto = use the local checkout (fetch-depth: 0) for full diffs and git-ai notes when both commits are present (never for fork PRs); false = API patches only."
+    default: auto
+  working-directory:
+    description: Repository checkout used for local diffs and coverage files.
+    default: ${{ github.workspace }}
+  dry-run:
+    description: Evaluate and print, but do not post a check run or comment.
+    default: "false"
+  license:
+    description: "Mainfast licence key (Pro, or the optional free key): pass your MAINFAST_LICENSE secret. Optional and never needed for public repositories or private ones with up to 5 active contributors; no feature needs it. Checked once per run with Polar (only the key and the organisation id are sent; offline counts as valid). Without a Pro key a larger private repository gets one notice in the job summary; the result is never affected."
+    default: ""
+outputs:
+  conclusion:
+    description: success | failure | neutral | pending
+  is-agent:
+    description: Whether any agent provenance signal was found.
+  agents:
+    description: Comma-separated agent names detected.
+  flags:
+    description: Comma-separated ids of the flags that fired (after policy).
+  check-run-url:
+    description: URL of the evidence check run.
+  comment-url:
+    description: URL of the sticky comment.
+  report-path:
+    description: Path to the full JSON report under RUNNER_TEMP.
+runs:
+  using: node24
+  main: "dist/index.cjs"

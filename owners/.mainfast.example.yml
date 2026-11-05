@@ -1,0 +1,11 @@
+owners:
+  dormantDays: 180         # weekly audit: no PR review in this many days = dormant (0 = off; never on PRs)
+  maxSearches: 100         # search API requests per audit for dormancy (30 a minute; capped runs rotate)
+  ignore:                  # paths that need no owner
+    - "**/*.snap"
+    - "docs/**"
+  skipOwners:              # owners not validated (bots, external groups)
+    - "@acme/release-bot"
+  requireOwners: true      # fail a PR that touches unowned files
+  expandTeams: false       # also check each team member for dormancy (needs org-token)
+  failOn: error            # error | warning | never

@@ -1,0 +1,59 @@
+{
+  "total_count": 3,
+  "check_runs": [
+    {
+      "id": 28461000101,
+      "head_sha": "b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+      "node_id": "CR_kwDOAbCdEf8AAAAGoVb1ZQ",
+      "external_id": "ca395085-040a-526b-2ce8-bdc85f692774",
+      "url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000101",
+      "html_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345601",
+      "details_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345601",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-27T08:00:12Z",
+      "completed_at": "2026-10-27T08:02:40Z",
+      "output": { "title": null, "summary": null, "text": null, "annotations_count": 0, "annotations_url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000101/annotations" },
+      "name": "test",
+      "check_suite": { "id": 30123456789 },
+      "app": { "id": 15368, "slug": "github-actions", "node_id": "MDM6QXBwMTUzNjg=", "name": "GitHub Actions", "owner": { "login": "github", "id": 9919, "type": "Organization" } },
+      "pull_requests": [{ "url": "https://api.github.com/repos/octo-org/widgets/pulls/42", "id": 1934567890, "number": 42, "head": { "ref": "claude/fix-price-rounding", "sha": "b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3", "repo": { "id": 1296269, "url": "https://api.github.com/repos/octo-org/widgets", "name": "widgets" } }, "base": { "ref": "main", "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e", "repo": { "id": 1296269, "url": "https://api.github.com/repos/octo-org/widgets", "name": "widgets" } } }]
+    },
+    {
+      "id": 28461000102,
+      "head_sha": "b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+      "node_id": "CR_kwDOAbCdEf8AAAAGoVb1Zg",
+      "external_id": "ca395085-040a-526b-2ce8-bdc85f692775",
+      "url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000102",
+      "html_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345602",
+      "details_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345602",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-27T08:00:12Z",
+      "completed_at": "2026-10-27T08:01:05Z",
+      "output": { "title": null, "summary": null, "text": null, "annotations_count": 0, "annotations_url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000102/annotations" },
+      "name": "lint",
+      "check_suite": { "id": 30123456789 },
+      "app": { "id": 15368, "slug": "github-actions", "node_id": "MDM6QXBwMTUzNjg=", "name": "GitHub Actions", "owner": { "login": "github", "id": 9919, "type": "Organization" } },
+      "pull_requests": []
+    },
+    {
+      "id": 28461000103,
+      "head_sha": "b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+      "node_id": "CR_kwDOAbCdEf8AAAAGoVb1Zw",
+      "external_id": "ca395085-040a-526b-2ce8-bdc85f692776",
+      "url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000103",
+      "html_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345603",
+      "details_url": "https://github.com/octo-org/widgets/actions/runs/11812345678/job/32912345603",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-27T08:00:12Z",
+      "completed_at": "2026-10-27T08:00:50Z",
+      "output": { "title": null, "summary": null, "text": null, "annotations_count": 0, "annotations_url": "https://api.github.com/repos/octo-org/widgets/check-runs/28461000103/annotations" },
+      "name": "build",
+      "check_suite": { "id": 30123456789 },
+      "app": { "id": 15368, "slug": "github-actions", "node_id": "MDM6QXBwMTUzNjg=", "name": "GitHub Actions", "owner": { "login": "github", "id": 9919, "type": "Organization" } },
+      "pull_requests": []
+    }
+  ]
+}

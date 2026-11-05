@@ -1,0 +1,40 @@
+[
+  {
+    "url": "https://api.github.com/repos/octo-org/widgets/commits/a1e2d3c4b5a6978877665544332211ffeeddccbb",
+    "sha": "a1e2d3c4b5a6978877665544332211ffeeddccbb",
+    "node_id": "C_kwDOAbCdEfoAKGExZTJkM2M0YjVhNjk3ODg3NzY2NTU0NDMzMjIxMWZmZWVkZGNjYmI",
+    "html_url": "https://github.com/octo-org/widgets/commit/a1e2d3c4b5a6978877665544332211ffeeddccbb",
+    "comments_url": "https://api.github.com/repos/octo-org/widgets/commits/a1e2d3c4b5a6978877665544332211ffeeddccbb/comments",
+    "commit": {
+      "url": "https://api.github.com/repos/octo-org/widgets/git/commits/a1e2d3c4b5a6978877665544332211ffeeddccbb",
+      "author": { "name": "The Octocat", "email": "octocat@github.com", "date": "2026-10-26T09:10:00Z" },
+      "committer": { "name": "The Octocat", "email": "octocat@github.com", "date": "2026-10-26T09:10:00Z" },
+      "message": "Fix half-cent rounding in formatPrice\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "tree": { "url": "https://api.github.com/repos/octo-org/widgets/git/trees/0f1e2d3c", "sha": "0f1e2d3c4b5a69788776655443322110ffeeddcc" },
+      "comment_count": 0,
+      "verification": { "verified": false, "reason": "unsigned", "signature": null, "payload": null }
+    },
+    "author": { "login": "octocat", "id": 583231, "type": "User", "site_admin": false },
+    "committer": { "login": "octocat", "id": 583231, "type": "User", "site_admin": false },
+    "parents": [{ "url": "https://api.github.com/repos/octo-org/widgets/commits/6dcb09b5b57875f334f61aebed695e2e4193db5e", "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e" }]
+  },
+  {
+    "url": "https://api.github.com/repos/octo-org/widgets/commits/b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+    "sha": "b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+    "node_id": "C_kwDOAbCdEfoAKGI3ZjNjMmExZDRlNWY2MDcxODI5M2E0YjVjNmQ3ZThmOTBhMWIyYzM",
+    "html_url": "https://github.com/octo-org/widgets/commit/b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+    "comments_url": "https://api.github.com/repos/octo-org/widgets/commits/b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3/comments",
+    "commit": {
+      "url": "https://api.github.com/repos/octo-org/widgets/git/commits/b7f3c2a1d4e5f60718293a4b5c6d7e8f90a1b2c3",
+      "author": { "name": "The Octocat", "email": "octocat@github.com", "date": "2026-10-27T07:58:00Z" },
+      "committer": { "name": "The Octocat", "email": "octocat@github.com", "date": "2026-10-27T07:58:00Z" },
+      "message": "Add tests for negative prices\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "tree": { "url": "https://api.github.com/repos/octo-org/widgets/git/trees/1a2b3c4d", "sha": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d" },
+      "comment_count": 0,
+      "verification": { "verified": false, "reason": "unsigned", "signature": null, "payload": null }
+    },
+    "author": { "login": "octocat", "id": 583231, "type": "User", "site_admin": false },
+    "committer": { "login": "octocat", "id": 583231, "type": "User", "site_admin": false },
+    "parents": [{ "url": "https://api.github.com/repos/octo-org/widgets/commits/a1e2d3c4b5a6978877665544332211ffeeddccbb", "sha": "a1e2d3c4b5a6978877665544332211ffeeddccbb" }]
+  }
+]

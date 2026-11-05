@@ -1,0 +1,41 @@
+{
+  "name": "@mainfast/owners",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mainfast Owners: CODEOWNERS drift check.",
+  "license": "MIT",
+  "author": "Mainfast authors",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mainfast-owners": "dist/cli.cjs"
+  },
+  "main": "dist/lib.cjs",
+  "files": [
+    "dist",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "build": "node build.mjs",
+    "all": "npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@mainfast/shared": "0.1.0",
+    "yaml": "^2.9.1"
+  },
+  "homepage": "https://github.com/mainfast/mainfast/tree/main/owners#readme",
+  "bugs": {
+    "url": "https://github.com/mainfast/mainfast/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mainfast/mainfast.git",
+    "directory": "owners"
+  }
+}

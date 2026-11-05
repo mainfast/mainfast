@@ -1,0 +1,33 @@
+// One line per flag: what to do about it. Shown under each flag on the card, by `flags` in the CLI,
+// and in the README's flag table (a test keeps the README in step with this list).
+import type { FlagId } from "./types.ts";
+
+export const FLAG_FIXES: Record<FlagId, string> = {
+  tests_not_run_on_head: "Run the test workflow on this commit (push again or re-run CI); evidence from an earlier push does not count.",
+  tests_failed: "Fix the failing tests on this commit, or have the agent fix them, then push.",
+  tests_skipped: "Make the test job run on this commit (check its `if:` and path filters), or set `tests_skipped: fail` to require it.",
+  tests_empty: "Point the test job at the real tests (glob, working directory, test discovery) so it runs more than zero.",
+  required_check_missing: "Restore the job name the ruleset requires (or update the ruleset after a rename), and drop path filters on required jobs.",
+  required_check_skipped: "Make required jobs always run and report, or move the condition inside a step; GitHub counts skipped as passing.",
+  required_check_failed: "Fix the failing required check; set `required_check_failed: fail` to show it as a failure here too.",
+  coverage_below_threshold: "Add tests for the changed lines, or lower `coverage.min_changed_lines`.",
+  coverage_missing: "Upload lcov or Cobertura from CI and pass it as `coverage-files` (or `coverage.files`).",
+  touched_workflows: "Have a human review the CI change, or move it to its own PR; agents should not edit what judges them.",
+  touched_codeowners: "Have a code owner review the CODEOWNERS change in a separate, human-authored PR.",
+  touched_lockfiles: "Check the dependency change is intended (`npm ci` / lockfile diff), or set `touched_lockfiles: off`.",
+  touched_tests: "Check each removed or rewritten test line is intended; keep the old assertions unless the behaviour changed.",
+  touched_test_config: "Review the test-config change: coverage thresholds, excluded paths and test globs can switch tests off.",
+  touched_policy: "Change `.mainfast.yml` in a separate, human-reviewed PR; this PR is judged by the base branch's policy anyway.",
+  tests_deleted: "Restore the deleted test file, or explain in the PR why the behaviour it covered is gone.",
+  tests_removed: "Restore the removed test cases, or replace them with equivalent ones.",
+  assertions_dropped: "Restore the dropped assertions; a test without them passes whatever the code does.",
+  assertions_commented_out: "Uncomment the assertion and fix the code it was catching, or delete it on purpose with a reason.",
+  skip_added: "Remove the skip marker and fix the test, or open an issue and link it next to the skip.",
+  focus_added: "Remove `.only` / `fit` / `fdescribe`; they stop every other test in the file.",
+  trivial_assertion_added: "Replace the always-true assertion with one that checks the code's result.",
+  claim_tests_added_unbacked: "Add the tests the description promises, or correct the description.",
+  claim_tests_pass_unbacked: "Wait for the test checks on this commit to pass, or correct the description.",
+  diff_too_large: "Split the PR, or raise `diff.max_lines` / `diff.max_files` (generated files can go in `diff.exclude`).",
+  secret_like_string: "Remove the value and rotate it if it is real; add a known fake to `secrets.allow` (anchored, `^…$`).",
+  diff_unanalyzed: "Run the Action in a full checkout (`fetch-depth: 0`) so the diff is computed locally, not from truncated API patches.",
+};

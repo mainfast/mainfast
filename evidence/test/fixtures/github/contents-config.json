@@ -1,0 +1,14 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 0,
+  "name": ".mainfast.yml",
+  "path": ".mainfast.yml",
+  "content": "",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/octo-org/widgets/contents/.mainfast.yml?ref=6dcb09b5b57875f334f61aebed695e2e4193db5e",
+  "git_url": "https://api.github.com/repos/octo-org/widgets/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/octo-org/widgets/blob/6dcb09b5b57875f334f61aebed695e2e4193db5e/.mainfast.yml",
+  "download_url": "https://raw.githubusercontent.com/octo-org/widgets/6dcb09b5b57875f334f61aebed695e2e4193db5e/.mainfast.yml",
+  "_links": { "self": "https://api.github.com/repos/octo-org/widgets/contents/.mainfast.yml?ref=6dcb09b5b57875f334f61aebed695e2e4193db5e", "git": "https://api.github.com/repos/octo-org/widgets/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1", "html": "https://github.com/octo-org/widgets/blob/6dcb09b5b57875f334f61aebed695e2e4193db5e/.mainfast.yml" }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@mainfast/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared GitHub client, Actions I/O, fixture fetch, globs, brand, .mainfast.yml loader, plan gate and required-check resolution for the Mainfast suite.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./actions-io": "./src/actions-io.ts",
+    "./brand": "./src/brand.ts",
+    "./config": "./src/config.ts",
+    "./github": "./src/github.ts",
+    "./glob": "./src/glob.ts",
+    "./markdown": "./src/markdown.ts",
+    "./mockfetch": "./src/mockfetch.ts",
+    "./plan": "./src/plan.ts",
+    "./required-checks": "./src/required-checks.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  }
+}
