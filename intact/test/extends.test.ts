@@ -121,6 +121,7 @@ describe("action reads .mainfast.yml from the base of the change", () => {
       RUNNER_TEMP: tmp,
       INPUT_TOKEN: "",
       INPUT_CONFIG: "",
+      "INPUT_FAIL-ON": "warning",
     });
     delete process.env.GITHUB_STEP_SUMMARY;
     vi.spyOn(process.stdout, "write").mockImplementation(() => true);

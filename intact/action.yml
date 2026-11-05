@@ -19,8 +19,8 @@ inputs:
     description: "Token that can read the repository named in `extends:` (Pro) when it is private and not this repository. Default: token."
     default: ""
   fail-on:
-    description: "Lowest finding level that fails the step: error, warning or notice."
-    default: "warning"
+    description: "Lowest finding level that fails the step: error, warning, notice or off. Off reports findings as annotations and a neutral check run without failing; a merge that could not be analysed still fails."
+    default: "off"
   check-run:
     description: "auto (try a check run, fall back to annotations) or false (annotations only)."
     default: "auto"

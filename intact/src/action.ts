@@ -103,7 +103,8 @@ async function postCheckRun(gh: GitHub, repo: string, headSha: string, report: C
   const findings = allFindings(report).filter((f) => ANNOTATION_LEVEL[f.level]);
   const annotations = findings.map(annotationFor);
   const s = report.summary;
-  const title = failed
+  const reportable = s.findings.error + s.findings.warning > 0;
+  const title = failed || reportable
     ? `${s.findings.error} error, ${s.findings.warning} warning in ${s.withFindings} merge commit(s)`
     : `${s.merges} merge commit(s) intact`;
   const summary = (formatMarkdown(report) + (notice ? `\n\n${notice}\n` : "")).slice(0, 65000);
@@ -115,7 +116,7 @@ async function postCheckRun(gh: GitHub, repo: string, headSha: string, report: C
         name: BRAND.checkName,
         head_sha: headSha,
         status: "completed",
-        conclusion: failed ? "failure" : s.findings.notice > 0 ? "neutral" : "success",
+        conclusion: failed ? "failure" : reportable || s.findings.notice > 0 ? "neutral" : "success",
         output: { title, summary, annotations: first },
       })
     ).data;
@@ -146,7 +147,8 @@ function workflowAnnotations(report: CheckReport): void {
 export async function runAction(): Promise<number> {
   const workspace = input("working-directory", process.env.GITHUB_WORKSPACE ?? process.cwd());
   const token = input("token", process.env.GITHUB_TOKEN ?? "");
-  const failOnRaw = input("fail-on", "warning") as Level;
+  // Report-only unless asked to block. A value we don't recognise blocks: a typo must not switch it off.
+  const failOnRaw = input("fail-on", "off") as Level;
   const failOn: Level = LEVELS.includes(failOnRaw) ? failOnRaw : "warning";
   const useCheckRun = input("check-run", "auto");
   const event = process.env.GITHUB_EVENT_NAME ?? "push";
