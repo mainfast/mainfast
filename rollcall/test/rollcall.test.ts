@@ -319,6 +319,24 @@ describe('merged and open PRs', () => {
     expect(report.tallies.find((t) => t.context === 'build')).toMatchObject({ sampled: 10, open: 2, failed: 1 });
   });
 
+  it('a check that finished after the merge counts as merged-while-pending; a re-run after the merge does not', () => {
+    const timed = (conclusion: string, started: string, completed: string) => ({ ...run('build', conclusion), started_at: `2026-01-01T${started}Z`, completed_at: `2026-01-01T${completed}Z` });
+    const mergedAt = '2026-01-01T10:00:00Z';
+    const r = audit(
+      snapshot({
+        classic: { contexts: ['build'], checks: [] },
+        pulls: [
+          pr(4, [timed('success', '09:59:00', '10:02:00')], { mergedAt }),
+          pr(3, [timed('failure', '09:59:00', '10:02:00')], { mergedAt }),
+          pr(2, [timed('success', '10:30:00', '10:32:00')], { mergedAt }),
+          pr(1, [timed('success', '09:50:00', '10:00:00')], { mergedAt }),
+        ],
+      }),
+    );
+    expect(summary(r)).toEqual(['warning merged-while-pending build']);
+    expect(r.findings[0]?.evidence).toEqual([4, 3]);
+  });
+
   it('a check still pending (or stale) at merge time is merged-while-pending, not merged-with-failure', () => {
     const r = audit(
       snapshot({

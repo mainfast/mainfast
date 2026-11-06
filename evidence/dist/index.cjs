@@ -8389,7 +8389,7 @@ async function fetchRequiredSources(gh, owner, repo, branch, opts = {}) {
   const rsc = info?.protection?.required_status_checks;
   if (info?.protected && rsc && (rsc.contexts?.length || rsc.checks?.length)) {
     classic = { strict: rsc.strict, enforcement_level: rsc.enforcement_level, contexts: rsc.contexts ?? [], checks: rsc.checks ?? [] };
-  } else if (info?.protected) {
+  } else if (info?.protected && info.protection?.enabled !== false) {
     classic = await soft(
       notes,
       `GET ${base}/branches/${branch}/protection/required_status_checks`,
