@@ -113,6 +113,23 @@ describe("fetchRequiredSources", () => {
     expect(requiredContexts(resolveRequiredChecks(s))).toEqual(["a", "b"]);
   });
 
+  it("does not ask the admin endpoint about a branch protected by rulesets alone", async () => {
+    const denied = { status: 403, body: { message: "Resource not accessible by integration" } };
+    const s = await fetchRequiredSources(
+      gh({
+        "GET /repos/o/r/branches/main": { body: { protected: true, protection: { enabled: false, required_status_checks: { enforcement_level: "off", contexts: [], checks: [] } } } },
+        "GET /repos/o/r/branches/main/protection/required_status_checks": denied,
+        "GET /repos/o/r/rules/branches/main": { body: [] },
+        "GET /repos/o/r/rulesets": { body: [] },
+      }),
+      "o",
+      "r",
+      "main",
+    );
+    expect(s.classic).toBeNull();
+    expect(s.notes).toEqual([]);
+  });
+
   it("degrades to notes when the admin endpoint and rulesets are not readable", async () => {
     const denied = { status: 403, body: { message: "Resource not accessible by integration" } };
     const s = await fetchRequiredSources(

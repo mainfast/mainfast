@@ -8,6 +8,8 @@ Rollcall:
 
 - A path-filtered required check is no longer also reported as `stopped-reporting`.
 - `protection-drift` no longer fires when only one layer pins a check to an app, which GitHub does by itself in classic branch protection.
+- `merged-while-pending` now catches a check that was running when the PR merged and finished later. Before, it only fired if the check was still unfinished when the audit ran. If that check later failed, it's reported here rather than as `merged-with-failure`.
+- Branches protected only by rulesets no longer get a note saying classic required checks are unknown.
 
 Intact:
 

@@ -76,11 +76,20 @@ const prList = (ns: number[]) => ns.map((n) => `#${n}`).join(', ');
 const ALWAYS = /\b(always|failure|cancelled)\s*\(\s*\)/;
 
 const isMerged = (p: PullObservation) => (p.state ?? 'merged') === 'merged';
+/**
+ * The run was going when the PR merged and finished later. A run that started after the merge is a
+ * re-run, so it says nothing about the merge; one still queued at merge time looks the same.
+ */
+const runningAtMerge = (run: { startedAt?: string | null; completedAt?: string | null } | undefined, mergedAt?: string | null) => {
+  if (!run?.startedAt || !run.completedAt || !mergedAt) return false;
+  const merged = Date.parse(mergedAt);
+  return Date.parse(run.startedAt) <= merged && merged < Date.parse(run.completedAt);
+};
 
 function commitChecks(p: PullObservation): CommitChecks {
   return {
     sha: p.headSha,
-    runs: p.checkRuns.map((r) => ({ name: r.name, headSha: r.head_sha, status: r.status, conclusion: r.conclusion, startedAt: r.started_at, id: r.id, appId: r.app?.id ?? null, appSlug: r.app?.slug ?? null })),
+    runs: p.checkRuns.map((r) => ({ name: r.name, headSha: r.head_sha, status: r.status, conclusion: r.conclusion, startedAt: r.started_at, completedAt: r.completed_at, id: r.id, appId: r.app?.id ?? null, appSlug: r.app?.slug ?? null })),
     statuses: p.statuses.map((x) => ({ context: x.context, state: x.state, updatedAt: x.updated_at })),
   };
 }
@@ -181,7 +190,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
     for (const { p, c } of obs) {
       const res = classifyRequired(r.context, c, r.sources);
       by[res.outcome].push(p.number);
-      if (isMerged(p)) mergedBy[res.outcome].push(p.number);
+      if (isMerged(p)) mergedBy[runningAtMerge(res.run, p.mergedAt) ? 'pending' : res.outcome].push(p.number);
       if (res.outcome === 'missing') missingAt.add(p.number);
       if (res.run && !res.appSatisfied) appMismatch.push({ pr: p.number, app: `${res.run.appSlug ?? '?'} (${res.run.appId ?? '?'})` });
     }
