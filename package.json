@@ -11,7 +11,8 @@
     "migrations",
     "rollcall",
     "owners",
-    "evidence"
+    "evidence",
+    "cli"
   ],
   "engines": {
     "node": ">=20"
@@ -27,6 +28,7 @@
     "all": "npm run brand:check && npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@types/node": "^22.20.5",
     "ajv": "^8.17.1",
     "esbuild": "^0.28.2",

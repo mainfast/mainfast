@@ -71,7 +71,40 @@ jobs:
         with: { local-diff: "false" }
 ```
 
-Intact also ships a CLI (`mainfast check`) and a Claude Code plugin that runs it before a push.
+One command, `npx mainfast`, sets the checks up and runs them locally; see [Using with an agent](#using-with-an-agent).
+
+## Using with an agent
+
+Any coding agent can set Mainfast up with one command, run from the repository root:
+
+```bash
+npx mainfast init
+```
+
+It writes the workflow files and a starter `.mainfast.yml`, never overwrites a file without
+`--force`, and lists what is left to do, such as making a check required. It does not push or
+change branch protection. Every command takes `--json`, with exit codes 0 clean, 1 findings, 2 error:
+
+| Command | What it does |
+| --- | --- |
+| `mainfast init [--checks intact,owners] [--dry-run]` | Install the checks in this repository |
+| `mainfast doctor` | What is installed, whether the config parses, what is missing |
+| `mainfast check` | Run Intact on the merge commits in this branch, before you push |
+| `mainfast audit <rollcall\|owners\|migrations\|evidence>` | Run one check locally; read-only |
+
+Token: `GITHUB_TOKEN` or `GH_TOKEN`, never printed. The same commands are available to any MCP
+client as tools, over stdio:
+
+```json
+{
+  "mcpServers": {
+    "mainfast": { "command": "npx", "args": ["-y", "mainfast", "mcp"] }
+  }
+}
+```
+
+The command installs the Actions. The [hosted GitHub App](https://github.com/apps/mainfast) is a
+separate option, installed on GitHub.
 
 ## One config file
 
@@ -162,7 +195,7 @@ intact/ migrations/ rollcall/ owners/ evidence/
   dist/lib.cjs             the library
 schema/                    .mainfast.yml JSON Schema + full example
 docs/config.md             .mainfast.yml reference
-scripts/sync-brand.mjs     rewrites action.yml / package.json / plugin.json / examples / LICENSE
+scripts/sync-brand.mjs     rewrites action.yml / package.json / examples / LICENSE
 test/                      suite tests: brand drift, schema vs parsers
 ```
 

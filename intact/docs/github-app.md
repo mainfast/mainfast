@@ -123,8 +123,7 @@ lists paid plans.
    problem: "Your pull request diff never shows what the merge commit itself did."
 3. **Reaching installs**: a write-up of a real dropped-fix incident (the
    `git checkout --ours` pattern), a demo repo with a planted evil merge and a forked
-   migration ledger, posts on Hacker News, r/git and dev.to, the Claude Code plugin for
-   agent-driven merges.
+   migration ledger, posts on Hacker News, r/git and dev.to.
 4. **Paid**: Pro at $4 per active contributor per month for private organisations over 5
    active contributors; public repositories and small private teams stay free.
 

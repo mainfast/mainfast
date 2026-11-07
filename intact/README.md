@@ -182,17 +182,6 @@ jobs:
   summary and the check run get one notice about Pro. The result never changes.
 - A shallow checkout is unshallowed automatically; `fetch-depth: 0` is faster.
 
-### Claude Code plugin
-
-`plugin/` holds a skill (`intact`) that runs the bundled CLI before a push and
-tells the agent how to read and act on findings. `npm run build` copies the CLI
-into `plugin/scripts/mainfast.cjs` (not `bin/`: claude.ai org sync rejects plugins
-with a top-level `bin/`).
-
-```bash
-claude plugin validate plugin
-```
-
 ## How it works
 
 For each two-parent merge commit `M = merge(P1, P2)`:

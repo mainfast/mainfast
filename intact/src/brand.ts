@@ -18,7 +18,6 @@ export interface Brand {
   issuesUrl: string;
   actionRef: string;
   envPrefix: string;
-  pluginName: string;
   author: string;
 }
 
@@ -40,7 +39,6 @@ export const BRAND: Brand = {
   issuesUrl: SUITE.issuesUrl,
   actionRef: P.actionRef,
   envPrefix: SUITE.envPrefix,
-  pluginName: P.plugin!.name,
   author: SUITE.author,
 };
 

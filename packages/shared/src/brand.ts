@@ -48,7 +48,6 @@ export interface ProductBrand {
   branding: { icon: string; color: string };
   statusContext?: string;
   staleLabel?: string;
-  plugin?: { name: string; description: string };
   /** Per-product docs link: <homepage>/tree/main/<slug>#readme. */
   docsUrl: string;
 }

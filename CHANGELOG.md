@@ -2,6 +2,8 @@
 
 ## 0.1.0 (unreleased)
 
+- `mainfast`: one command for people and agents, `npx mainfast init|doctor|check|audit`, with `--json`, and `mainfast mcp`, an MCP server over stdio with the same tools.
+- Removed the Claude Code plugin.
 First release of Mainfast Intact, Migrations, Rollcall, Owners and Evidence.
 
 Rollcall:

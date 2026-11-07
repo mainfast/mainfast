@@ -17,7 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run all
       - name: Committed bundles match the source
-        run: git diff --exit-code -- '*/dist/' intact/plugin/scripts/
+        run: git diff --exit-code -- '*/dist/'
       - name: Lint example workflows
         uses: docker://rhysd/actionlint:1.7.12
         with:

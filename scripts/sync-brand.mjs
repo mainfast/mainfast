@@ -1,7 +1,6 @@
 // Rewrites every machine-read brand field in the suite from brand.json:
 //   <pkg>/action.yml       name, description, author, branding, runs.main
 //   <pkg>/package.json     name, description, license, author, bin, main, files, homepage, bugs, repository
-//   intact/plugin/.claude-plugin/plugin.json
 //   <pkg>/examples/**/*.yml   `uses: <org>/<slug>@vN` (also rewrites the older <org>/<repo>/<slug>) and Intact's workflow name
 //   LICENSE (root and per package)
 // TypeScript needs nothing generated: it imports brand.json through @mainfast/shared/brand.
@@ -100,19 +99,6 @@ function packageJson(slug, p, s) {
   return JSON.stringify(next, null, 2) + "\n";
 }
 
-function pluginJson(p, s) {
-  const j = JSON.parse(s);
-  Object.assign(j, {
-    name: p.plugin.name,
-    description: p.plugin.description,
-    author: { name: S.author },
-    homepage: S.homepageUrl,
-    repository: `https://github.com/${S.githubOrg}/${S.githubRepo}`,
-    license: S.license,
-  });
-  return JSON.stringify(j, null, 2) + "\n";
-}
-
 function exampleYml(slug, p, s) {
   const re = new RegExp(`uses: [\\w.-]+/(?:[\\w.-]+/)?${slug}@v\\d+`, "g");
   let out = s.replace(re, `uses: ${p.actionRef}`);
@@ -145,9 +131,9 @@ export function plannedFiles() {
     plan(join(dir, "action.yml"), (s) => actionYml(slug, p, s));
     plan(join(dir, "package.json"), (s) => packageJson(slug, p, s));
     for (const f of ymlFiles(join(dir, "examples"))) plan(f, (s) => exampleYml(slug, p, s));
-    if (p.plugin) plan(join(dir, "plugin/.claude-plugin/plugin.json"), (s) => pluginJson(p, s));
   }
   plan(join(ROOT, "packages/shared/LICENSE"), () => licenseText());
+  plan(join(ROOT, "cli/LICENSE"), () => licenseText());
   return files;
 }
 

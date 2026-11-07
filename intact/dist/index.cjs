@@ -7589,11 +7589,7 @@ var brand_default = {
       checkName: "Mainfast Intact",
       commentMarker: "<!-- mainfast-intact:sticky -->",
       actionRef: "mainfast/intact@v0",
-      branding: { icon: "git-merge", color: "blue" },
-      plugin: {
-        name: "mainfast",
-        description: "Mainfast Intact: check merge commits for dropped main changes before you push."
-      }
+      branding: { icon: "git-merge", color: "blue" }
     },
     migrations: {
       productName: "Mainfast Migrations",
@@ -7947,7 +7943,6 @@ var BRAND = {
   issuesUrl: SUITE.issuesUrl,
   actionRef: P.actionRef,
   envPrefix: SUITE.envPrefix,
-  pluginName: P.plugin.name,
   author: SUITE.author
 };
 function envName(suffix) {
