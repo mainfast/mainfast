@@ -1,23 +1,47 @@
 // Offline mode and Action enrichment from a local checkout.
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { readRepoFile, UnsafeRepoPathError } from "@mainfast/shared/repo-file";
 import { mergeCoverage, parseCoverage } from "./analyze/coverage.ts";
 import { CONFIG_FILE } from "./constants.ts";
 import { diffFiles, hasCommit, listCommits, readGitAiNotes, revParse, showFile, git } from "./diff/git.ts";
 import type { CoverageReport, PrSnapshot } from "./types.ts";
 
-export function loadCoverage(paths: string[], cwd: string): { report?: CoverageReport; missing: string[] } {
+/** Coverage reports are routinely over the default cap; this only bounds a hostile file. */
+const MAX_COVERAGE_BYTES = 256 * 1024 * 1024;
+
+export interface LoadedCoverage {
+  report?: CoverageReport;
+  /** Files that do not exist. */
+  missing: string[];
+  /** Policy paths not read: outside the repository, through a symlink, or too large. */
+  refused: Array<{ path: string; reason: string }>;
+}
+
+/**
+ * `policyPaths` come from a file in the repository, so they are read only from inside it.
+ * `explicitPaths` are the caller's own (--coverage, the Action's coverage-files input), read as given.
+ */
+export function loadCoverage(policyPaths: string[], cwd: string, explicitPaths: string[] = []): LoadedCoverage {
   const reports: CoverageReport[] = [];
   const missing: string[] = [];
-  for (const p of paths) {
-    const abs = resolve(cwd, p);
-    if (!existsSync(abs)) {
-      missing.push(p);
-      continue;
+  const refused: LoadedCoverage["refused"] = [];
+  for (const p of policyPaths) {
+    try {
+      const text = readRepoFile(cwd, p, MAX_COVERAGE_BYTES);
+      if (text === undefined) missing.push(p);
+      else reports.push(parseCoverage(text, p));
+    } catch (e) {
+      if (!(e instanceof UnsafeRepoPathError)) throw e;
+      refused.push({ path: p, reason: e.message });
     }
-    reports.push(parseCoverage(readFileSync(abs, "utf8"), p));
   }
-  return { report: mergeCoverage(reports), missing };
+  for (const p of explicitPaths) {
+    const abs = resolve(cwd, p);
+    if (!existsSync(abs)) missing.push(p);
+    else reports.push(parseCoverage(readFileSync(abs, "utf8"), p));
+  }
+  return { report: mergeCoverage(reports), missing, refused };
 }
 
 export interface LocalOptions {

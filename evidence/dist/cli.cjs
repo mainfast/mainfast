@@ -3998,10 +3998,10 @@ var require_resolve_block_map = __commonJS({
       let offset = bm.offset;
       let commentEnd = null;
       for (const collItem of bm.items) {
-        const { start, key, sep, value } = collItem;
+        const { start, key, sep: sep2, value } = collItem;
         const keyProps = resolveProps.resolveProps(start, {
           indicator: "explicit-key-ind",
-          next: key ?? sep?.[0],
+          next: key ?? sep2?.[0],
           offset,
           onError,
           parentIndent: bm.indent,
@@ -4015,7 +4015,7 @@ var require_resolve_block_map = __commonJS({
             else if ("indent" in key && key.indent !== bm.indent)
               onError(offset, "BAD_INDENT", startColMsg);
           }
-          if (!keyProps.anchor && !keyProps.tag && !sep) {
+          if (!keyProps.anchor && !keyProps.tag && !sep2) {
             commentEnd = keyProps.end;
             if (keyProps.comment) {
               if (map.comment)
@@ -4039,7 +4039,7 @@ var require_resolve_block_map = __commonJS({
         ctx.atKey = false;
         if (utilMapIncludes.mapIncludes(ctx, map.items, keyNode))
           onError(keyStart, "DUPLICATE_KEY", "Map keys must be unique");
-        const valueProps = resolveProps.resolveProps(sep ?? [], {
+        const valueProps = resolveProps.resolveProps(sep2 ?? [], {
           indicator: "map-value-ind",
           next: value,
           offset: keyNode.range[2],
@@ -4055,7 +4055,7 @@ var require_resolve_block_map = __commonJS({
             if (ctx.options.strict && keyProps.start < valueProps.found.offset - 1024)
               onError(keyNode.range, "KEY_OVER_1024_CHARS", "The : indicator must be at most 1024 chars after the start of an implicit block mapping key");
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep, null, valueProps, onError);
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep2, null, valueProps, onError);
           if (ctx.schema.compat)
             utilFlowIndentCheck.flowIndentCheck(bm.indent, value, onError);
           offset = valueNode.range[2];
@@ -4146,7 +4146,7 @@ var require_resolve_end = __commonJS({
       let comment = "";
       if (end) {
         let hasSpace = false;
-        let sep = "";
+        let sep2 = "";
         for (const token of end) {
           const { source, type } = token;
           switch (type) {
@@ -4160,13 +4160,13 @@ var require_resolve_end = __commonJS({
               if (!comment)
                 comment = cb;
               else
-                comment += sep + cb;
-              sep = "";
+                comment += sep2 + cb;
+              sep2 = "";
               break;
             }
             case "newline":
               if (comment)
-                sep += source;
+                sep2 += source;
               hasSpace = true;
               break;
             default:
@@ -4209,18 +4209,18 @@ var require_resolve_flow_collection = __commonJS({
       let offset = fc.offset + fc.start.source.length;
       for (let i = 0; i < fc.items.length; ++i) {
         const collItem = fc.items[i];
-        const { start, key, sep, value } = collItem;
+        const { start, key, sep: sep2, value } = collItem;
         const props = resolveProps.resolveProps(start, {
           flow: fcName,
           indicator: "explicit-key-ind",
-          next: key ?? sep?.[0],
+          next: key ?? sep2?.[0],
           offset,
           onError,
           parentIndent: fc.indent,
           startOnNewline: false
         });
         if (!props.found) {
-          if (!props.anchor && !props.tag && !sep && !value) {
+          if (!props.anchor && !props.tag && !sep2 && !value) {
             if (i === 0 && props.comma)
               onError(props.comma, "UNEXPECTED_TOKEN", `Unexpected , in ${fcName}`);
             else if (i < fc.items.length - 1)
@@ -4274,8 +4274,8 @@ var require_resolve_flow_collection = __commonJS({
             }
           }
         }
-        if (!isMap && !sep && !props.found) {
-          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep, null, props, onError);
+        if (!isMap && !sep2 && !props.found) {
+          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep2, null, props, onError);
           coll.items.push(valueNode);
           offset = valueNode.range[2];
           if (isBlock(value))
@@ -4287,7 +4287,7 @@ var require_resolve_flow_collection = __commonJS({
           if (isBlock(key))
             onError(keyNode.range, "BLOCK_IN_FLOW", blockMsg);
           ctx.atKey = false;
-          const valueProps = resolveProps.resolveProps(sep ?? [], {
+          const valueProps = resolveProps.resolveProps(sep2 ?? [], {
             flow: fcName,
             indicator: "map-value-ind",
             next: value,
@@ -4298,8 +4298,8 @@ var require_resolve_flow_collection = __commonJS({
           });
           if (valueProps.found) {
             if (!isMap && !props.found && ctx.options.strict) {
-              if (sep)
-                for (const st of sep) {
+              if (sep2)
+                for (const st of sep2) {
                   if (st === valueProps.found)
                     break;
                   if (st.type === "newline") {
@@ -4316,7 +4316,7 @@ var require_resolve_flow_collection = __commonJS({
             else
               onError(valueProps.start, "MISSING_CHAR", `Missing , or : between ${fcName} items`);
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep, null, valueProps, onError) : null;
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep2, null, valueProps, onError) : null;
           if (valueNode) {
             if (isBlock(value))
               onError(valueNode.range, "BLOCK_IN_FLOW", blockMsg);
@@ -4496,7 +4496,7 @@ var require_resolve_block_scalar = __commonJS({
           chompStart = i + 1;
       }
       let value = "";
-      let sep = "";
+      let sep2 = "";
       let prevMoreIndented = false;
       for (let i = 0; i < contentStart; ++i)
         value += lines[i][0].slice(trimIndent) + "\n";
@@ -4513,24 +4513,24 @@ var require_resolve_block_scalar = __commonJS({
           indent = "";
         }
         if (type === Scalar.Scalar.BLOCK_LITERAL) {
-          value += sep + indent.slice(trimIndent) + content;
-          sep = "\n";
+          value += sep2 + indent.slice(trimIndent) + content;
+          sep2 = "\n";
         } else if (indent.length > trimIndent || content[0] === "	") {
-          if (sep === " ")
-            sep = "\n";
-          else if (!prevMoreIndented && sep === "\n")
-            sep = "\n\n";
-          value += sep + indent.slice(trimIndent) + content;
-          sep = "\n";
+          if (sep2 === " ")
+            sep2 = "\n";
+          else if (!prevMoreIndented && sep2 === "\n")
+            sep2 = "\n\n";
+          value += sep2 + indent.slice(trimIndent) + content;
+          sep2 = "\n";
           prevMoreIndented = true;
         } else if (content === "") {
-          if (sep === "\n")
+          if (sep2 === "\n")
             value += "\n";
           else
-            sep = "\n";
+            sep2 = "\n";
         } else {
-          value += sep + content;
-          sep = " ";
+          value += sep2 + content;
+          sep2 = " ";
           prevMoreIndented = false;
         }
       }
@@ -4713,25 +4713,25 @@ var require_resolve_flow_scalar = __commonJS({
         trimBoth = /^[ \t]+|[ \t]+$/g;
       }
       let res = match[1].replace(trimEnd, "");
-      let sep = " ";
+      let sep2 = " ";
       let pos = line.lastIndex;
       while (match = line.exec(source)) {
         const lm = match[1].replace(trimBoth, "");
         if (lm === "") {
-          if (sep === "\n")
-            res += sep;
+          if (sep2 === "\n")
+            res += sep2;
           else
-            sep = "\n";
+            sep2 = "\n";
         } else {
-          res += sep + lm;
-          sep = " ";
+          res += sep2 + lm;
+          sep2 = " ";
         }
         pos = line.lastIndex;
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
       match = last.exec(source);
-      return res + sep + (match?.[1] ?? "");
+      return res + sep2 + (match?.[1] ?? "");
     }
     function doubleQuotedValue(source, onError) {
       let res = "";
@@ -5541,14 +5541,14 @@ var require_cst_stringify = __commonJS({
         }
       }
     }
-    function stringifyItem({ start, key, sep, value }) {
+    function stringifyItem({ start, key, sep: sep2, value }) {
       let res = "";
       for (const st of start)
         res += st.source;
       if (key)
         res += stringifyToken(key);
-      if (sep)
-        for (const st of sep)
+      if (sep2)
+        for (const st of sep2)
           res += st.source;
       if (value)
         res += stringifyToken(value);
@@ -6715,18 +6715,18 @@ var require_parser = __commonJS({
         if (this.type === "map-value-ind") {
           const prev = getPrevProps(this.peek(2));
           const start = getFirstKeyStartProps(prev);
-          let sep;
+          let sep2;
           if (scalar.end) {
-            sep = scalar.end;
-            sep.push(this.sourceToken);
+            sep2 = scalar.end;
+            sep2.push(this.sourceToken);
             delete scalar.end;
           } else
-            sep = [this.sourceToken];
+            sep2 = [this.sourceToken];
           const map = {
             type: "block-map",
             offset: scalar.offset,
             indent: scalar.indent,
-            items: [{ start, key: scalar, sep }]
+            items: [{ start, key: scalar, sep: sep2 }]
           };
           this.onKeyLine = true;
           this.stack[this.stack.length - 1] = map;
@@ -6879,15 +6879,15 @@ var require_parser = __commonJS({
                 } else if (isFlowToken(it.key) && !includesToken(it.sep, "newline")) {
                   const start2 = getFirstKeyStartProps(it.start);
                   const key = it.key;
-                  const sep = it.sep;
-                  sep.push(this.sourceToken);
+                  const sep2 = it.sep;
+                  sep2.push(this.sourceToken);
                   delete it.key;
                   delete it.sep;
                   this.stack.push({
                     type: "block-map",
                     offset: this.offset,
                     indent: this.indent,
-                    items: [{ start: start2, key, sep }]
+                    items: [{ start: start2, key, sep: sep2 }]
                   });
                 } else if (start.length > 0) {
                   it.sep = it.sep.concat(start, this.sourceToken);
@@ -7081,13 +7081,13 @@ var require_parser = __commonJS({
             const prev = getPrevProps(parent);
             const start = getFirstKeyStartProps(prev);
             fixFlowSeqItems(fc);
-            const sep = fc.end.splice(1, fc.end.length);
-            sep.push(this.sourceToken);
+            const sep2 = fc.end.splice(1, fc.end.length);
+            sep2.push(this.sourceToken);
             const map = {
               type: "block-map",
               offset: fc.offset,
               indent: fc.indent,
-              items: [{ start, key: fc, sep }]
+              items: [{ start, key: fc, sep: sep2 }]
             };
             this.onKeyLine = true;
             this.stack[this.stack.length - 1] = map;
@@ -7371,8 +7371,8 @@ __export(cli_exports, {
   main: () => main
 });
 module.exports = __toCommonJS(cli_exports);
-var import_node_fs2 = require("node:fs");
-var import_node_path2 = require("node:path");
+var import_node_fs3 = require("node:fs");
+var import_node_path3 = require("node:path");
 var import_node_util = require("node:util");
 
 // ../packages/shared/src/config.ts
@@ -9484,9 +9484,9 @@ var MAX_LIST = 20;
 var MD = { t: (s, max) => mdText(s, max), i: (s) => mdInline(s), code: (s, max) => mdCode(s, max) };
 var flat = (s, max = 500) => cap(oneLine(s), max);
 var TEXT = { t: flat, i: (s) => flat(s, 2e3), code: flat };
-function joinCapped(items, sep) {
-  const shown = items.slice(0, MAX_LIST).join(sep);
-  return items.length > MAX_LIST ? `${shown}${sep}+${items.length - MAX_LIST} more` : shown;
+function joinCapped(items, sep2) {
+  const shown = items.slice(0, MAX_LIST).join(sep2);
+  return items.length > MAX_LIST ? `${shown}${sep2}+${items.length - MAX_LIST} more` : shown;
 }
 function headline(r, e = (s) => s) {
   const fails = r.flags.filter((f) => f.severity === "fail").length;
@@ -9712,8 +9712,49 @@ async function publish(api, report, opts = {}) {
 }
 
 // src/local.ts
+var import_node_fs2 = require("node:fs");
+var import_node_path2 = require("node:path");
+
+// ../packages/shared/src/repo-file.ts
 var import_node_fs = require("node:fs");
 var import_node_path = require("node:path");
+var MAX_REPO_FILE_BYTES = 1024 * 1024;
+var UnsafeRepoPathError = class extends Error {
+};
+function lstatOrUndefined(path) {
+  try {
+    return (0, import_node_fs.lstatSync)(path);
+  } catch (e) {
+    if (e.code === "ENOENT" || e.code === "ENOTDIR") return void 0;
+    throw e;
+  }
+}
+function repoPathKind(root, rel) {
+  const clean = (0, import_node_path.normalize)(rel);
+  if ((0, import_node_path.isAbsolute)(rel) || clean === ".." || clean.startsWith(`..${import_node_path.sep}`)) throw new UnsafeRepoPathError(`refusing a path outside the repository: ${rel}`);
+  let cur = root;
+  let kind = "directory";
+  for (const part of clean.split(import_node_path.sep).filter((p) => p && p !== ".")) {
+    cur = (0, import_node_path.join)(cur, part);
+    const st = lstatOrUndefined(cur);
+    if (!st) return void 0;
+    if (st.isSymbolicLink()) throw new UnsafeRepoPathError(`refusing to follow a symlink: ${rel}`);
+    kind = st.isFile() ? "file" : st.isDirectory() ? "directory" : "other";
+  }
+  return kind;
+}
+function readRepoFile(root, rel, maxBytes = MAX_REPO_FILE_BYTES) {
+  const kind = repoPathKind(root, rel);
+  if (kind === void 0) return void 0;
+  if (kind !== "file") throw new UnsafeRepoPathError(`not a regular file: ${rel}`);
+  const fd = (0, import_node_fs.openSync)((0, import_node_path.join)(root, rel), import_node_fs.constants.O_RDONLY | import_node_fs.constants.O_NOFOLLOW);
+  try {
+    if ((0, import_node_fs.fstatSync)(fd).size > maxBytes) throw new UnsafeRepoPathError(`too large to read (over ${maxBytes} bytes): ${rel}`);
+    return (0, import_node_fs.readFileSync)(fd, "utf8");
+  } finally {
+    (0, import_node_fs.closeSync)(fd);
+  }
+}
 
 // src/diff/git.ts
 var import_node_child_process = require("node:child_process");
@@ -9741,10 +9782,10 @@ function diffFiles(cwd, base, head) {
   return parseGitDiff(out);
 }
 function listCommits(cwd, base, head) {
-  const sep = "";
+  const sep2 = "";
   const fs = "";
-  const out = git(cwd, ["log", "--reverse", `--format=%H${fs}%an${fs}%ae${fs}%cn${fs}%ce${fs}%B${sep}`, `${base}..${head}`]);
-  return out.split(sep).map((s) => s.replace(/^\n/, "")).filter((s) => s.trim()).map((s) => {
+  const out = git(cwd, ["log", "--reverse", `--format=%H${fs}%an${fs}%ae${fs}%cn${fs}%ce${fs}%B${sep2}`, `${base}..${head}`]);
+  return out.split(sep2).map((s) => s.replace(/^\n/, "")).filter((s) => s.trim()).map((s) => {
     const [sha, an, ae, cn, ce, ...rest] = s.split(fs);
     return {
       sha,
@@ -9771,18 +9812,27 @@ function showFile(cwd, rev, path) {
 }
 
 // src/local.ts
-function loadCoverage(paths, cwd) {
+var MAX_COVERAGE_BYTES = 256 * 1024 * 1024;
+function loadCoverage(policyPaths, cwd, explicitPaths = []) {
   const reports = [];
   const missing = [];
-  for (const p of paths) {
-    const abs = (0, import_node_path.resolve)(cwd, p);
-    if (!(0, import_node_fs.existsSync)(abs)) {
-      missing.push(p);
-      continue;
+  const refused = [];
+  for (const p of policyPaths) {
+    try {
+      const text = readRepoFile(cwd, p, MAX_COVERAGE_BYTES);
+      if (text === void 0) missing.push(p);
+      else reports.push(parseCoverage(text, p));
+    } catch (e) {
+      if (!(e instanceof UnsafeRepoPathError)) throw e;
+      refused.push({ path: p, reason: e.message });
     }
-    reports.push(parseCoverage((0, import_node_fs.readFileSync)(abs, "utf8"), p));
   }
-  return { report: mergeCoverage(reports), missing };
+  for (const p of explicitPaths) {
+    const abs = (0, import_node_path2.resolve)(cwd, p);
+    if (!(0, import_node_fs2.existsSync)(abs)) missing.push(p);
+    else reports.push(parseCoverage((0, import_node_fs2.readFileSync)(abs, "utf8"), p));
+  }
+  return { report: mergeCoverage(reports), missing, refused };
 }
 function localSnapshot(cwd, o) {
   const headSha = revParse(cwd, o.head ?? "HEAD");
@@ -9899,20 +9949,22 @@ async function main(argv, io = stdio) {
       io.err("local: --base is required\n");
       return 2;
     }
-    const cwd = (0, import_node_path2.resolve)(values.repo ?? ".");
-    const loaded = parsePolicy(values.config ? (0, import_node_fs2.readFileSync)(values.config, "utf8") : localPolicyText(cwd, values.base));
+    const cwd = (0, import_node_path3.resolve)(values.repo ?? ".");
+    const loaded = parsePolicy(values.config ? (0, import_node_fs3.readFileSync)(values.config, "utf8") : localPolicyText(cwd, values.base));
     if (values.all) loaded.policy.applyTo = "all";
     const snap = localSnapshot(cwd, {
       base: values.base,
       head: values.head,
       title: values.title,
-      body: values["body-file"] ? (0, import_node_fs2.readFileSync)(values["body-file"], "utf8") : void 0,
+      body: values["body-file"] ? (0, import_node_fs3.readFileSync)(values["body-file"], "utf8") : void 0,
       branch: values.branch,
       labels: values.label,
       author: values.author
     });
-    const cov = loadCoverage([...loaded.policy.coverage.files, ...values.coverage ?? []], cwd);
+    const cov = loadCoverage(loaded.policy.coverage.files, cwd, values.coverage ?? []);
     for (const m of cov.missing) io.err(`warning: coverage file not found: ${m}
+`);
+    for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}
 `);
     return emit(evaluate({ ...snap, coverage: cov.report }, loaded.policy, loaded.warnings));
   }
@@ -9922,17 +9974,19 @@ async function main(argv, io = stdio) {
       io.err("pr: --repo owner/name and --pr <number> are required\n");
       return 2;
     }
-    const fetchImpl = values.fixture ? mockFetch2(JSON.parse((0, import_node_fs2.readFileSync)(values.fixture, "utf8"))).fetch : void 0;
+    const fetchImpl = values.fixture ? mockFetch2(JSON.parse((0, import_node_fs3.readFileSync)(values.fixture, "utf8"))).fetch : void 0;
     const api = new RestClient(values.token ?? process.env.GITHUB_TOKEN, { baseUrl: values["api-url"], fetch: fetchImpl });
     const [owner, repo] = values.repo.split("/");
     const pull = await api.getPull(owner, repo, prNum);
-    const loaded = parsePolicy(values.config ? (0, import_node_fs2.readFileSync)(values.config, "utf8") : await fetchPolicyText(api, owner, repo, pull.base.sha));
+    const loaded = parsePolicy(values.config ? (0, import_node_fs3.readFileSync)(values.config, "utf8") : await fetchPolicyText(api, owner, repo, pull.base.sha));
     if (values.all) loaded.policy.applyTo = "all";
     let snap = await collectSnapshot(api, values.repo, prNum, loaded.policy, { pull });
     if (!pull.head.repo?.full_name || pull.head.repo.full_name.toLowerCase() !== values.repo.toLowerCase()) {
       snap = { ...snap, coverageUnavailable: FORK_COVERAGE_NOTE };
     } else {
-      const cov = loadCoverage([...loaded.policy.coverage.files, ...values.coverage ?? []], process.cwd());
+      const cov = loadCoverage(loaded.policy.coverage.files, process.cwd(), values.coverage ?? []);
+      for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}
+`);
       if (cov.report) snap = { ...snap, coverage: cov.report };
     }
     const report = evaluate(snap, loaded.policy, loaded.warnings);

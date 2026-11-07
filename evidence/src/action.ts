@@ -120,13 +120,16 @@ export async function run(deps: RunDeps): Promise<{ report?: EvidenceReport; exi
   // it is never read. The card says so instead of showing a figure or a coverage flag.
   // Fail closed: a missing head repo (deleted fork) counts as a fork, not as this repo.
   const fromFork = !pull.head.repo?.full_name || pull.head.repo.full_name.toLowerCase() !== repoFull.toLowerCase();
-  const coverageFiles = fromFork ? [] : [...policy.coverage.files, ...input(env, "coverage-files").split(/[\n,]/).map((s) => s.trim()).filter(Boolean)];
+  const policyCoverage = fromFork ? [] : policy.coverage.files;
+  const inputCoverage: string[] = fromFork ? [] : input(env, "coverage-files").split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+  const coverageFiles = [...policyCoverage, ...inputCoverage];
   if (fromFork) {
     snap = { ...snap, coverage: undefined, coverageUnavailable: FORK_COVERAGE_NOTE };
     log("info", `Fork PR: coverage ${FORK_COVERAGE_NOTE}; ignored.`);
   } else if (coverageFiles.length) {
-    const { report, missing } = loadCoverage(coverageFiles, workspace);
+    const { report, missing, refused } = loadCoverage(policyCoverage, workspace, inputCoverage);
     if (missing.length) log("warning", `Coverage file(s) not found: ${missing.join(", ")}`);
+    for (const r of refused) log("warning", `Coverage file not read: ${r.reason}`);
     snap = { ...snap, coverage: report };
   }
   // A fork PR's diff comes from the API only: no local diff, no git-ai notes from the checkout.

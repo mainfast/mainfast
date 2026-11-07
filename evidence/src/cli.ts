@@ -119,8 +119,9 @@ export async function main(argv: string[], io: Io = stdio): Promise<number> {
       labels: values.label,
       author: values.author,
     });
-    const cov = loadCoverage([...loaded.policy.coverage.files, ...(values.coverage ?? [])], cwd);
+    const cov = loadCoverage(loaded.policy.coverage.files, cwd, values.coverage ?? []);
     for (const m of cov.missing) io.err(`warning: coverage file not found: ${m}\n`);
+    for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}\n`);
     return emit(evaluate({ ...snap, coverage: cov.report }, loaded.policy, loaded.warnings));
   }
 
@@ -141,7 +142,8 @@ export async function main(argv: string[], io: Io = stdio): Promise<number> {
     if (!pull.head.repo?.full_name || pull.head.repo.full_name.toLowerCase() !== values.repo.toLowerCase()) {
       snap = { ...snap, coverageUnavailable: FORK_COVERAGE_NOTE };
     } else {
-      const cov = loadCoverage([...loaded.policy.coverage.files, ...(values.coverage ?? [])], process.cwd());
+      const cov = loadCoverage(loaded.policy.coverage.files, process.cwd(), values.coverage ?? []);
+      for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}\n`);
       if (cov.report) snap = { ...snap, coverage: cov.report };
     }
     const report = evaluate(snap, loaded.policy, loaded.warnings);
