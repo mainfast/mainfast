@@ -11,7 +11,7 @@ npx mainfast audit owners
 ```
 
 `init` never overwrites a file without `--force`, and never pushes or changes branch protection.
-Every command takes `--help` and `--json`. Exit codes: 0 clean, 1 findings, 2 error. Tokens come
+Every command takes `--help` and `--json`. Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error. Tokens come
 only from `GITHUB_TOKEN` or `GH_TOKEN` and are never printed.
 
 ## MCP

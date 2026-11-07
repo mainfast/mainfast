@@ -1,6 +1,6 @@
 {
   "name": "mainfast",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Set up and run Mainfast, GitHub checks that stop merges from silently breaking main. CLI and MCP server.",
   "license": "MIT",
   "author": "Mainfast authors",
