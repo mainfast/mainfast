@@ -48,6 +48,8 @@ export function parseDjango(path: string, text: string, app: string): DjangoMigr
 }
 
 const MIGRATION_FILE = /(^|\/)migrations\/\d{4}_[^/]+\.py$/;
+/** Django loads every module in the folder, numbered or not, except those starting with _ or ~. */
+const ANY_MIGRATION_FILE = /\/migrations\/[^_~/][^/]*\.py$|^migrations\/[^_~/][^/]*\.py$/;
 
 /**
  * An app's label: `label` in its AppConfig when apps.py is readable, else the directory name when
@@ -69,7 +71,7 @@ function appLabel(tree: Tree, root: string, files: string[]): string {
 }
 
 function migrations(tree: Tree, root: string): DjangoMigration[] {
-  const files = tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f));
+  const files = tree.under(root).filter((f) => dirname(f) === root && ANY_MIGRATION_FILE.test(f));
   const app = appLabel(tree, root, files);
   return files.map((f) => parseDjango(f, tree.read(f) ?? '', app));
 }
@@ -85,10 +87,11 @@ export const django: Framework = {
     const migs = migrations(tree, root);
     const app = migs[0]?.app ?? basename(dirname(root));
     const findings: Finding[] = [];
-    const names = new Set(migs.map((m) => m.name));
+    // A dependency on a migration that a squash replaces resolves to the squash.
+    const names = new Set(migs.flatMap((m) => [m.name, ...m.replaces.filter(([a]) => a === app).map(([, n]) => n)]));
 
     for (const [num, list] of groupBy(migs, (m) => m.number)) {
-      if (list.length > 1)
+      if (list.length > 1 && /^\d{4}$/.test(num))
         findings.push({
           framework: 'django',
           root,

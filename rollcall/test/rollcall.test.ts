@@ -618,6 +618,22 @@ describe('false positives found on real repositories', () => {
         expect(codes(audit(snap({ ...ctx, workflows: [dispatched, plain] })))).toEqual(['warning ambiguous-name']);
       });
 
+      describe('the no-op pattern: two filtered workflows with one name (backstage)', () => {
+        const noop = { path: 'n.yml', text: 'on: {pull_request: {paths: ["docs/**"]}}\njobs:\n  lint:\n    runs-on: x\n' };
+        const real = { path: 'r.yml', text: 'on: {pull_request: {paths: ["**", "!docs/**"]}}\njobs:\n  lint:\n    runs-on: x\n' };
+        const all = [5, 4, 3, 2, 1].map((n) => merged(n, ['lint']));
+
+        it('is not path-filtered when the check reports on every sampled PR', () => {
+          expect(codes(audit(snap({ ...ctx, pulls: all, workflows: [noop, real] })))).toEqual(['warning ambiguous-name']);
+        });
+
+        it('is path-filtered when a sampled PR got no check, or the sample is too small to tell', () => {
+          const gap = [merged(5, ['lint']), merged(4, ['other']), ...all.slice(2)];
+          expect(codes(audit(snap({ ...ctx, pulls: gap, workflows: [noop, real] })))).toContain('error path-filtered');
+          expect(codes(audit(snap({ ...ctx, pulls: all.slice(0, 2), workflows: [noop, real] })))).toContain('error path-filtered');
+        });
+      });
+
       it('a producer that does not cover PRs into this branch does not excuse a path filter', () => {
         const otherBranch = { path: 'o.yml', text: 'on: {pull_request: {branches: [release]}}\njobs:\n  lint:\n    runs-on: x\n' };
         const queue = { path: 'q.yml', text: 'on: {merge_group: {}}\njobs:\n  lint:\n    runs-on: x\n' };

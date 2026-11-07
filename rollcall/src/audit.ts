@@ -420,6 +420,9 @@ function staticFindings(
   const unfilteredProducer = producers.some(onEveryPr);
   // A job whose name is an expression may be that other job, when the check reports on most PRs.
   const opaqueAlternative = opaqueJobs.some(onEveryPr) && sampled > 0 && seen / sampled >= 0.5;
+  // Two filtered workflows with one name are the usual no-op pattern: their filters are meant to
+  // cover every path. When the check also reported on every sampled PR, that is what they do.
+  const coveredByFilters = new Set(producers.filter(onPrs).map((j) => j.workflow)).size > 1 && sampled >= 5 && seen === sampled;
   if (clashing)
     out.push({
       code: 'ambiguous-name',
@@ -444,7 +447,7 @@ function staticFindings(
     }
     const filters = filtersOf(wf);
     const pathFiltered = wf.prTriggers.some((t) => t.paths || t.pathsIgnore);
-    if (pathFiltered && !unfilteredProducer && !opaqueAlternative)
+    if (pathFiltered && !unfilteredProducer && !opaqueAlternative && !coveredByFilters)
       out.push({
         code: 'path-filtered',
         severity: 'error',

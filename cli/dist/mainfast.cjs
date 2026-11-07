@@ -19174,6 +19174,7 @@ function parseDjango(path, text, app) {
   };
 }
 var MIGRATION_FILE = /(^|\/)migrations\/\d{4}_[^/]+\.py$/;
+var ANY_MIGRATION_FILE = /\/migrations\/[^_~/][^/]*\.py$|^migrations\/[^_~/][^/]*\.py$/;
 function appLabel(tree, root, files) {
   const dir = basename(dirname(root)) || basename(root);
   const config2 = /^[ \t]+label\s*=\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]/m.exec(tree.read(`${dirname(root)}/apps.py`) ?? "");
@@ -19187,7 +19188,7 @@ function appLabel(tree, root, files) {
   return [...counts].sort((a, b) => b[1] - a[1])[0][0];
 }
 function migrations(tree, root) {
-  const files = tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f));
+  const files = tree.under(root).filter((f) => dirname(f) === root && ANY_MIGRATION_FILE.test(f));
   const app = appLabel(tree, root, files);
   return files.map((f) => parseDjango(f, tree.read(f) ?? "", app));
 }
@@ -19202,9 +19203,9 @@ var django = {
     const migs = migrations(tree, root);
     const app = migs[0]?.app ?? basename(dirname(root));
     const findings = [];
-    const names = new Set(migs.map((m) => m.name));
+    const names = new Set(migs.flatMap((m) => [m.name, ...m.replaces.filter(([a]) => a === app).map(([, n]) => n)]));
     for (const [num2, list5] of groupBy(migs, (m) => m.number)) {
-      if (list5.length > 1)
+      if (list5.length > 1 && /^\d{4}$/.test(num2))
         findings.push({
           framework: "django",
           root,
@@ -21719,6 +21720,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2, rep
   const onEveryPr = (j) => reachesPrs(wfOf(j)).some((t) => !t.paths && !t.pathsIgnore);
   const unfilteredProducer = producers.some(onEveryPr);
   const opaqueAlternative = opaqueJobs.some(onEveryPr) && sampled > 0 && seen / sampled >= 0.5;
+  const coveredByFilters = new Set(producers.filter(onPrs).map((j) => j.workflow)).size > 1 && sampled >= 5 && seen === sampled;
   if (clashing)
     out.push({
       code: "ambiguous-name",
@@ -21743,7 +21745,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2, rep
     }
     const filters = filtersOf(wf);
     const pathFiltered = wf.prTriggers.some((t) => t.paths || t.pathsIgnore);
-    if (pathFiltered && !unfilteredProducer && !opaqueAlternative)
+    if (pathFiltered && !unfilteredProducer && !opaqueAlternative && !coveredByFilters)
       out.push({
         code: "path-filtered",
         severity: "error",

@@ -20,13 +20,14 @@ Rollcall:
 - `not-on-pull-request` no longer fires on `workflow_call` reusable workflows.
 - `${{ matrix.x }}` in a job name now resolves to the values the matrix lists, so `Check ${{ matrix.file }}` is no longer taken to produce `Check all requirements`.
 - `conditional-job` no longer fires when the condition always holds on a PR into this repository (the event name, the repository, empty dispatch inputs).
-- `path-filtered` and `not-on-pull-request` no longer fire when another job covers PRs into this branch. `ambiguous-name` no longer fires when one job runs only in the merge queue and the other never does.
+- `path-filtered` and `not-on-pull-request` no longer fire when another job covers PRs into this branch, or for two filtered workflows that report on every sampled PR. `ambiguous-name` no longer fires when one job runs only in the merge queue and the other never does.
 - `merged-with-failure` ignores a failure only when every failing source arrived after the merge, and lists those in the report's notes.
 - Open PRs only count as `stopped-reporting` when the branch itself has stopped moving, so a mirrored repository does not read as blocked.
 
 Migrations:
 
 - Django apps with a custom `AppConfig.label` no longer read as having every migration as a leaf. The label comes from `apps.py`, or else from the migrations' own dependencies.
+- Django dependencies on a migration that a squash replaces now resolve to the squash. Migrations with no number in their file name now count.
 
 Owners:
 

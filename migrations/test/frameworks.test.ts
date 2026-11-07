@@ -69,6 +69,45 @@ describe('alembic', () => {
 });
 
 describe('django', () => {
+  // authentik: 0017 depends on 0016, which a squash replaces.
+  it('resolves a dependency on a migration that a squash replaces', () => {
+    const M2 = 'core/migrations';
+    const squash = `${djangoMig([['core', '0011_a']])}\nreplaces = [('core', '0012_b'), ('core', '0016_c')]\n`;
+    const files = {
+      [`${M2}/__init__.py`]: '',
+      [`${M2}/0011_a.py`]: djangoMig([]),
+      [`${M2}/0012_b_squashed_0016_c.py`]: squash,
+      [`${M2}/0017_d.py`]: djangoMig([['core', '0016_c']]),
+    };
+    const r = race(files, { 'main.txt': 'm' }, { 'branch.txt': 'b' });
+    const rep = analyze({ repo: r.dir, mainRef: 'main', headRef: 'feature' });
+    expect(rep.preExisting.map((f) => f.code)).toEqual([]);
+  });
+
+  it('still reports a dependency on a migration nothing provides', () => {
+    const M2 = 'core/migrations';
+    const files = { [`${M2}/__init__.py`]: '', [`${M2}/0001_a.py`]: djangoMig([]), [`${M2}/0002_b.py`]: djangoMig([['core', '0099_gone']]) };
+    const r = race(files, { 'main.txt': 'm' }, { 'branch.txt': 'b' });
+    const rep = analyze({ repo: r.dir, mainRef: 'main', headRef: 'feature' });
+    expect(rep.preExisting.map((f) => f.code)).toContain('missing-dependency');
+  });
+
+  // saleor/checkout: fix_empty_data_in_lines.py sits between numbered migrations.
+  it('counts migrations with no number in their file name', () => {
+    const M2 = 'checkout/migrations';
+    const files = {
+      [`${M2}/__init__.py`]: '',
+      [`${M2}/0001_a.py`]: djangoMig([]),
+      [`${M2}/fix_lines.py`]: djangoMig([['checkout', '0001_a']]),
+      [`${M2}/fix_other.py`]: djangoMig([['checkout', 'fix_lines']]),
+      [`${M2}/0002_b.py`]: djangoMig([['checkout', 'fix_other']]),
+      [`${M2}/_helpers.py`]: 'x = 1\n',
+    };
+    const r = race(files, { 'main.txt': 'm' }, { 'branch.txt': 'b' });
+    const rep = analyze({ repo: r.dir, mainRef: 'main', headRef: 'feature' });
+    expect(rep.preExisting.map((f) => f.code)).toEqual([]);
+  });
+
   // authentik: authentik/providers/saml has label "authentik_providers_saml", so dependencies do not use the folder name.
   describe('with a custom app label', () => {
     const L = 'authentik/providers/saml/migrations';

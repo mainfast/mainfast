@@ -8415,6 +8415,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2, rep
   const onEveryPr = (j) => reachesPrs(wfOf(j)).some((t) => !t.paths && !t.pathsIgnore);
   const unfilteredProducer = producers.some(onEveryPr);
   const opaqueAlternative = opaqueJobs.some(onEveryPr) && sampled > 0 && seen / sampled >= 0.5;
+  const coveredByFilters = new Set(producers.filter(onPrs).map((j) => j.workflow)).size > 1 && sampled >= 5 && seen === sampled;
   if (clashing)
     out.push({
       code: "ambiguous-name",
@@ -8439,7 +8440,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2, rep
     }
     const filters = filtersOf(wf);
     const pathFiltered = wf.prTriggers.some((t) => t.paths || t.pathsIgnore);
-    if (pathFiltered && !unfilteredProducer && !opaqueAlternative)
+    if (pathFiltered && !unfilteredProducer && !opaqueAlternative && !coveredByFilters)
       out.push({
         code: "path-filtered",
         severity: "error",
