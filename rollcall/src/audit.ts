@@ -4,7 +4,7 @@
 import { classifyRequired, latestRuns, latestStatuses, pinnedApps, resolveRequiredChecks, rulesetTargetsBranch, sourceLabel, type CommitChecks, type Outcome, type RequiredSet } from '@mainfast/shared/required-checks';
 import { CHECK_NAME } from './brand.js';
 import type { AuditReport, CheckTally, Finding, PullObservation, RequiredCheck, Snapshot } from './types.js';
-import { branchAllowed, filtersOf, parseWorkflows, producersOf, type JobInfo, type WorkflowInfo } from './workflows.js';
+import { branchAllowed, conditionOnPr, filtersOf, parseWorkflows, producersOf, type JobInfo, type WorkflowInfo } from './workflows.js';
 
 export interface AuditOptions {
   /** Required contexts to leave out of the audit. */
@@ -87,6 +87,9 @@ const runningAtMerge = (run: { startedAt?: string | null; completedAt?: string |
   const merged = Date.parse(mergedAt);
   return Date.parse(run.startedAt) <= merged && merged < Date.parse(run.completedAt);
 };
+
+/** The result arrived after the merge, so it says nothing about the state at merge time. */
+const reportedAfterMerge = (at: string | null | undefined, mergedAt?: string | null) => Boolean(at && mergedAt && Date.parse(at) > Date.parse(mergedAt));
 
 function commitChecks(p: PullObservation): CommitChecks {
   return {
@@ -196,7 +199,13 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
     for (const { p, c } of obs) {
       const res = classifyRequired(r.context, c, r.sources);
       by[res.outcome].push(p.number);
-      if (isMerged(p)) mergedBy[runningAtMerge(res.run, p.mergedAt) ? 'pending' : res.outcome].push(p.number);
+      if (isMerged(p)) {
+        const status = latestStatuses(c).find((x) => x.context === r.context);
+        const late = reportedAfterMerge(res.run?.startedAt, p.mergedAt) || reportedAfterMerge(status?.updatedAt, p.mergedAt);
+        // A failure that came in after the merge did not get merged over.
+        const outcome = res.outcome === 'failed' && late ? 'unknown-at-merge' : runningAtMerge(res.run, p.mergedAt) ? 'pending' : res.outcome;
+        if (outcome !== 'unknown-at-merge') mergedBy[outcome].push(p.number);
+      }
       if (res.outcome === 'missing') missingAt.add(p.number);
       if (res.run && !res.appSatisfied) appMismatch.push({ pr: p.number, app: `${res.run.appSlug ?? '?'} (${res.run.appId ?? '?'})` });
     }
@@ -271,7 +280,10 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
       const firstMerged = obs.findIndex((x) => isMerged(x.p));
       const openFirst = firstMerged < 0 ? obs : obs.slice(0, firstMerged);
       const lastMerge = Date.parse(mergedObs[0]?.p.mergedAt ?? '');
-      const stalled = !Number.isNaN(lastMerge) && Date.parse(s.collectedAt) - lastMerge >= STALLED_MERGES_DAYS * 86_400_000;
+      const weekOld = (at: number) => Date.parse(s.collectedAt) - at >= STALLED_MERGES_DAYS * 86_400_000;
+      // A branch that still moves (a mirror, say) is not being blocked: nothing lands through PRs at all.
+      const headDate = Date.parse(s.headCommittedAt ?? '');
+      const stalled = !Number.isNaN(lastMerge) && weekOld(lastMerge) && (Number.isNaN(headDate) || weekOld(headDate));
       // The exception: a required check that vanished blocks every PR, so nothing merges at all.
       const blockedOpen = stalled && streak < stoppedAfter ? missingStreak(openFirst) : 0;
       if (stoppedAfter > 0 && (streak >= stoppedAfter || blockedOpen >= stoppedAfter)) {
@@ -342,7 +354,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
         message: `\`${r.context}\` is pinned to app ${pins.join('/')}, but the runs come from ${[...new Set(appMismatch.map((x) => x.app))].join(', ')} (${prList(appMismatch.map((x) => x.pr).slice(0, 10))}); a check from another app does not satisfy the rule`,
       });
 
-    findings.push(...staticFindings(r.context, producers, workflows, s.branch, requiredNames));
+    findings.push(...staticFindings(r.context, producers, workflows, s.branch, requiredNames, s.repository, seen, pulls.length, opaqueJobs));
   }
 
   // Required workflows (ruleset "workflows" rule) whose file is gone.
@@ -373,10 +385,30 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
   };
 }
 
-function staticFindings(context: string, producers: JobInfo[], workflows: WorkflowInfo[], branch: string, requiredSet: Set<string>): Finding[] {
+function staticFindings(
+  context: string,
+  producers: JobInfo[],
+  workflows: WorkflowInfo[],
+  branch: string,
+  requiredSet: Set<string>,
+  repository: string,
+  seen: number,
+  sampled: number,
+  opaqueJobs: JobInfo[],
+): Finding[] {
   const out: Finding[] = [];
   const wfByPath = new Map(workflows.map((w) => [w.path, w]));
-  if (producers.length > 1 && new Set(producers.map((j) => j.workflow)).size > 1)
+  // pull_request and pull_request_target can land on one commit; a merge queue run has its own.
+  const eventClass = (e: string) => (e === 'merge_group' ? 'queue' : 'pr');
+  const classesOf = (j: JobInfo) => new Set<string>(wfByPath.get(j.workflow)!.prTriggers.map((t) => eventClass(t.event)));
+  const clashing = (['pr', 'queue'] as const).map((c) => producers.filter((j) => classesOf(j).has(c))).find((list) => new Set(list.map((j) => j.workflow)).size > 1);
+  const hasPrTrigger = (j: JobInfo) => wfByPath.get(j.workflow)!.prTriggers.length > 0;
+  const isPathFiltered = (j: JobInfo) => wfByPath.get(j.workflow)!.prTriggers.some((t) => t.paths || t.pathsIgnore);
+  // Another job can report the check when this one does not run, so a filter on one proves nothing.
+  const unfilteredProducer = producers.some((j) => hasPrTrigger(j) && !isPathFiltered(j));
+  // A job whose name is an expression may be that other job, when the check reports on most PRs.
+  const opaqueAlternative = opaqueJobs.some((j) => !isPathFiltered(j)) && sampled > 0 && seen / sampled >= 0.5;
+  if (clashing)
     out.push({
       code: 'ambiguous-name',
       severity: 'warning',
@@ -388,6 +420,7 @@ function staticFindings(context: string, producers: JobInfo[], workflows: Workfl
     const wf = wfByPath.get(job.workflow)!;
     const where = `\`${job.workflow}\` job \`${job.id}\``;
     if (!wf.prTriggers.length) {
+      if (producers.some(hasPrTrigger)) continue;
       out.push({
         code: 'not-on-pull-request',
         severity: 'error',
@@ -399,7 +432,7 @@ function staticFindings(context: string, producers: JobInfo[], workflows: Workfl
     }
     const filters = filtersOf(wf);
     const pathFiltered = wf.prTriggers.some((t) => t.paths || t.pathsIgnore);
-    if (pathFiltered)
+    if (pathFiltered && !unfilteredProducer && !opaqueAlternative)
       out.push({
         code: 'path-filtered',
         severity: 'error',
@@ -414,7 +447,7 @@ function staticFindings(context: string, producers: JobInfo[], workflows: Workfl
         message: `\`${context}\` is required on \`${branch}\`, but ${where} does not run for PRs into \`${branch}\` (${filters.filter((f) => f.includes('branches')).map((f) => `\`${f}\``).join('; ')})`,
       });
     const cond = job.if;
-    if (cond && !ALWAYS.test(cond))
+    if (cond && !ALWAYS.test(cond) && conditionOnPr(cond, wf.prTriggers.map((t) => t.event), repository) !== true)
       out.push({
         code: 'conditional-job',
         severity: 'warning',

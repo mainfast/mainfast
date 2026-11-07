@@ -84,15 +84,124 @@ function isCallableOnly(on: unknown): boolean {
   return events.includes('workflow_call') && events.every((e) => e === 'workflow_call' || e === 'workflow_dispatch');
 }
 
-const EXPRESSION = /\$\{\{[^}]*\}\}/g;
+const EXPRESSION = /\$\{\{([^}]*)\}\}/g;
 
-/** No letters or digits outside the expressions: `${{ matrix.x }}`, `${{ a }} / ${{ b }}`. */
-const isOpaqueName = (name: string) => /\$\{\{/.test(name) && !/[\p{L}\p{N}]/u.test(name.replace(EXPRESSION, ''));
+const isScalar = (v: unknown) => typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean';
 
-/** Pattern for a name that may contain ${{ expressions }}. */
-function namePattern(name: string): { source: string; display: string } {
-  const parts = name.split(/\$\{\{[^}]*\}\}/);
-  return { source: parts.map(escapeRe).join('.+'), display: name.replace(/\$\{\{[^}]*\}\}/g, '…') };
+/** The values `${{ matrix.key }}` can take, when the matrix spells them all out. */
+function matrixValues(expr: string, matrix: unknown): string[] | undefined {
+  const key = /^\s*matrix\.([A-Za-z_][\w-]*)\s*$/.exec(expr)?.[1];
+  if (!key || !matrix || typeof matrix !== 'object') return undefined;
+  const m = matrix as Record<string, unknown>;
+  const include = Array.isArray(m.include) ? m.include : [];
+  const fromInclude = include.map((row) => (row as Record<string, unknown> | null)?.[key]).filter((v) => v !== undefined);
+  const listed = m[key];
+  if (listed !== undefined && !Array.isArray(listed)) return undefined;
+  const all = [...((listed as unknown[] | undefined) ?? []), ...fromInclude];
+  if (!all.length || !all.every(isScalar) || all.some((v) => /\$\{\{/.test(String(v)))) return undefined;
+  return [...new Set(all.map(String))];
+}
+
+/**
+ * The event names and repository a PR run sees make many conditions constant. `true` means the
+ * condition always holds on a PR into this repository, `false` never, `undefined` unknown.
+ */
+export function conditionOnPr(cond: string, events: readonly string[], repository: string): boolean | undefined {
+  const text = cond.trim().replace(/^\$\{\{([\s\S]*)\}\}$/, '$1');
+  const owner = repository.split('/')[0]!;
+  const atom = (raw: string): boolean | undefined => {
+    const a = raw.trim();
+    const cmp = /^([\w.-]+)\s*(==|!=)\s*'([^']*)'$/.exec(a);
+    if (cmp) {
+      const [, left, op, right] = cmp;
+      let eq: boolean | undefined;
+      if (left === 'github.event_name') eq = events.every((e) => e === right) ? true : events.includes(right!) ? undefined : false;
+      else if (left === 'github.repository') eq = right!.toLowerCase() === repository.toLowerCase();
+      else if (left === 'github.repository_owner') eq = right!.toLowerCase() === owner.toLowerCase();
+      else if (left!.startsWith('github.event.inputs.') || left!.startsWith('inputs.')) eq = right === '';
+      if (eq === undefined) return undefined;
+      return op === '==' ? eq : !eq;
+    }
+    if (/^startsWith\(\s*github\.ref\s*,\s*'refs\/tags\/[^']*'\s*\)$/.test(a)) return false;
+    return undefined;
+  };
+  let i = 0;
+  const space = () => {
+    while (/\s/.test(text[i] ?? '')) i++;
+  };
+  const or = (): boolean | undefined => {
+    let v = and();
+    for (space(); text.startsWith('||', i); space()) {
+      i += 2;
+      const r = and();
+      v = v === true || r === true ? true : v === false && r === false ? false : undefined;
+    }
+    return v;
+  };
+  const and = (): boolean | undefined => {
+    let v = not();
+    for (space(); text.startsWith('&&', i); space()) {
+      i += 2;
+      const r = not();
+      v = v === false || r === false ? false : v === true && r === true ? true : undefined;
+    }
+    return v;
+  };
+  const not = (): boolean | undefined => {
+    space();
+    if (text[i] === '!' && text[i + 1] !== '=') {
+      i++;
+      const v = not();
+      return v === undefined ? undefined : !v;
+    }
+    if (text[i] === '(') {
+      i++;
+      const v = or();
+      space();
+      if (text[i] === ')') i++;
+      return v;
+    }
+    const start = i;
+    let depth = 0;
+    let quoted = false;
+    for (; i < text.length; i++) {
+      const c = text[i]!;
+      if (c === "'") quoted = !quoted;
+      if (quoted) continue;
+      if (c === '(') depth++;
+      if (c === ')' && depth-- === 0) break;
+      if (depth === 0 && (text.startsWith('&&', i) || text.startsWith('||', i))) break;
+    }
+    return atom(text.slice(start, i));
+  };
+  const value = or();
+  space();
+  return i >= text.length ? value : undefined;
+}
+
+/**
+ * Pattern for a name that may contain ${{ expressions }}. `${{ matrix.x }}` with listed values
+ * becomes exactly those values; anything else matches any text. `opaque`: nothing in the name is
+ * known, as in `${{ matrix.x }}` from a computed matrix or `${{ a }} / ${{ b }}`.
+ */
+function namePattern(name: string, matrix?: unknown): { source: string; display: string; opaque: boolean } {
+  let source = '';
+  let literal = '';
+  let at = 0;
+  let unknown = false;
+  for (const m of name.matchAll(EXPRESSION)) {
+    const text = name.slice(at, m.index);
+    source += escapeRe(text);
+    literal += text;
+    const values = matrixValues(m[1]!, matrix);
+    if (!values) unknown = true;
+    source += values ? `(?:${values.map(escapeRe).join('|')})` : '.+';
+    at = m.index + m[0].length;
+  }
+  const rest = name.slice(at);
+  source += escapeRe(rest);
+  literal += rest;
+  return { source, display: name.replace(EXPRESSION, '…'), opaque: unknown && !/[\p{L}\p{N}]/u.test(literal) };
 }
 
 export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
@@ -112,8 +221,7 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
     const hasExpr = /\$\{\{/.test(rawName);
     const matrix = Boolean(j.strategy?.matrix);
     const reusable = typeof j.uses === 'string';
-    const opaque = isOpaqueName(rawName);
-    const { source, display } = namePattern(rawName);
+    const { source, display, opaque } = namePattern(rawName, j.strategy?.matrix);
     let src = source;
     let disp = display;
     // GitHub appends the matrix values in parentheses unless the name already uses an expression

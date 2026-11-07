@@ -60,6 +60,8 @@ export interface Snapshot {
   workflows: WorkflowFile[];
   /** Head commit of the audited branch (where the check run goes). */
   headSha?: string;
+  /** When that commit landed, if known. */
+  headCommittedAt?: string;
   /** What could not be read (missing permission, 404) and was treated as empty. */
   notes?: string[];
 }
