@@ -35,7 +35,7 @@ export interface MigrationsConfig {
   label: string;
 }
 
-export const KNOWN_KEYS = ['frameworks', 'paths', 'ignore', 'outOfOrder', 'label'] as const;
+export const KNOWN_KEYS = ['enabled', 'frameworks', 'paths', 'ignore', 'outOfOrder', 'label'] as const;
 
 export const DEFAULT_CONFIG: MigrationsConfig = {
   frameworks: 'auto',

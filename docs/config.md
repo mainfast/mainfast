@@ -21,6 +21,9 @@ One file at the repository root configures every Mainfast check. JSON Schema:
   file from the checkout instead. Rollcall has no pull request: it reads the file from the
   default branch through the API. Owners reads it through the API from the PR's base branch
   (pull requests) or the default branch (weekly audit), never from a checkout.
+- **`enabled`.** Every section takes `enabled: false`, which turns that check off for the
+  repository in the hosted GitHub App. The Actions accept the key and ignore it. A broken file
+  is reported by the App as a failing `Mainfast config` check run.
 - **Globs** are gitignore-flavoured everywhere: `**` spans directories, `*` and `?` stay in
   one segment, `{a,b}` alternates, a pattern without `/` matches the basename anywhere,
   a leading `/` anchors to the root, a pattern that names a directory covers everything in it.

@@ -33,9 +33,12 @@ export function mergeBase(repo: string, a: string, b: string): string | undefine
 /** A source of file contents for one path. */
 export type Blob = { sha: string } | { content: string };
 
+/** Where blob contents come from, for a Tree that has no local repository (the hosted App). */
+export type BlobReader = (sha: string, path: string) => string;
+
 /**
  * A snapshot of the repository at one ref (or a synthesised merge of several):
- * path -> blob. Content is read lazily through `git cat-file`.
+ * path -> blob. Content is read lazily through `git cat-file`, or through `readBlob` when given.
  */
 export class Tree {
   private readonly cache = new Map<string, string>();
@@ -43,6 +46,7 @@ export class Tree {
     public readonly repo: string,
     public readonly entries: Map<string, Blob>,
     public readonly label: string,
+    public readonly readBlob: BlobReader = (sha) => git(repo, ['cat-file', 'blob', sha]),
   ) {}
 
   static atRef(repo: string, ref: string, label = ref): Tree {
@@ -71,7 +75,7 @@ export class Tree {
     if ('content' in blob) return blob.content;
     let text = this.cache.get(blob.sha);
     if (text === undefined) {
-      text = git(this.repo, ['cat-file', 'blob', blob.sha]);
+      text = this.readBlob(blob.sha, path);
       this.cache.set(blob.sha, text);
     }
     return text;
@@ -125,7 +129,7 @@ export function mergedTree(base: Tree, main: Tree, head: Tree, dir: string, merg
     entries.set(p, 'sha' in pick ? pick : { content: pick.content });
   }
   // Blobs from different trees all live in the same repository object store.
-  const t = new Tree(main.repo, entries, `merge(${main.label}, ${head.label})`);
+  const t = new Tree(main.repo, entries, `merge(${main.label}, ${head.label})`, main.readBlob);
   return t;
 }
 

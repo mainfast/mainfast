@@ -8133,7 +8133,7 @@ var COMMENT_MARKER = P.commentMarker;
 var USER_AGENT = `${P.cliName}/${VERSION}`;
 
 // src/config.ts
-var KNOWN_KEYS = ["dormantDays", "maxSearches", "ignore", "skipOwners", "requireOwners", "expandTeams", "failOn"];
+var KNOWN_KEYS = ["enabled", "dormantDays", "maxSearches", "ignore", "skipOwners", "requireOwners", "expandTeams", "failOn"];
 var DEFAULT_CONFIG = {
   dormantDays: 180,
   maxSearches: 100,

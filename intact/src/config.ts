@@ -23,7 +23,7 @@ export { MainfastConfigError as ConfigError } from "@mainfast/shared/config";
 export type Level = "error" | "warning" | "notice" | "off";
 export const LEVELS: Level[] = ["error", "warning", "notice", "off"];
 
-export const INTACT_KEYS = ["main_branch", "use_default_ignores", "ignore", "severity"] as const;
+export const INTACT_KEYS = ["enabled", "main_branch", "use_default_ignores", "ignore", "severity"] as const;
 
 export interface Config {
   version: 1;

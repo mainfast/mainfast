@@ -17,7 +17,7 @@ export interface RollcallConfig {
   issueOn: Level;
 }
 
-export const KNOWN_KEYS = ['branch', 'pulls', 'openPulls', 'ignore', 'stoppedAfter', 'failOn', 'issueOn'] as const;
+export const KNOWN_KEYS = ['enabled', 'branch', 'pulls', 'openPulls', 'ignore', 'stoppedAfter', 'failOn', 'issueOn'] as const;
 
 export const DEFAULT_CONFIG: RollcallConfig = { pulls: 20, openPulls: 10, ignore: [], stoppedAfter: 2, failOn: 'error', issueOn: 'error' };
 

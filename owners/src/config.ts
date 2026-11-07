@@ -23,7 +23,7 @@ export interface OwnersConfig {
   failOn: Level;
 }
 
-export const KNOWN_KEYS = ['dormantDays', 'maxSearches', 'ignore', 'skipOwners', 'requireOwners', 'expandTeams', 'failOn'] as const;
+export const KNOWN_KEYS = ['enabled', 'dormantDays', 'maxSearches', 'ignore', 'skipOwners', 'requireOwners', 'expandTeams', 'failOn'] as const;
 
 export const DEFAULT_CONFIG: OwnersConfig = {
   dormantDays: 180,

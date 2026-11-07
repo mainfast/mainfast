@@ -8415,7 +8415,7 @@ function globToRegExp(pattern) {
 
 // src/config.ts
 var LEVELS = ["error", "warning", "notice", "off"];
-var INTACT_KEYS = ["main_branch", "use_default_ignores", "ignore", "severity"];
+var INTACT_KEYS = ["enabled", "main_branch", "use_default_ignores", "ignore", "severity"];
 var DEFAULT_IGNORE = [
   "**/package-lock.json",
   "**/npm-shrinkwrap.json",

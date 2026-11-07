@@ -8502,7 +8502,7 @@ async function resolveConfig(text, fetcher, source = SUITE.configFile) {
 }
 
 // src/config.ts
-var KNOWN_KEYS = ["branch", "pulls", "openPulls", "ignore", "stoppedAfter", "failOn", "issueOn"];
+var KNOWN_KEYS = ["enabled", "branch", "pulls", "openPulls", "ignore", "stoppedAfter", "failOn", "issueOn"];
 var DEFAULT_CONFIG = { pulls: 20, openPulls: 10, ignore: [], stoppedAfter: 2, failOn: "error", issueOn: "error" };
 function level(key, v) {
   const s = String(v);
