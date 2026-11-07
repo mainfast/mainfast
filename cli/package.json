@@ -1,0 +1,38 @@
+{
+  "name": "mainfast",
+  "version": "0.1.0",
+  "description": "Set up and run Mainfast, GitHub checks that stop merges from silently breaking main. CLI and MCP server.",
+  "license": "MIT",
+  "author": "Mainfast authors",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mainfast": "dist/mainfast.cjs"
+  },
+  "files": [
+    "dist/mainfast.cjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "build": "node build.mjs",
+    "all": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@mainfast/shared": "0.1.0",
+    "@modelcontextprotocol/sdk": "^1.32.2"
+  },
+  "homepage": "https://mainfast.dev",
+  "bugs": {
+    "url": "https://github.com/mainfast/mainfast/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mainfast/mainfast.git",
+    "directory": "cli"
+  }
+}
