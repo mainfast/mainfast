@@ -31,7 +31,7 @@ export interface SuiteBrand {
     benefitIds: { free: string; pro: string };
   };
   /** Polar's public licence-key API (customer portal: no merchant secret). */
-  polar: { api: string; sandboxApi: string; organizationId: string; apiEnv: string; orgEnv: string; timeoutMs: number };
+  polar: { api: string; organizationId: string; apiEnv: string; orgEnv: string; timeoutMs: number };
 }
 
 export interface ProductBrand {
