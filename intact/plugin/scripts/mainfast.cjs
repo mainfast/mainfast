@@ -7374,7 +7374,7 @@ var brand_default = {
     homepageUrl: "https://github.com/mainfast/mainfast",
     docsUrl: "https://github.com/mainfast/mainfast#readme",
     issuesUrl: "https://github.com/mainfast/mainfast/issues",
-    pricingUrl: "https://github.com/mainfast/mainfast#free-and-pro",
+    pricingUrl: "https://mainfast.dev/pricing",
     npmScope: "@mainfast",
     configFile: ".mainfast.yml",
     configFileAlt: ".mainfast.yaml",
@@ -7394,7 +7394,6 @@ var brand_default = {
     polar: {
       _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
-      sandboxApi: "https://sandbox-api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
       orgEnv: "MAINFAST_POLAR_ORG",

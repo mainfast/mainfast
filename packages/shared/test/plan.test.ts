@@ -205,7 +205,7 @@ describe("Polar licence validation", () => {
     await polarValidator({ fetch: f, benefitIds: IDS, env: { MAINFAST_POLAR_API: `${API}/`, MAINFAST_POLAR_ORG: ORG } })(KEY, ctx);
     expect(calls[0]!.url).toBe(`${API}/v1/customer-portal/license-keys/validate`);
     expect(calls[0]!.body.organization_id).toBe(ORG);
-    expect([SUITE.polar.sandboxApi, "https://api.polar.sh"]).toContain(SUITE.polar.api); /** the sandbox until launch */
+    expect(SUITE.polar.api).toBe("https://api.polar.sh");
     expect([SUITE.polar.apiEnv, SUITE.polar.orgEnv]).toEqual(["MAINFAST_POLAR_API", "MAINFAST_POLAR_ORG"]);
   });
 
