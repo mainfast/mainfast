@@ -339,6 +339,14 @@ describe("sticky comment ownership", () => {
     expect(findSticky([bot(4, "github-actions[bot]", "no marker")], "github-actions[bot]")).toBeUndefined();
   });
 
+  it("with checkRunApp, leaves another app's check run alone and creates its own", async () => {
+    const { report } = await runVariant();
+    const other = checkRun("Mainfast Evidence", "success", { id: 555, app: { slug: "github-actions" } });
+    const m = mockFetch(routes({ checkRuns: (runs) => runs.push(other) }));
+    await publish(new RestClient("t", { fetch: m.fetch }), report, { checkRunApp: "mainfast" });
+    expect(m.calls.filter((x) => x.method !== "GET" && x.path.includes("check-runs")).map((x) => `${x.method} ${x.path}`)).toEqual([`POST ${R}/check-runs`]);
+  });
+
   it("creates its own comment instead of editing a user's marker comment", async () => {
     const { report } = await runVariant();
     const m = mockFetch(routes({ comments: [bot(66, "mallory")] }));

@@ -13,6 +13,7 @@ Rollcall:
 
 Intact:
 
+- A blobless partial clone now gives the same result as a full clone. A blob that cannot be fetched is reported as an error, where it used to read as a missing file.
 - The Action is report-only by default (`fail-on: off`): findings appear as annotations and a neutral check run, and the job passes. Set `fail-on: error` to block on dropped changes, or `warning` to also block on evil merges and partial drops. The CLI still defaults to `warning`.
 - Warnings below the `fail-on` level no longer show as "intact" with a success check run.
 - Dropped version bumps and changes to generated files are warnings, not errors. Lockfiles, CI workflows and Docker image files stay errors.

@@ -8145,8 +8145,11 @@ var Git = class {
   }
   /** File content at rev:path, or undefined when the path does not exist there. */
   show(rev, path) {
-    const r = this.run(["cat-file", "blob", `${rev}:${path}`], { okStatus: [0, 128] });
-    return r.status === 0 ? r.stdout : void 0;
+    const entry = this.run(["ls-tree", "-z", "--full-tree", rev, "--", path], { okStatus: [0, 128] });
+    if (entry.status !== 0 || !entry.stdout) return void 0;
+    const [, type, id] = /^\S+ (\S+) (\S+)\t/.exec(entry.stdout) ?? [];
+    if (type !== "blob" || !id) return void 0;
+    return this.out(["cat-file", "blob", id]);
   }
   blobId(rev, path) {
     const r = this.run(["rev-parse", "--verify", "--quiet", `${rev}:${path}`], { okStatus: [0, 1, 128] });
