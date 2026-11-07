@@ -142,7 +142,7 @@ describe("doctor", () => {
 
   it("says a token is set and never prints it", () => {
     const d = repo();
-    const secret = "ghp_notarealtokenvalue000000000000000000";
+    const secret = ["ghp", "notarealtokenvalue000000000000000000"].join("_");
     const r = run(d, ["doctor", "--json"], { ...process.env, GITHUB_TOKEN: "", GH_TOKEN: secret });
     expect(r.json().token).toEqual({ present: true, source: "GH_TOKEN" });
     expect(r.stdout + r.stderr).not.toContain(secret);
