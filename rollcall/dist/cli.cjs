@@ -7885,8 +7885,9 @@ function triggers(on) {
   }
   return [];
 }
+var eventsOf = (on) => typeof on === "string" ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === "object" ? Object.keys(on) : [];
 function isCallableOnly(on) {
-  const events = typeof on === "string" ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === "object" ? Object.keys(on) : [];
+  const events = eventsOf(on);
   return events.includes("workflow_call") && events.every((e) => e === "workflow_call" || e === "workflow_dispatch");
 }
 var EXPRESSION = /\$\{\{([^}]*)\}\}/g;
@@ -7895,8 +7896,10 @@ function matrixValues(expr, matrix) {
   const key = /^\s*matrix\.([A-Za-z_][\w-]*)\s*$/.exec(expr)?.[1];
   if (!key || !matrix || typeof matrix !== "object") return void 0;
   const m = matrix;
-  const include = Array.isArray(m.include) ? m.include : [];
-  const fromInclude = include.map((row) => row?.[key]).filter((v) => v !== void 0);
+  if (m.include !== void 0 && !Array.isArray(m.include)) return void 0;
+  const include = m.include ?? [];
+  if (include.some((row) => !row || typeof row !== "object" || Array.isArray(row))) return void 0;
+  const fromInclude = include.map((row) => row[key]).filter((v) => v !== void 0);
   const listed = m[key];
   if (listed !== void 0 && !Array.isArray(listed)) return void 0;
   const all = [...listed ?? [], ...fromInclude];
@@ -7999,7 +8002,7 @@ function parseWorkflow(file) {
   try {
     doc = (0, import_yaml.parse)(file.text);
   } catch (e) {
-    return { path: file.path, name: file.path, prTriggers: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
+    return { path: file.path, name: file.path, prTriggers: [], events: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
   }
   const name = typeof doc?.name === "string" ? doc.name : file.path;
   const on = doc?.on ?? doc?.true;
@@ -8035,7 +8038,7 @@ function parseWorkflow(file) {
       needs: list(j.needs) ?? []
     });
   }
-  return { path: file.path, name, prTriggers: triggers(on), callableOnly: isCallableOnly(on), jobs };
+  return { path: file.path, name, prTriggers: triggers(on), events: eventsOf(on), callableOnly: isCallableOnly(on), jobs };
 }
 function parseWorkflows(files) {
   return files.map(parseWorkflow);
@@ -8207,6 +8210,7 @@ function audit(s, opts = {}) {
       });
   }
   const tallies = [];
+  const lateFailures = [];
   for (const r of required) {
     const producers = producersOf(r.context, workflows);
     const by = { passed: [], failed: [], skipped: [], neutral: [], pending: [], stale: [], missing: [] };
@@ -8214,18 +8218,23 @@ function audit(s, opts = {}) {
     const appMismatch = [];
     const pins = pinnedApps(r.sources);
     const missingAt = /* @__PURE__ */ new Set();
+    const failedAfterMerge = [];
     for (const { p, c } of obs) {
       const res = classifyRequired(r.context, c, r.sources);
       by[res.outcome].push(p.number);
       if (isMerged(p)) {
         const status = latestStatuses(c).find((x) => x.context === r.context);
-        const late = reportedAfterMerge(res.run?.startedAt, p.mergedAt) || reportedAfterMerge(status?.updatedAt, p.mergedAt);
-        const outcome = res.outcome === "failed" && late ? "unknown-at-merge" : runningAtMerge(res.run, p.mergedAt) ? "pending" : res.outcome;
-        if (outcome !== "unknown-at-merge") mergedBy[outcome].push(p.number);
+        const failing = [
+          ...res.run && outcomeOf(checkRunState(res.run.status, res.run.conclusion)) === "failed" ? [res.run.startedAt] : [],
+          ...status && outcomeOf(commitStatusState(status.state)) === "failed" ? [status.updatedAt] : []
+        ];
+        if (failing.length && failing.every((at) => reportedAfterMerge(at, p.mergedAt))) failedAfterMerge.push(p.number);
+        else mergedBy[runningAtMerge(res.run, p.mergedAt) ? "pending" : res.outcome].push(p.number);
       }
       if (res.outcome === "missing") missingAt.add(p.number);
       if (res.run && !res.appSatisfied) appMismatch.push({ pr: p.number, app: `${res.run.appSlug ?? "?"} (${res.run.appId ?? "?"})` });
     }
+    if (failedAfterMerge.length) lateFailures.push(`\`${r.context}\` failed after the merge on ${prList(failedAfterMerge.slice(0, 10))} (a re-run or a late report), so it is not counted as merged over a failure`);
     tallies.push({
       context: r.context,
       sources: r.sources.map(sourceLabel),
@@ -8377,19 +8386,22 @@ function audit(s, opts = {}) {
     findings,
     sampledPulls: merged.map((p) => p.number),
     sampledOpen: pulls.filter((p) => !isMerged(p)).map((p) => p.number),
-    notes: [...s.notes ?? [], ...pulls.length ? [] : ["no merged or open PRs into this branch were found; only static checks ran"]]
+    notes: [...s.notes ?? [], ...lateFailures, ...pulls.length ? [] : ["no merged or open PRs into this branch were found; only static checks ran"]]
   };
 }
 function staticFindings(context, producers, workflows, branch, requiredSet2, repository, seen, sampled, opaqueJobs) {
   const out = [];
   const wfByPath = new Map(workflows.map((w) => [w.path, w]));
-  const eventClass = (e) => e === "merge_group" ? "queue" : "pr";
-  const classesOf = (j) => new Set(wfByPath.get(j.workflow).prTriggers.map((t) => eventClass(t.event)));
-  const clashing = ["pr", "queue"].map((c) => producers.filter((j) => classesOf(j).has(c))).find((list2) => new Set(list2.map((j) => j.workflow)).size > 1);
-  const hasPrTrigger = (j) => wfByPath.get(j.workflow).prTriggers.length > 0;
-  const isPathFiltered = (j) => wfByPath.get(j.workflow).prTriggers.some((t) => t.paths || t.pathsIgnore);
-  const unfilteredProducer = producers.some((j) => hasPrTrigger(j) && !isPathFiltered(j));
-  const opaqueAlternative = opaqueJobs.some((j) => !isPathFiltered(j)) && sampled > 0 && seen / sampled >= 0.5;
+  const wfOf = (j) => wfByPath.get(j.workflow);
+  const queueOnly = (w) => w.events.length > 0 && w.events.every((e) => e === "merge_group");
+  const inQueue = (w) => w.events.includes("merge_group");
+  const disjoint = (a, b) => queueOnly(a) && !inQueue(b) || queueOnly(b) && !inQueue(a);
+  const clashing = producers.some((a, i) => producers.slice(i + 1).some((b) => a.workflow !== b.workflow && !disjoint(wfOf(a), wfOf(b))));
+  const reachesPrs = (w) => w.prTriggers.filter((t) => t.event !== "merge_group" && branchAllowed(t, branch));
+  const onPrs = (j) => reachesPrs(wfOf(j)).length > 0;
+  const onEveryPr = (j) => reachesPrs(wfOf(j)).some((t) => !t.paths && !t.pathsIgnore);
+  const unfilteredProducer = producers.some(onEveryPr);
+  const opaqueAlternative = opaqueJobs.some(onEveryPr) && sampled > 0 && seen / sampled >= 0.5;
   if (clashing)
     out.push({
       code: "ambiguous-name",
@@ -8402,7 +8414,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2, rep
     const wf = wfByPath.get(job.workflow);
     const where = `\`${job.workflow}\` job \`${job.id}\``;
     if (!wf.prTriggers.length) {
-      if (producers.some(hasPrTrigger)) continue;
+      if (producers.some(onPrs)) continue;
       out.push({
         code: "not-on-pull-request",
         severity: "error",

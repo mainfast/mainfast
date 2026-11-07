@@ -38,6 +38,8 @@ export interface WorkflowInfo {
   name: string;
   /** Pull-request-ish triggers (pull_request, pull_request_target, merge_group). */
   prTriggers: PrFilters[];
+  /** Every event that starts this workflow. */
+  events: string[];
   /**
    * Only runs when another workflow calls it (`workflow_call`, optionally `workflow_dispatch`).
    * Its PR triggers live in the caller, and its checks report as "<caller job> / <job>".
@@ -79,8 +81,10 @@ function triggers(on: unknown): PrFilters[] {
 }
 
 /** Whether the workflow runs only when called (or by hand), so no PR event starts it directly. */
+const eventsOf = (on: unknown): string[] => (typeof on === 'string' ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === 'object' ? Object.keys(on) : []);
+
 function isCallableOnly(on: unknown): boolean {
-  const events = typeof on === 'string' ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === 'object' ? Object.keys(on) : [];
+  const events = eventsOf(on);
   return events.includes('workflow_call') && events.every((e) => e === 'workflow_call' || e === 'workflow_dispatch');
 }
 
@@ -93,8 +97,11 @@ function matrixValues(expr: string, matrix: unknown): string[] | undefined {
   const key = /^\s*matrix\.([A-Za-z_][\w-]*)\s*$/.exec(expr)?.[1];
   if (!key || !matrix || typeof matrix !== 'object') return undefined;
   const m = matrix as Record<string, unknown>;
-  const include = Array.isArray(m.include) ? m.include : [];
-  const fromInclude = include.map((row) => (row as Record<string, unknown> | null)?.[key]).filter((v) => v !== undefined);
+  // A computed `include`, or a row that is not a mapping, can add values nobody can read here.
+  if (m.include !== undefined && !Array.isArray(m.include)) return undefined;
+  const include = (m.include ?? []) as unknown[];
+  if (include.some((row) => !row || typeof row !== 'object' || Array.isArray(row))) return undefined;
+  const fromInclude = include.map((row) => (row as Record<string, unknown>)[key]).filter((v) => v !== undefined);
   const listed = m[key];
   if (listed !== undefined && !Array.isArray(listed)) return undefined;
   const all = [...((listed as unknown[] | undefined) ?? []), ...fromInclude];
@@ -209,7 +216,7 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
   try {
     doc = parse(file.text);
   } catch (e) {
-    return { path: file.path, name: file.path, prTriggers: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
+    return { path: file.path, name: file.path, prTriggers: [], events: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
   }
   const name = typeof doc?.name === 'string' ? doc.name : file.path;
   // YAML 1.1 parsers read a bare `on:` key as boolean true; the yaml package keeps "on"
@@ -248,7 +255,7 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
       needs: list(j.needs) ?? [],
     });
   }
-  return { path: file.path, name, prTriggers: triggers(on), callableOnly: isCallableOnly(on), jobs };
+  return { path: file.path, name, prTriggers: triggers(on), events: eventsOf(on), callableOnly: isCallableOnly(on), jobs };
 }
 
 export function parseWorkflows(files: WorkflowFile[]): WorkflowInfo[] {

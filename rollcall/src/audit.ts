@@ -1,7 +1,7 @@
 // Pure audit over a Snapshot: required checks (classic protection + active rulesets, resolved by
 // @mainfast/shared/required-checks, the same logic Evidence uses per PR) against what recent
 // merged and open PRs actually reported and what the workflow files can produce.
-import { classifyRequired, latestRuns, latestStatuses, pinnedApps, resolveRequiredChecks, rulesetTargetsBranch, sourceLabel, type CommitChecks, type Outcome, type RequiredSet } from '@mainfast/shared/required-checks';
+import { checkRunState, classifyRequired, commitStatusState, latestRuns, latestStatuses, outcomeOf, pinnedApps, resolveRequiredChecks, rulesetTargetsBranch, sourceLabel, type CommitChecks, type Outcome, type RequiredSet } from '@mainfast/shared/required-checks';
 import { CHECK_NAME } from './brand.js';
 import type { AuditReport, CheckTally, Finding, PullObservation, RequiredCheck, Snapshot } from './types.js';
 import { branchAllowed, conditionOnPr, filtersOf, parseWorkflows, producersOf, type JobInfo, type WorkflowInfo } from './workflows.js';
@@ -189,6 +189,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
   }
 
   const tallies: CheckTally[] = [];
+  const lateFailures: string[] = [];
   for (const r of required) {
     const producers = producersOf(r.context, workflows);
     const by: Record<Outcome, number[]> = { passed: [], failed: [], skipped: [], neutral: [], pending: [], stale: [], missing: [] };
@@ -196,19 +197,25 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
     const appMismatch: Array<{ pr: number; app: string }> = [];
     const pins = pinnedApps(r.sources);
     const missingAt = new Set<number>();
+    const failedAfterMerge: number[] = [];
     for (const { p, c } of obs) {
       const res = classifyRequired(r.context, c, r.sources);
       by[res.outcome].push(p.number);
       if (isMerged(p)) {
         const status = latestStatuses(c).find((x) => x.context === r.context);
-        const late = reportedAfterMerge(res.run?.startedAt, p.mergedAt) || reportedAfterMerge(status?.updatedAt, p.mergedAt);
-        // A failure that came in after the merge did not get merged over.
-        const outcome = res.outcome === 'failed' && late ? 'unknown-at-merge' : runningAtMerge(res.run, p.mergedAt) ? 'pending' : res.outcome;
-        if (outcome !== 'unknown-at-merge') mergedBy[outcome].push(p.number);
+        // A failure that came in after the merge did not get merged over, unless another source had
+        // already failed. It is still worth knowing about, so it goes in the report's notes.
+        const failing = [
+          ...(res.run && outcomeOf(checkRunState(res.run.status, res.run.conclusion)) === 'failed' ? [res.run.startedAt] : []),
+          ...(status && outcomeOf(commitStatusState(status.state)) === 'failed' ? [status.updatedAt] : []),
+        ];
+        if (failing.length && failing.every((at) => reportedAfterMerge(at, p.mergedAt))) failedAfterMerge.push(p.number);
+        else mergedBy[runningAtMerge(res.run, p.mergedAt) ? 'pending' : res.outcome].push(p.number);
       }
       if (res.outcome === 'missing') missingAt.add(p.number);
       if (res.run && !res.appSatisfied) appMismatch.push({ pr: p.number, app: `${res.run.appSlug ?? '?'} (${res.run.appId ?? '?'})` });
     }
+    if (failedAfterMerge.length) lateFailures.push(`\`${r.context}\` failed after the merge on ${prList(failedAfterMerge.slice(0, 10))} (a re-run or a late report), so it is not counted as merged over a failure`);
     tallies.push({
       context: r.context,
       sources: r.sources.map(sourceLabel),
@@ -381,7 +388,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
     findings,
     sampledPulls: merged.map((p) => p.number),
     sampledOpen: pulls.filter((p) => !isMerged(p)).map((p) => p.number),
-    notes: [...(s.notes ?? []), ...(pulls.length ? [] : ['no merged or open PRs into this branch were found; only static checks ran'])],
+    notes: [...(s.notes ?? []), ...lateFailures, ...(pulls.length ? [] : ['no merged or open PRs into this branch were found; only static checks ran'])],
   };
 }
 
@@ -398,16 +405,21 @@ function staticFindings(
 ): Finding[] {
   const out: Finding[] = [];
   const wfByPath = new Map(workflows.map((w) => [w.path, w]));
-  // pull_request and pull_request_target can land on one commit; a merge queue run has its own.
-  const eventClass = (e: string) => (e === 'merge_group' ? 'queue' : 'pr');
-  const classesOf = (j: JobInfo) => new Set<string>(wfByPath.get(j.workflow)!.prTriggers.map((t) => eventClass(t.event)));
-  const clashing = (['pr', 'queue'] as const).map((c) => producers.filter((j) => classesOf(j).has(c))).find((list) => new Set(list.map((j) => j.workflow)).size > 1);
-  const hasPrTrigger = (j: JobInfo) => wfByPath.get(j.workflow)!.prTriggers.length > 0;
-  const isPathFiltered = (j: JobInfo) => wfByPath.get(j.workflow)!.prTriggers.some((t) => t.paths || t.pathsIgnore);
+  const wfOf = (j: JobInfo) => wfByPath.get(j.workflow)!;
+  // Same-named jobs can both report on one commit, so one can stand in for the other, unless one
+  // runs only in the merge queue and the other never does: those commits never overlap.
+  const queueOnly = (w: WorkflowInfo) => w.events.length > 0 && w.events.every((e) => e === 'merge_group');
+  const inQueue = (w: WorkflowInfo) => w.events.includes('merge_group');
+  const disjoint = (a: WorkflowInfo, b: WorkflowInfo) => (queueOnly(a) && !inQueue(b)) || (queueOnly(b) && !inQueue(a));
+  const clashing = producers.some((a, i) => producers.slice(i + 1).some((b) => a.workflow !== b.workflow && !disjoint(wfOf(a), wfOf(b))));
+  // A PR-stage trigger that reaches this branch. The merge queue is another stage: its run does not report on PR commits.
+  const reachesPrs = (w: WorkflowInfo) => w.prTriggers.filter((t) => t.event !== 'merge_group' && branchAllowed(t, branch));
+  const onPrs = (j: JobInfo) => reachesPrs(wfOf(j)).length > 0;
+  const onEveryPr = (j: JobInfo) => reachesPrs(wfOf(j)).some((t) => !t.paths && !t.pathsIgnore);
   // Another job can report the check when this one does not run, so a filter on one proves nothing.
-  const unfilteredProducer = producers.some((j) => hasPrTrigger(j) && !isPathFiltered(j));
+  const unfilteredProducer = producers.some(onEveryPr);
   // A job whose name is an expression may be that other job, when the check reports on most PRs.
-  const opaqueAlternative = opaqueJobs.some((j) => !isPathFiltered(j)) && sampled > 0 && seen / sampled >= 0.5;
+  const opaqueAlternative = opaqueJobs.some(onEveryPr) && sampled > 0 && seen / sampled >= 0.5;
   if (clashing)
     out.push({
       code: 'ambiguous-name',
@@ -420,7 +432,7 @@ function staticFindings(
     const wf = wfByPath.get(job.workflow)!;
     const where = `\`${job.workflow}\` job \`${job.id}\``;
     if (!wf.prTriggers.length) {
-      if (producers.some(hasPrTrigger)) continue;
+      if (producers.some(onPrs)) continue;
       out.push({
         code: 'not-on-pull-request',
         severity: 'error',
