@@ -5,6 +5,7 @@
 // Lockfiles are CHECKED by default: a merge that drops main's lockfile bump can drop a
 // security fix. `use_default_ignores: true` opts into ignoring them.
 import { existsSync, readFileSync } from "node:fs";
+import { readRepoFile } from "@mainfast/shared/repo-file";
 import { join } from "node:path";
 import {
   MainfastConfigError,
@@ -118,8 +119,9 @@ export function configPath(repoRoot: string, explicitPath?: string): string | un
 }
 
 export function loadConfig(repoRoot: string, explicitPath?: string): Config {
-  const path = configPath(repoRoot, explicitPath);
-  return path ? parseConfig(readFileSync(path, "utf8"), path) : defaultConfig();
+  if (explicitPath) return parseConfig(readFileSync(configPath(repoRoot, explicitPath)!, "utf8"), explicitPath);
+  const text = readRepoFile(repoRoot, BRAND.configFile);
+  return text === undefined ? defaultConfig() : parseConfig(text, join(repoRoot, BRAND.configFile));
 }
 
 // --- matching ------------------------------------------------------------

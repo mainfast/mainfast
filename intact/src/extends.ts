@@ -4,7 +4,8 @@
 // for a push), so a pull request cannot loosen its own check; a `./path` extends is read at
 // the same commit, an `owner/repo[:path][@ref]` extends through the contents API.
 // CLI: from the working tree (it checks what you are about to push).
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { readRepoFile } from "@mainfast/shared/repo-file";
 import { join } from "node:path";
 import { SUITE } from "@mainfast/shared/brand";
 import type { ExtendsFetcher } from "@mainfast/shared/config";
@@ -23,8 +24,7 @@ export function extendsFetcher(git: Git, root: string, rev: string | undefined, 
   return {
     async localFile(path) {
       if (rev) return git.show(rev, path);
-      const p = join(root, path);
-      return existsSync(p) ? readFileSync(p, "utf8") : undefined;
+      return readRepoFile(root, path);
     },
     async repoFile(owner, repo, path, ref) {
       if (!gh) throw new Error("no GitHub API client (set GITHUB_TOKEN to read a private repository)");
@@ -35,9 +35,11 @@ export function extendsFetcher(git: Git, root: string, rev: string | undefined, 
 
 /** Config from the working tree (CLI) or an explicit file, with extends applied. */
 export async function loadWorkingTreeConfig(git: Git, root: string, explicitPath: string | undefined, gh: GitHub | undefined): Promise<Config> {
-  const path = configPath(root, explicitPath);
-  if (!path) return resolveIntactConfig(undefined, undefined);
-  return resolveIntactConfig(readFileSync(path, "utf8"), extendsFetcher(git, root, undefined, gh), path);
+  // An explicit path is the caller's choice; the repository's own file is not to be trusted as a path.
+  if (explicitPath) return resolveIntactConfig(readFileSync(configPath(root, explicitPath)!, "utf8"), extendsFetcher(git, root, undefined, gh), explicitPath);
+  const text = readRepoFile(root, BRAND.configFile);
+  if (text === undefined) return resolveIntactConfig(undefined, undefined);
+  return resolveIntactConfig(text, extendsFetcher(git, root, undefined, gh), join(root, BRAND.configFile));
 }
 
 /** Config as committed at `rev` (Action: the base of the change), with extends applied. */

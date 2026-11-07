@@ -15,7 +15,8 @@
     "./markdown": "./src/markdown.ts",
     "./mockfetch": "./src/mockfetch.ts",
     "./plan": "./src/plan.ts",
-    "./required-checks": "./src/required-checks.ts"
+    "./required-checks": "./src/required-checks.ts",
+    "./repo-file": "./src/repo-file.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
