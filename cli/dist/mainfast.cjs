@@ -14685,8 +14685,8 @@ function redact(text, env = process.env) {
 var import_node_child_process6 = require("node:child_process");
 
 // ../evidence/src/cli.ts
-var import_node_fs2 = require("node:fs");
-var import_node_path2 = require("node:path");
+var import_node_fs3 = require("node:fs");
+var import_node_path3 = require("node:path");
 var import_node_util = require("node:util");
 
 // ../packages/shared/src/config.ts
@@ -17147,8 +17147,49 @@ async function publish(api, report, opts = {}) {
 }
 
 // ../evidence/src/local.ts
+var import_node_fs2 = require("node:fs");
+var import_node_path2 = require("node:path");
+
+// ../packages/shared/src/repo-file.ts
 var import_node_fs = require("node:fs");
 var import_node_path = require("node:path");
+var MAX_REPO_FILE_BYTES = 1024 * 1024;
+var UnsafeRepoPathError = class extends Error {
+};
+function lstatOrUndefined(path) {
+  try {
+    return (0, import_node_fs.lstatSync)(path);
+  } catch (e) {
+    if (e.code === "ENOENT" || e.code === "ENOTDIR") return void 0;
+    throw e;
+  }
+}
+function repoPathKind(root, rel) {
+  const clean = (0, import_node_path.normalize)(rel);
+  if ((0, import_node_path.isAbsolute)(rel) || clean === ".." || clean.startsWith(`..${import_node_path.sep}`)) throw new UnsafeRepoPathError(`refusing a path outside the repository: ${rel}`);
+  let cur = root;
+  let kind = "directory";
+  for (const part of clean.split(import_node_path.sep).filter((p) => p && p !== ".")) {
+    cur = (0, import_node_path.join)(cur, part);
+    const st = lstatOrUndefined(cur);
+    if (!st) return void 0;
+    if (st.isSymbolicLink()) throw new UnsafeRepoPathError(`refusing to follow a symlink: ${rel}`);
+    kind = st.isFile() ? "file" : st.isDirectory() ? "directory" : "other";
+  }
+  return kind;
+}
+function readRepoFile(root, rel, maxBytes = MAX_REPO_FILE_BYTES) {
+  const kind = repoPathKind(root, rel);
+  if (kind === void 0) return void 0;
+  if (kind !== "file") throw new UnsafeRepoPathError(`not a regular file: ${rel}`);
+  const fd = (0, import_node_fs.openSync)((0, import_node_path.join)(root, rel), import_node_fs.constants.O_RDONLY | import_node_fs.constants.O_NOFOLLOW);
+  try {
+    if ((0, import_node_fs.fstatSync)(fd).size > maxBytes) throw new UnsafeRepoPathError(`too large to read (over ${maxBytes} bytes): ${rel}`);
+    return (0, import_node_fs.readFileSync)(fd, "utf8");
+  } finally {
+    (0, import_node_fs.closeSync)(fd);
+  }
+}
 
 // ../evidence/src/diff/git.ts
 var import_node_child_process2 = require("node:child_process");
@@ -17206,18 +17247,27 @@ function showFile(cwd, rev, path) {
 }
 
 // ../evidence/src/local.ts
-function loadCoverage(paths, cwd) {
+var MAX_COVERAGE_BYTES = 256 * 1024 * 1024;
+function loadCoverage(policyPaths, cwd, explicitPaths = []) {
   const reports = [];
   const missing = [];
-  for (const p of paths) {
-    const abs = (0, import_node_path.resolve)(cwd, p);
-    if (!(0, import_node_fs.existsSync)(abs)) {
-      missing.push(p);
-      continue;
+  const refused = [];
+  for (const p of policyPaths) {
+    try {
+      const text = readRepoFile(cwd, p, MAX_COVERAGE_BYTES);
+      if (text === void 0) missing.push(p);
+      else reports.push(parseCoverage(text, p));
+    } catch (e) {
+      if (!(e instanceof UnsafeRepoPathError)) throw e;
+      refused.push({ path: p, reason: e.message });
     }
-    reports.push(parseCoverage((0, import_node_fs.readFileSync)(abs, "utf8"), p));
   }
-  return { report: mergeCoverage(reports), missing };
+  for (const p of explicitPaths) {
+    const abs = (0, import_node_path2.resolve)(cwd, p);
+    if (!(0, import_node_fs2.existsSync)(abs)) missing.push(p);
+    else reports.push(parseCoverage((0, import_node_fs2.readFileSync)(abs, "utf8"), p));
+  }
+  return { report: mergeCoverage(reports), missing, refused };
 }
 function localSnapshot(cwd, o) {
   const headSha = revParse(cwd, o.head ?? "HEAD");
@@ -17334,20 +17384,22 @@ async function main(argv, io = stdio) {
       io.err("local: --base is required\n");
       return 2;
     }
-    const cwd = (0, import_node_path2.resolve)(values.repo ?? ".");
-    const loaded = parsePolicy(values.config ? (0, import_node_fs2.readFileSync)(values.config, "utf8") : localPolicyText(cwd, values.base));
+    const cwd = (0, import_node_path3.resolve)(values.repo ?? ".");
+    const loaded = parsePolicy(values.config ? (0, import_node_fs3.readFileSync)(values.config, "utf8") : localPolicyText(cwd, values.base));
     if (values.all) loaded.policy.applyTo = "all";
     const snap = localSnapshot(cwd, {
       base: values.base,
       head: values.head,
       title: values.title,
-      body: values["body-file"] ? (0, import_node_fs2.readFileSync)(values["body-file"], "utf8") : void 0,
+      body: values["body-file"] ? (0, import_node_fs3.readFileSync)(values["body-file"], "utf8") : void 0,
       branch: values.branch,
       labels: values.label,
       author: values.author
     });
-    const cov = loadCoverage([...loaded.policy.coverage.files, ...values.coverage ?? []], cwd);
+    const cov = loadCoverage(loaded.policy.coverage.files, cwd, values.coverage ?? []);
     for (const m of cov.missing) io.err(`warning: coverage file not found: ${m}
+`);
+    for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}
 `);
     return emit2(evaluate({ ...snap, coverage: cov.report }, loaded.policy, loaded.warnings));
   }
@@ -17357,17 +17409,19 @@ async function main(argv, io = stdio) {
       io.err("pr: --repo owner/name and --pr <number> are required\n");
       return 2;
     }
-    const fetchImpl = values.fixture ? mockFetch2(JSON.parse((0, import_node_fs2.readFileSync)(values.fixture, "utf8"))).fetch : void 0;
+    const fetchImpl = values.fixture ? mockFetch2(JSON.parse((0, import_node_fs3.readFileSync)(values.fixture, "utf8"))).fetch : void 0;
     const api = new RestClient(values.token ?? process.env.GITHUB_TOKEN, { baseUrl: values["api-url"], fetch: fetchImpl });
     const [owner, repo] = values.repo.split("/");
     const pull = await api.getPull(owner, repo, prNum);
-    const loaded = parsePolicy(values.config ? (0, import_node_fs2.readFileSync)(values.config, "utf8") : await fetchPolicyText(api, owner, repo, pull.base.sha));
+    const loaded = parsePolicy(values.config ? (0, import_node_fs3.readFileSync)(values.config, "utf8") : await fetchPolicyText(api, owner, repo, pull.base.sha));
     if (values.all) loaded.policy.applyTo = "all";
     let snap = await collectSnapshot(api, values.repo, prNum, loaded.policy, { pull });
     if (!pull.head.repo?.full_name || pull.head.repo.full_name.toLowerCase() !== values.repo.toLowerCase()) {
       snap = { ...snap, coverageUnavailable: FORK_COVERAGE_NOTE };
     } else {
-      const cov = loadCoverage([...loaded.policy.coverage.files, ...values.coverage ?? []], process.cwd());
+      const cov = loadCoverage(loaded.policy.coverage.files, process.cwd(), values.coverage ?? []);
+      for (const r of cov.refused) io.err(`warning: coverage file not read: ${r.reason}
+`);
       if (cov.report) snap = { ...snap, coverage: cov.report };
     }
     const report = evaluate(snap, loaded.policy, loaded.warnings);
@@ -17421,9 +17475,9 @@ function envName(suffix) {
 }
 
 // ../intact/src/automerge.ts
-var import_node_fs3 = require("node:fs");
+var import_node_fs4 = require("node:fs");
 var import_node_os = require("node:os");
-var import_node_path3 = require("node:path");
+var import_node_path4 = require("node:path");
 
 // ../intact/src/diff.ts
 function filePath(f) {
@@ -17647,8 +17701,8 @@ function autoMergeDiff(git4, merge2, p1, p2, strategy) {
     const files = parseDiff(git4.out(["diff", ...DIFF_OPTS, tree, merge2]));
     return { strategy, files, conflicted };
   }
-  const dir = (0, import_node_fs3.mkdtempSync)((0, import_node_path3.join)((0, import_node_os.tmpdir)(), "mainfast-wt-"));
-  const wt = (0, import_node_path3.join)(dir, "wt");
+  const dir = (0, import_node_fs4.mkdtempSync)((0, import_node_path4.join)((0, import_node_os.tmpdir)(), "mainfast-wt-"));
+  const wt = (0, import_node_path4.join)(dir, "wt");
   try {
     git4.run(["worktree", "add", "--detach", "--quiet", wt, p1]);
     const ident = ["-c", "user.name=mainfast", "-c", "user.email=mainfast@localhost"];
@@ -17662,7 +17716,7 @@ function autoMergeDiff(git4, merge2, p1, p2, strategy) {
     return { strategy, files, conflicted };
   } finally {
     git4.run(["worktree", "remove", "--force", wt], { okStatus: [0, 128] });
-    (0, import_node_fs3.rmSync)(dir, { recursive: true, force: true });
+    (0, import_node_fs4.rmSync)(dir, { recursive: true, force: true });
     git4.run(["worktree", "prune"], { okStatus: [0, 128] });
   }
 }
@@ -17734,49 +17788,6 @@ function scan(a, ref) {
 
 // ../intact/src/config.ts
 var import_node_fs5 = require("node:fs");
-
-// ../packages/shared/src/repo-file.ts
-var import_node_fs4 = require("node:fs");
-var import_node_path4 = require("node:path");
-var MAX_REPO_FILE_BYTES = 1024 * 1024;
-var UnsafeRepoPathError = class extends Error {
-};
-function lstatOrUndefined(path) {
-  try {
-    return (0, import_node_fs4.lstatSync)(path);
-  } catch (e) {
-    if (e.code === "ENOENT" || e.code === "ENOTDIR") return void 0;
-    throw e;
-  }
-}
-function repoPathKind(root, rel) {
-  const clean = (0, import_node_path4.normalize)(rel);
-  if ((0, import_node_path4.isAbsolute)(rel) || clean === ".." || clean.startsWith(`..${import_node_path4.sep}`)) throw new UnsafeRepoPathError(`refusing a path outside the repository: ${rel}`);
-  let cur = root;
-  let kind = "directory";
-  for (const part of clean.split(import_node_path4.sep).filter((p) => p && p !== ".")) {
-    cur = (0, import_node_path4.join)(cur, part);
-    const st = lstatOrUndefined(cur);
-    if (!st) return void 0;
-    if (st.isSymbolicLink()) throw new UnsafeRepoPathError(`refusing to follow a symlink: ${rel}`);
-    kind = st.isFile() ? "file" : st.isDirectory() ? "directory" : "other";
-  }
-  return kind;
-}
-function readRepoFile(root, rel, maxBytes = MAX_REPO_FILE_BYTES) {
-  const kind = repoPathKind(root, rel);
-  if (kind === void 0) return void 0;
-  if (kind !== "file") throw new UnsafeRepoPathError(`not a regular file: ${rel}`);
-  const fd = (0, import_node_fs4.openSync)((0, import_node_path4.join)(root, rel), import_node_fs4.constants.O_RDONLY | import_node_fs4.constants.O_NOFOLLOW);
-  try {
-    if ((0, import_node_fs4.fstatSync)(fd).size > maxBytes) throw new UnsafeRepoPathError(`too large to read (over ${maxBytes} bytes): ${rel}`);
-    return (0, import_node_fs4.readFileSync)(fd, "utf8");
-  } finally {
-    (0, import_node_fs4.closeSync)(fd);
-  }
-}
-
-// ../intact/src/config.ts
 var import_node_path5 = require("node:path");
 var LEVELS = ["error", "warning", "notice", "off"];
 var INTACT_KEYS = ["enabled", "main_branch", "use_default_ignores", "ignore", "severity"];
@@ -21758,9 +21769,18 @@ function parseConfig4(text) {
 var import_node_fs9 = require("node:fs");
 var import_node_path7 = require("node:path");
 function readLocalWorkflows(repoDir) {
-  const dir = (0, import_node_path7.join)(repoDir, ".github", "workflows");
-  if (!(0, import_node_fs9.existsSync)(dir)) return void 0;
-  return (0, import_node_fs9.readdirSync)(dir).filter((f) => /\.ya?ml$/.test(f)).sort().map((f) => ({ path: `.github/workflows/${f}`, text: (0, import_node_fs9.readFileSync)((0, import_node_path7.join)(dir, f), "utf8") }));
+  const rel = ".github/workflows";
+  if (repoPathKind(repoDir, rel) !== "directory") return void 0;
+  const out = [];
+  for (const f of (0, import_node_fs9.readdirSync)((0, import_node_path7.join)(repoDir, rel)).filter((n) => /\.ya?ml$/.test(n)).sort()) {
+    try {
+      const text = readRepoFile(repoDir, `${rel}/${f}`);
+      if (text !== void 0) out.push({ path: `${rel}/${f}`, text });
+    } catch (e) {
+      if (!(e instanceof UnsafeRepoPathError)) throw e;
+    }
+  }
+  return out;
 }
 
 // ../rollcall/src/report.ts
