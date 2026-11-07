@@ -538,6 +538,13 @@ describe('false positives found on real repositories', () => {
       expect(producersOf('Check Dockerfile.dev', [w]).map((j) => j.id)).toEqual(['hadolint']);
     });
 
+    it('does not trust listed matrix values when include is computed or has odd rows', () => {
+      for (const include of ['"${{ fromJson(env.more) }}"', '[unit]', '[null]']) {
+        const w = parseWorkflow({ path: 'ci.yml', text: `on: pull_request\njobs:\n  a:\n    name: Check \${{ matrix.n }}\n    strategy: {matrix: {n: [x], include: ${include}}}\n    runs-on: x\n` });
+        expect(producersOf('Check y', [w]).map((j) => j.id), include).toEqual(['a']);
+      }
+    });
+
     it('a name that is only a listed matrix value is known, not opaque', () => {
       const w = parseWorkflow({ path: 'ci.yml', text: 'on: pull_request\njobs:\n  a:\n    name: ${{ matrix.n }}\n    strategy: {matrix: {include: [{n: unit}, {n: e2e}]}}\n    runs-on: x\n' });
       expect(w.jobs[0]!.opaque).toBe(false);
@@ -591,14 +598,47 @@ describe('false positives found on real repositories', () => {
         expect(codes(seen)).not.toContain('error path-filtered');
       });
 
-      it('a merge-queue-only job and a PR job never report on one commit (cal.com)', () => {
-        const queue = { path: 'q.yml', text: 'on: {merge_group: {}, workflow_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+      it('a merge-queue-only job and a PR job never report on one commit', () => {
+        const queue = { path: 'q.yml', text: 'on: {merge_group: {}}\njobs:\n  lint:\n    runs-on: x\n' };
         expect(codes(audit(snap({ ...ctx, workflows: [queue, plain] })))).toEqual([]);
       });
 
-      it('a job with no PR trigger is not blamed when another produces the check (posthog)', () => {
+      it('still warns when a queue job can also be started by hand on any commit (cal.com)', () => {
+        const queue = { path: 'q.yml', text: 'on: {merge_group: {}, workflow_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [queue, plain] })))).toEqual(['warning ambiguous-name']);
+      });
+
+      it('warns about a push workflow that can report the required name on a PR commit', () => {
+        const pushed = { path: 'p.yml', text: 'on: push\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [pushed, plain] })))).toEqual(['warning ambiguous-name']);
+      });
+
+      it('a job with no PR trigger is not blamed for the trigger, but can still report the name (posthog)', () => {
         const dispatched = { path: 'd.yml', text: 'on: {repository_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
-        expect(codes(audit(snap({ ...ctx, workflows: [dispatched, plain] })))).toEqual([]);
+        expect(codes(audit(snap({ ...ctx, workflows: [dispatched, plain] })))).toEqual(['warning ambiguous-name']);
+      });
+
+      it('a producer that does not cover PRs into this branch does not excuse a path filter', () => {
+        const otherBranch = { path: 'o.yml', text: 'on: {pull_request: {branches: [release]}}\njobs:\n  lint:\n    runs-on: x\n' };
+        const queue = { path: 'q.yml', text: 'on: {merge_group: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [filtered, otherBranch] })))).toContain('error path-filtered');
+        expect(codes(audit(snap({ ...ctx, workflows: [filtered, queue] })))).toContain('error path-filtered');
+      });
+
+      it('a job with no trigger is still blamed when the other producer misses this branch or runs only in the queue', () => {
+        const dispatched = { path: 'd.yml', text: 'on: {repository_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        const otherBranch = { path: 'o.yml', text: 'on: {pull_request: {branches: [release]}}\njobs:\n  lint:\n    runs-on: x\n' };
+        const queue = { path: 'q.yml', text: 'on: {merge_group: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [dispatched, otherBranch] })))).toContain('error not-on-pull-request');
+        expect(codes(audit(snap({ ...ctx, workflows: [dispatched, queue] })))).toContain('error not-on-pull-request');
+      });
+
+      it('an expression-named job excuses a path filter only if it covers every PR into this branch', () => {
+        const pulls = [merged(2, ['lint']), merged(1, ['other'])];
+        for (const on of ['{pull_request: {paths: ["b/**"]}}', '{pull_request: {branches: [release]}}', 'push', '{merge_group: {}}']) {
+          const opaque = { path: 'c.yml', text: `on: ${on}\njobs:\n  x:\n    name: \${{ matrix.n }}\n    strategy: {matrix: "\${{ fromJson(env.m) }}"}\n    runs-on: x\n` };
+          expect(codes(audit(snap({ ...ctx, pulls, workflows: [filtered, opaque] }))), on).toContain('error path-filtered');
+        }
       });
     });
 
@@ -613,6 +653,28 @@ describe('false positives found on real repositories', () => {
 
       it('a commit status posted after the merge neither (kubernetes #143624)', () => {
         expect(codes(audit(snap({ ...ctx, pulls: [pr([], [{ context: 'ci', state: 'failure', updated_at: '2026-11-06T12:00:02Z' }])] })))).toEqual([]);
+      });
+
+      it('a late failure is surfaced in the notes', () => {
+        const r = audit(snap({ ...ctx, pulls: [pr([failing('2026-11-06T12:00:30Z')])] }));
+        expect(r.notes.join('\n')).toContain('`ci` failed after the merge on #1');
+      });
+
+      it('a status that failed before the merge still counts when a re-run came later', () => {
+        const before = { context: 'ci', state: 'failure', updated_at: '2026-11-06T11:55:00Z' };
+        const r = audit(snap({ ...ctx, pulls: [pr([failing('2026-11-06T12:00:30Z')], [before])] }));
+        expect(codes(r)).toEqual(['warning merged-with-failure']);
+      });
+
+      it('a run that failed before the merge still counts when a status failed later', () => {
+        const later = { context: 'ci', state: 'failure', updated_at: '2026-11-06T12:00:02Z' };
+        const r = audit(snap({ ...ctx, pulls: [pr([failing('2026-11-06T11:50:00Z')], [later])] }));
+        expect(codes(r)).toEqual(['warning merged-with-failure']);
+      });
+
+      it('a failed status with no time on it still counts', () => {
+        const r = audit(snap({ ...ctx, pulls: [pr([], [{ context: 'ci', state: 'failure' }])] }));
+        expect(codes(r)).toEqual(['warning merged-with-failure']);
       });
 
       it('a failure before the merge still counts (uv #23135, rails #59685)', () => {

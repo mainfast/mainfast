@@ -20,8 +20,8 @@ Rollcall:
 - `not-on-pull-request` no longer fires on `workflow_call` reusable workflows.
 - `${{ matrix.x }}` in a job name now resolves to the values the matrix lists, so `Check ${{ matrix.file }}` is no longer taken to produce `Check all requirements`.
 - `conditional-job` no longer fires when the condition always holds on a PR into this repository (the event name, the repository, empty dispatch inputs).
-- `path-filtered` and `not-on-pull-request` no longer fire when another job can report the same check. `ambiguous-name` no longer fires when one job runs only in the merge queue.
-- `merged-with-failure` ignores results that arrived after the merge.
+- `path-filtered` and `not-on-pull-request` no longer fire when another job covers PRs into this branch. `ambiguous-name` no longer fires when one job runs only in the merge queue and the other never does.
+- `merged-with-failure` ignores a failure only when every failing source arrived after the merge, and lists those in the report's notes.
 - Open PRs only count as `stopped-reporting` when the branch itself has stopped moving, so a mirrored repository does not read as blocked.
 
 Migrations:
