@@ -1,4 +1,4 @@
-// The `mainfast` command. Exit codes: 0 clean, 1 findings or something missing, 2 error.
+// The `mainfast` command. Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error.
 import { parseArgs } from "node:util";
 import { AUDIT_CHECKS, AUDIT_NEEDS, runAudit, runCheck } from "./commands.ts";
 import { CliError, redact, SCHEMA, VERSION, type Result } from "./common.ts";
@@ -20,7 +20,7 @@ usage: mainfast <command> [options]
   mcp      serve these commands as MCP tools over stdio
 
 Run mainfast <command> --help for its options. Every command takes --json.
-Exit codes: 0 clean, 1 findings or something missing, 2 error.
+Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error.
 Token: GITHUB_TOKEN or GH_TOKEN, never printed.
 `,
   init: `usage: mainfast init [--checks intact,owners,...] [--dry-run] [--force]
@@ -36,7 +36,7 @@ ${COMMON}`,
   check: `usage: mainfast check [<merge-commit>] [--range A..B] [--main <branch>] [--fail-on error|warning|notice]
 
 Runs Intact locally. With no commit or range, checks every merge commit in <main>..HEAD.
-Exit codes: 0 clean, 1 findings, 2 error.
+Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail, 2 error.
 
 ${COMMON}`,
   audit: `usage: mainfast audit <${AUDIT_CHECKS.join("|")}> [--main <branch>] [--pr <n>] [--offline]

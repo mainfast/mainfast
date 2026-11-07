@@ -85,7 +85,7 @@ npx mainfast init
 
 It writes the workflow files and a starter `.mainfast.yml`, never overwrites a file without
 `--force`, and lists what is left to do, such as making a check required. It does not push or
-change branch protection. Every command takes `--json`, with exit codes 0 clean, 1 findings, 2 error:
+change branch protection. Every command takes `--json`, with exit codes 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error:
 
 | Command | What it does |
 | --- | --- |

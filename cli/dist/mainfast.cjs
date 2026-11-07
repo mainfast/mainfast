@@ -14595,7 +14595,7 @@ var import_node_child_process = require("node:child_process");
 // package.json
 var package_default = {
   name: "mainfast",
-  version: "0.1.0",
+  version: "0.1.1",
   description: "Set up and run Mainfast, GitHub checks that stop merges from silently breaking main. CLI and MCP server.",
   license: "MIT",
   author: "Mainfast authors",
@@ -32225,7 +32225,7 @@ usage: mainfast <command> [options]
   mcp      serve these commands as MCP tools over stdio
 
 Run mainfast <command> --help for its options. Every command takes --json.
-Exit codes: 0 clean, 1 findings or something missing, 2 error.
+Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error.
 Token: GITHUB_TOKEN or GH_TOKEN, never printed.
 `,
   init: `usage: mainfast init [--checks intact,owners,...] [--dry-run] [--force]
@@ -32246,7 +32246,7 @@ ${COMMON}`,
   check: `usage: mainfast check [<merge-commit>] [--range A..B] [--main <branch>] [--fail-on error|warning|notice]
 
 Runs Intact locally. With no commit or range, checks every merge commit in <main>..HEAD.
-Exit codes: 0 clean, 1 findings, 2 error.
+Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail, 2 error.
 
 ${COMMON}`,
   audit: `usage: mainfast audit <${AUDIT_CHECKS.join("|")}> [--main <branch>] [--pr <n>] [--offline]
