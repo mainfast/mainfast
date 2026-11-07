@@ -71,6 +71,8 @@ jobs:
         with: { local-diff: "false" }
 ```
 
+The examples use the moving tag `@v0`, which follows each new release. To stay on one exact version and choose when to update, replace `@v0` with a full commit SHA.
+
 One command, `npx mainfast`, sets the checks up and runs them locally; see [Using with an agent](#using-with-an-agent).
 
 ## Using with an agent
