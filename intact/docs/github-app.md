@@ -1,7 +1,7 @@
 # Hosted GitHub App: design note (whole Mainfast suite)
 
-Status: design only. Delivery today is the five GitHub Actions (customers run them in their
-own workflows, with their own `GITHUB_TOKEN`); the App is the hosted form of the same
+Status: built, in the private `mainfast/app` repository. The Actions stay free; the App is the hosted
+form of the same
 libraries, so installs need no workflow file. All names come from the
 suite's `brand.json`. This note lives in `intact/docs/` because Intact is the first product
 to move; it covers all five.
@@ -90,26 +90,18 @@ plan state and alert settings.
 
 ## Plan and billing
 
-Same rules as the Actions, enforced the same soft way:
+The Actions stay free and never block for licensing. The App is what Pro sells.
 
-- Free: public repositories, and private repositories with up to 5 active contributors
+- Free: public repositories, and private organisations with up to 5 active contributors
   (opened a PR or pushed in the last 30 days; bots excluded).
-- Pro: private organisations above that, $4 per active contributor per month, billed
-  through Polar (seat product; seats = the org's distinct active contributors across its
-  private repositories, counted daily from webhook traffic, which the App sees anyway).
-- Over the limit without a subscription: checks still run in full; the check run summary
-  carries the same notice the Actions print. No blocking, no degraded results.
-- The Actions' `MAINFAST_LICENSE` key becomes a Polar licence key validated by the
-  `LicenseValidator` hook in `packages/shared/src/plan.ts` (a network error counts as valid).
-
-What Pro adds on top of the free checks:
-
-| Pro | Notes |
-| --- | --- |
-| `extends:` org-wide shared config | In Intact's Action today; the App resolves it with the installation token |
-| Alerts: Slack and email | A drop on main (Intact on a push), a PR whose migrations went stale after main moved (Migrations), a required check that stopped reporting (Rollcall), a dormant CODEOWNERS owner |
-| Hosted App | No workflow files, cached results, org dashboard of findings per repo |
-| Support | One business day |
+- Pro: private organisations above that, $4 per active contributor per month, billed through
+  Polar (seat product; bought from the dashboard, with the installation id in checkout metadata).
+- Over the limit without a subscription: 14 days in full, with a warning and the date from day 7.
+  After that each hosted check fails as "Mainfast Pro needed" and checks nothing, and the dashboard
+  shows only the upgrade page. Only a known "nothing live at Polar" blocks; any doubt runs normally.
+  A payment re-checks open PRs.
+- Pro adds: one install, the dashboard, Slack and email alerts, cached results, and answers to
+  issues within one business day. `extends:` stays free in the Actions.
 
 ## Security
 
@@ -138,11 +130,6 @@ lists paid plans.
 
 ## Open questions
 
-- Marketplace billing vs Polar: Marketplace takes a cut but removes a checkout step; Polar
-  keeps one billing system across the products. Proposal: Polar, Marketplace
-  listing as free with "Pro via website".
-- Count seats per organisation (sum over private repos, distinct people) or per repository?
-  Proposal: per organisation, distinct people.
 - Rollcall needs Administration: read, which some orgs refuse to grant an App. Offer it as a
   separate opt-in App permission set, or keep Rollcall Action-only?
 - Owners needs org Members: read: same question.
