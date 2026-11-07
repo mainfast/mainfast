@@ -259,3 +259,7 @@ library). Shared code (GitHub client, Actions I/O, globs, config loader, plan ga
 
 Tests build real throwaway git repositories in temp dirs (`test/scenarios.test.ts`).
 Design note for the hosted App: [`docs/github-app.md`](docs/github-app.md).
+
+## Report a problem
+
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.

@@ -222,3 +222,7 @@ one that throws, so no test reaches the network.
   `report` output has all.
 - A truncated tree listing (very large repositories) skips dead and shadowed
   patterns, with a note.
+
+## Report a problem
+
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.

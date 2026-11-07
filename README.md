@@ -131,10 +131,16 @@ What Pro pays for, as it lands:
 | **`extends:` org-wide shared config**: one policy file in another repository (or path) that every repository's `.mainfast.yml` builds on | In Mainfast Intact, Rollcall and Owners now (works for everyone in the open-source Action; the notice covers fairness). Migrations and Evidence accept the key and will apply it in their release passes |
 | **Alerts**: Slack and email when a check catches a drop on main, a stale migration ledger or an unprotected required check | Planned (needs the hosted side) |
 | **Hosted GitHub App**: no workflow files, config from the base branch, cached results per merge commit, org dashboard | Planned ([design](intact/docs/github-app.md)) |
-| **Support**: issues answered within one business day | With the first paid plan |
+| **Support**: answers to issues within one business day | With the first paid plan |
 
 Reading policy from the base branch is not a Pro feature: it is the default for every
 check, because a check a PR can switch off is not a check.
+
+## Report a problem
+
+Found a bug or a false positive, or want something added? [Open an issue](https://github.com/mainfast/mainfast/issues),
+for any of the five checks. Anyone can, free, with no key. Issues are public, so leave out private
+code and secrets; report security problems as [SECURITY.md](SECURITY.md) describes.
 
 ## Repository layout
 

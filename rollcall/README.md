@@ -209,3 +209,7 @@ so no test can reach the network.
 - Reusable-workflow producers are matched as `caller / …`; the called workflow
   is not opened.
 - Up to 1000 open issues are scanned for the tracking issue.
+
+## Report a problem
+
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.

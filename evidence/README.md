@@ -274,3 +274,7 @@ npm run typecheck && npm test && npm run build   # or: npm run all
 use recorded REST payloads (`test/fixtures/github/`, shaped per the 2022-11-28 REST docs) served
 through `mockFetch`; no test calls GitHub (`test/setup.ts` replaces the global `fetch` with one
 that throws). Diff analysis tests build real temporary git repos.
+
+## Report a problem
+
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.
