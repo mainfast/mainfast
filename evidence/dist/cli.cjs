@@ -8107,7 +8107,8 @@ async function fetchRequiredSources(gh, owner, repo, branch, opts = {}) {
       rulesets.push(await soft(notes, `GET ${base}/rulesets/${r.id}`, () => gh.get(`${base}/rulesets/${r.id}?includes_parents=true`), r));
     }
   }
-  return { classic, branchRules, rulesets, headSha: typeof info?.commit?.sha === "string" ? info.commit.sha : void 0, notes };
+  const committedAt = info?.commit?.commit?.committer?.date;
+  return { classic, branchRules, rulesets, headSha: typeof info?.commit?.sha === "string" ? info.commit.sha : void 0, headCommittedAt: typeof committedAt === "string" ? committedAt : void 0, notes };
 }
 var STATE_ORDER = ["failure", "timed_out", "cancelled", "action_required", "stale", "pending", "skipped", "neutral", "success"];
 function checkRunState(status, conclusion) {

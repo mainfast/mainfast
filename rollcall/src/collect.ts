@@ -108,6 +108,7 @@ export async function collect(o: CollectOptions): Promise<Snapshot> {
     pulls,
     workflows,
     headSha: req.headSha,
+    headCommittedAt: req.headCommittedAt,
     notes: [...new Set(notes)],
   };
 }

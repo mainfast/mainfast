@@ -173,6 +173,7 @@ export interface RequiredSourcesSnapshot {
   rulesets: Ruleset[];
   /** Head commit of the branch, from "Get a branch". */
   headSha?: string;
+  headCommittedAt?: string;
   /** What could not be read (403/404), treated as empty. */
   notes: string[];
 }
@@ -232,7 +233,8 @@ export async function fetchRequiredSources(
       rulesets.push(await soft(notes, `GET ${base}/rulesets/${r.id}`, () => gh.get<Ruleset>(`${base}/rulesets/${r.id}?includes_parents=true`), r));
     }
   }
-  return { classic, branchRules, rulesets, headSha: typeof info?.commit?.sha === "string" ? info.commit.sha : undefined, notes };
+  const committedAt = info?.commit?.commit?.committer?.date;
+  return { classic, branchRules, rulesets, headSha: typeof info?.commit?.sha === "string" ? info.commit.sha : undefined, headCommittedAt: typeof committedAt === "string" ? committedAt : undefined, notes };
 }
 
 // --- what a commit reported ------------------------------------------------------------------

@@ -16,7 +16,7 @@ import { ISSUE_MARKER } from '../src/brand.js';
 import { GitHub } from '@mainfast/shared/github';
 import { mockFetch, type MockRoute } from '@mainfast/shared/mockfetch';
 import type { Snapshot } from '../src/types.js';
-import { parseWorkflow, producersOf } from '../src/workflows.js';
+import { conditionOnPr, parseWorkflow, producersOf } from '../src/workflows.js';
 
 const fixture = (name: string) => new URL(`./fixtures/${name}`, import.meta.url);
 const routesJson = JSON.parse(readFileSync(fixture('acme-web.routes.json'), 'utf8')) as Record<string, unknown>;
@@ -258,7 +258,8 @@ describe('audit rules in isolation', () => {
     });
     expect(w.prTriggers).toEqual([{ event: 'pull_request' }]);
     expect(w.jobs.map((j) => j.display)).toEqual(['Test on …', 'm (…)', 'Deploy / …']);
-    expect(producersOf('Test on ubuntu', [w]).map((j) => j.id)).toEqual(['t']);
+    expect(producersOf('Test on a', [w]).map((j) => j.id)).toEqual(['t']);
+    expect(producersOf('Test on ubuntu', [w])).toEqual([]);
     expect(producersOf('m (1)', [w]).map((j) => j.id)).toEqual(['m']);
     expect(producersOf('Deploy / prod', [w]).map((j) => j.id)).toEqual(['call']);
     expect(producersOf('m', [w])).toEqual([]);
@@ -430,7 +431,7 @@ describe('false positives found on real repositories', () => {
   const codes = (r: ReturnType<typeof audit>, ctx?: string) => r.findings.filter((f) => !ctx || f.context === ctx).map((f) => `${f.severity} ${f.code}`);
 
   describe('a job named only by an expression (PostHog terragrunt, cpython jit)', () => {
-    const wf = { path: '.github/workflows/jit.yml', text: 'on: {pull_request: {paths: ["jit/**"]}}\njobs:\n  jit:\n    name: ${{ matrix.target }}\n    needs: [setup]\n    if: github.repository == "a/b"\n    strategy: {matrix: {target: [x, y]}}\n    runs-on: x\n  setup:\n    runs-on: x\n' };
+    const wf = { path: '.github/workflows/jit.yml', text: 'on: {pull_request: {paths: ["jit/**"]}}\njobs:\n  jit:\n    name: ${{ matrix.target }}\n    needs: [setup]\n    if: needs.setup.outputs.go == "true"\n    strategy: {matrix: "${{ fromJson(needs.setup.outputs.t) }}"}\n    runs-on: x\n  setup:\n    runs-on: x\n' };
 
     it('produces no required check, so it is blamed for none', () => {
       expect(producersOf('Semgrep Checks Pass', [parseWorkflow(wf)])).toEqual([]);
@@ -527,6 +528,103 @@ describe('false positives found on real repositories', () => {
       const pushed = { path: 'p.yml', text: 'on: {push: {}, workflow_call: {}}\njobs:\n  build:\n    runs-on: x\n' };
       const r = audit(snap({ classic: { contexts: ['build'], checks: [] }, workflows: [pushed], pulls: [merged(1, ['build'])] }));
       expect(codes(r)).toContain('error not-on-pull-request');
+    });
+  });
+
+  describe('second pass of the benchmark', () => {
+    it('reads the listed matrix values, so home-assistant `Check ${{ matrix.file }}` is not `Check all requirements`', () => {
+      const w = parseWorkflow({ path: 'ci.yml', text: 'on: pull_request\njobs:\n  hadolint:\n    name: Check ${{ matrix.file }}\n    strategy: {matrix: {file: [Dockerfile, Dockerfile.dev]}}\n    runs-on: x\n' });
+      expect(producersOf('Check all requirements', [w])).toEqual([]);
+      expect(producersOf('Check Dockerfile.dev', [w]).map((j) => j.id)).toEqual(['hadolint']);
+    });
+
+    it('a name that is only a listed matrix value is known, not opaque', () => {
+      const w = parseWorkflow({ path: 'ci.yml', text: 'on: pull_request\njobs:\n  a:\n    name: ${{ matrix.n }}\n    strategy: {matrix: {include: [{n: unit}, {n: e2e}]}}\n    runs-on: x\n' });
+      expect(w.jobs[0]!.opaque).toBe(false);
+      expect(producersOf('e2e', [w]).map((j) => j.id)).toEqual(['a']);
+      expect(producersOf('lint', [w])).toEqual([]);
+    });
+
+    describe('conditions that cannot be false on a PR', () => {
+      const yes = (cond: string, events = ['pull_request']) => conditionOnPr(cond, events, 'python/cpython');
+      it('knows the event, repository and inputs (prometheus, cpython, mlflow, home-assistant)', () => {
+        expect(yes("github.event_name == 'pull_request'")).toBe(true);
+        expect(yes("github.repository_owner == 'python'")).toBe(true);
+        expect(yes("github.event_name != 'schedule' || github.repository == 'python/cpython'")).toBe(true);
+        expect(yes("!(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v2.')) && !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v3.'))")).toBe(true);
+        expect(yes("github.event.inputs.pylint-only != 'true'\n&& github.event.inputs.mypy-only != 'true'\n")).toBe(true);
+        expect(yes("${{ github.event_name != 'schedule' }}")).toBe(true);
+      });
+
+      it('leaves real conditions unknown or false', () => {
+        expect(yes("needs.changes.outputs.python == 'true'")).toBeUndefined();
+        expect(yes("!contains(github.event.pull_request.labels.*.name, 'ci-ignore')")).toBeUndefined();
+        expect(yes("github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false")).toBeUndefined();
+        expect(yes("github.event_name == 'pull_request'", ['pull_request', 'merge_group'])).toBeUndefined();
+        expect(yes("github.repository == 'someone/else'")).toBe(false);
+      });
+
+      it('drops conditional-job only when the condition always holds', () => {
+        const job = (cond: string) => ({ path: 'c.yml', text: `on: pull_request\njobs:\n  ci:\n    if: ${cond}\n    runs-on: x\n` });
+        const run = (cond: string) => codes(audit(snap({ repository: 'python/cpython', classic: { contexts: ['ci'], checks: [] }, workflows: [job(cond)], pulls: [merged(1, ['ci'])] })));
+        expect(run("github.repository_owner == 'python'")).toEqual([]);
+        expect(run("needs.x.outputs.go == 'true'")).toEqual(['warning conditional-job']);
+      });
+    });
+
+    describe('more than one job produces the check', () => {
+      const ctx = { classic: { contexts: ['lint'], checks: [] }, pulls: [merged(1, ['lint'])] };
+      const filtered = { path: 'a.yml', text: 'on: {pull_request: {paths: ["a/**"]}}\njobs:\n  lint:\n    runs-on: x\n' };
+      const plain = { path: 'b.yml', text: 'on: pull_request\njobs:\n  lint:\n    runs-on: x\n' };
+
+      it('a filter on one does not stop the check reporting when another has none (mastodon)', () => {
+        expect(codes(audit(snap({ ...ctx, workflows: [filtered, plain] })))).toEqual(['warning ambiguous-name']);
+      });
+
+      it('still reports path-filtered when every producer is filtered', () => {
+        expect(codes(audit(snap({ ...ctx, workflows: [filtered] })))).toEqual(['error path-filtered']);
+      });
+
+      it('an expression-named job explains a check that reports on most PRs (mlflow lint)', () => {
+        const opaque = { path: 'c.yml', text: "on: pull_request\njobs:\n  x:\n    name: ${{ matrix.os == 'm' && 'a' || 'lint' }}\n    runs-on: x\n" };
+        const seen = audit(snap({ ...ctx, pulls: [merged(2, ['lint']), merged(1, ['other'])], workflows: [filtered, opaque] }));
+        expect(codes(seen)).not.toContain('error path-filtered');
+      });
+
+      it('a merge-queue-only job and a PR job never report on one commit (cal.com)', () => {
+        const queue = { path: 'q.yml', text: 'on: {merge_group: {}, workflow_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [queue, plain] })))).toEqual([]);
+      });
+
+      it('a job with no PR trigger is not blamed when another produces the check (posthog)', () => {
+        const dispatched = { path: 'd.yml', text: 'on: {repository_dispatch: {}}\njobs:\n  lint:\n    runs-on: x\n' };
+        expect(codes(audit(snap({ ...ctx, workflows: [dispatched, plain] })))).toEqual([]);
+      });
+    });
+
+    describe('results that arrived after the merge', () => {
+      const failing = (startedAt: string) => ({ ...checkRun('ci'), conclusion: 'failure' as const, started_at: startedAt, completed_at: startedAt });
+      const pr = (runs: unknown[], statuses: unknown[] = []) => ({ number: 1, title: '', headSha: 's', state: 'merged' as const, mergedAt: '2026-11-06T12:00:00Z', checkRuns: runs, statuses }) as Snapshot['pulls'][number];
+      const ctx = { classic: { contexts: ['ci'], checks: [] } };
+
+      it('a re-run after the merge did not get merged over (mlflow #27563, cpython #161461)', () => {
+        expect(codes(audit(snap({ ...ctx, pulls: [pr([failing('2026-11-06T12:00:30Z')])] })))).toEqual([]);
+      });
+
+      it('a commit status posted after the merge neither (kubernetes #143624)', () => {
+        expect(codes(audit(snap({ ...ctx, pulls: [pr([], [{ context: 'ci', state: 'failure', updated_at: '2026-11-06T12:00:02Z' }])] })))).toEqual([]);
+      });
+
+      it('a failure before the merge still counts (uv #23135, rails #59685)', () => {
+        expect(codes(audit(snap({ ...ctx, pulls: [pr([failing('2026-11-06T11:50:00Z')])] })))).toEqual(['warning merged-with-failure']);
+        expect(codes(audit(snap({ ...ctx, pulls: [pr([], [{ context: 'ci', state: 'failure', updated_at: '2026-11-06T11:55:00Z' }])] })))).toEqual(['warning merged-with-failure']);
+      });
+    });
+
+    it('a mirror branch still moving is not blocked by open PRs missing a check (vault)', () => {
+      const pulls = [open(9, ['lint']), open(8, ['lint']), merged(1, ['ci'], '2026-03-26T00:00:00Z')];
+      const r = audit(snap({ classic: { contexts: ['ci'], checks: [] }, pulls, headCommittedAt: '2026-11-06T22:00:00Z' }));
+      expect(codes(r)).toEqual([]);
     });
   });
 });
