@@ -7870,6 +7870,7 @@ function parseDjango(path, text, app) {
   };
 }
 var MIGRATION_FILE = /(^|\/)migrations\/\d{4}_[^/]+\.py$/;
+var ANY_MIGRATION_FILE = /\/migrations\/[^_~/][^/]*\.py$|^migrations\/[^_~/][^/]*\.py$/;
 function appLabel(tree, root, files) {
   const dir = basename(dirname(root)) || basename(root);
   const config = /^[ \t]+label\s*=\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]/m.exec(tree.read(`${dirname(root)}/apps.py`) ?? "");
@@ -7883,7 +7884,7 @@ function appLabel(tree, root, files) {
   return [...counts].sort((a, b) => b[1] - a[1])[0][0];
 }
 function migrations(tree, root) {
-  const files = tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f));
+  const files = tree.under(root).filter((f) => dirname(f) === root && ANY_MIGRATION_FILE.test(f));
   const app = appLabel(tree, root, files);
   return files.map((f) => parseDjango(f, tree.read(f) ?? "", app));
 }
@@ -7898,9 +7899,9 @@ var django = {
     const migs = migrations(tree, root);
     const app = migs[0]?.app ?? basename(dirname(root));
     const findings = [];
-    const names = new Set(migs.map((m) => m.name));
+    const names = new Set(migs.flatMap((m) => [m.name, ...m.replaces.filter(([a]) => a === app).map(([, n]) => n)]));
     for (const [num, list4] of groupBy(migs, (m) => m.number)) {
-      if (list4.length > 1)
+      if (list4.length > 1 && /^\d{4}$/.test(num))
         findings.push({
           framework: "django",
           root,
