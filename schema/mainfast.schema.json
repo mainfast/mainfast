@@ -25,6 +25,11 @@
       "description": "Mainfast Intact: merge-integrity guard.",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hosted GitHub App only: false turns this check off for the repository. The Actions ignore it; to stop an Action, remove its workflow step."
+        },
         "main_branch": {
           "type": "string",
           "minLength": 1,
@@ -61,6 +66,11 @@
       "description": "Mainfast Migrations: database migration guard.",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hosted GitHub App only: false turns this check off for the repository. The Actions ignore it; to stop an Action, remove its workflow step."
+        },
         "frameworks": {
           "anyOf": [
             {
@@ -188,6 +198,11 @@
       "description": "Mainfast Rollcall: required-check integrity audit (read from the default branch).",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hosted GitHub App only: false turns this check off for the repository. The Actions ignore it; to stop an Action, remove its workflow step."
+        },
         "branch": {
           "type": "string",
           "description": "Protected branch to audit. Default: the repository default branch."
@@ -248,6 +263,11 @@
       "description": "Mainfast Owners: CODEOWNERS drift check.",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hosted GitHub App only: false turns this check off for the repository. The Actions ignore it; to stop an Action, remove its workflow step."
+        },
         "dormantDays": {
           "type": "integer",
           "minimum": 0,
@@ -308,6 +328,11 @@
       "description": "Mainfast Evidence: proof, not review, for pull requests written by coding agents. Unknown keys are reported in the evidence card rather than failing.",
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Hosted GitHub App only: false turns this check off for the repository. The Actions ignore it; to stop an Action, remove its workflow step."
+        },
         "apply_to": {
           "enum": [
             "agents",

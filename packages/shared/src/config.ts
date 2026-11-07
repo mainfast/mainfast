@@ -75,6 +75,17 @@ export function loadSection(text: string | undefined | null, slug: ProductSlug, 
   return getSection(parseConfigDoc(text, opts.source), slug, opts);
 }
 
+/**
+ * Whether a section's `enabled` key leaves the check on (default true). Only the hosted App reads
+ * it; the Actions accept the key and ignore it. Throws MainfastConfigError on a non-boolean.
+ */
+export function sectionEnabled(doc: ConfigDoc, slug: ProductSlug): boolean {
+  const raw = doc[slug];
+  if (!isMapping(raw) || raw.enabled === undefined) return true;
+  if (typeof raw.enabled !== "boolean") throw new MainfastConfigError(`${slug}.enabled: expected true or false`);
+  return raw.enabled;
+}
+
 // --- extends (Pro) ------------------------------------------------------------------------
 
 export type ExtendsRef =

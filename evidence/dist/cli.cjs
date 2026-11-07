@@ -7909,7 +7909,7 @@ function parsePolicy(yamlText) {
   const p = `${CONFIG_SECTION}.`;
   unknownKeys(
     raw,
-    ["apply_to", "agents", "flags", "test_checks", "required_checks", "ignore_checks", "coverage", "diff", "paths", "secrets", "warn_conclusion"],
+    ["enabled", "apply_to", "agents", "flags", "test_checks", "required_checks", "ignore_checks", "coverage", "diff", "paths", "secrets", "warn_conclusion"],
     p,
     warnings
   );

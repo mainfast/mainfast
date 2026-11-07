@@ -73,7 +73,24 @@ export function analyze(opts: AnalyzeOptions): MigrationsReport {
   const head = Tree.atRef(opts.repo, headSha, opts.headRef);
   const base = baseSha === mainSha ? main : Tree.atRef(opts.repo, baseSha, 'merge-base');
   const config = opts.config ?? loadConfigFromRef(main);
+  return analyzeTrees({ main, head, base, mainRef: opts.mainRef, headRef: opts.headRef, mainSha, headSha, baseSha, config });
+}
 
+export interface AnalyzeTreesOptions {
+  main: Tree;
+  head: Tree;
+  base: Tree;
+  mainRef: string;
+  headRef: string;
+  mainSha: string;
+  headSha: string;
+  baseSha: string;
+  config: MigrationsConfig;
+}
+
+/** The analysis itself, on trees from any source: `analyze` builds them with git, the hosted App through the API. */
+export function analyzeTrees(opts: AnalyzeTreesOptions): MigrationsReport {
+  const { main, head, base, mainSha, headSha, baseSha, config } = opts;
   const roots: MigrationRoot[] = [];
   const findings: Finding[] = [];
   const preExisting: Finding[] = [];

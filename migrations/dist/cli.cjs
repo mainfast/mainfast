@@ -7643,7 +7643,7 @@ var DEFAULT_OUT_OF_ORDER = {
   flyway: "warning",
   drizzle: "error"
 };
-var KNOWN_KEYS = ["frameworks", "paths", "ignore", "outOfOrder", "label"];
+var KNOWN_KEYS = ["enabled", "frameworks", "paths", "ignore", "outOfOrder", "label"];
 var DEFAULT_CONFIG = {
   frameworks: "auto",
   paths: {},
@@ -8306,14 +8306,16 @@ function mergeBase(repo, a, b) {
   return tryGit(repo, ["merge-base", a, b]) || void 0;
 }
 var Tree = class _Tree {
-  constructor(repo, entries, label) {
+  constructor(repo, entries, label, readBlob = (sha) => git(repo, ["cat-file", "blob", sha])) {
     this.repo = repo;
     this.entries = entries;
     this.label = label;
+    this.readBlob = readBlob;
   }
   repo;
   entries;
   label;
+  readBlob;
   cache = /* @__PURE__ */ new Map();
   static atRef(repo, ref, label = ref) {
     const out = git(repo, ["ls-tree", "-r", "-z", "--full-tree", ref]);
@@ -8338,7 +8340,7 @@ var Tree = class _Tree {
     if ("content" in blob) return blob.content;
     let text = this.cache.get(blob.sha);
     if (text === void 0) {
-      text = git(this.repo, ["cat-file", "blob", blob.sha]);
+      text = this.readBlob(blob.sha, path);
       this.cache.set(blob.sha, text);
     }
     return text;
@@ -8376,7 +8378,7 @@ function mergedTree(base, main2, head, dir, mergeFile) {
     if (!pick) continue;
     entries.set(p, "sha" in pick ? pick : { content: pick.content });
   }
-  const t = new Tree(main2.repo, entries, `merge(${main2.label}, ${head.label})`);
+  const t = new Tree(main2.repo, entries, `merge(${main2.label}, ${head.label})`, main2.readBlob);
   return t;
 }
 
@@ -8461,6 +8463,10 @@ function analyze(opts) {
   const head = Tree.atRef(opts.repo, headSha, opts.headRef);
   const base = baseSha === mainSha ? main2 : Tree.atRef(opts.repo, baseSha, "merge-base");
   const config = opts.config ?? loadConfigFromRef(main2);
+  return analyzeTrees({ main: main2, head, base, mainRef: opts.mainRef, headRef: opts.headRef, mainSha, headSha, baseSha, config });
+}
+function analyzeTrees(opts) {
+  const { main: main2, head, base, mainSha, headSha, baseSha, config } = opts;
   const roots = [];
   const findings = [];
   const preExisting = [];
