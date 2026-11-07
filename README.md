@@ -146,10 +146,6 @@ The five GitHub Actions are **free and open source (MIT)** for everyone, at any 
   Polar's public licence-key endpoint (only the key and the organisation id are sent, with a
   3-second timeout); if Polar cannot be reached the key counts as valid. A key Polar reports as
   unknown, revoked or expired is ignored with one log line, as if no key were set.
-- **Optional free key.** A free key from the pricing page (a $0 Polar checkout) gets you
-  release and security notices by email and lets us know you use Mainfast; no feature needs it
-  and nothing changes without it. Pass it the same way; the job summary then says
-  "Registered (free key)". It is not a Pro key, so a larger private repository still gets the notice.
 
 **Mainfast Pro is the hosted GitHub App**, at **$4 per active contributor per month**, for private
 organisations above 5 active contributors. It is free for public repositories and for private
