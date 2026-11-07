@@ -2,7 +2,7 @@
 
 GitHub checks that stop merges from silently breaking `main`. Five checks, one config
 file (`.mainfast.yml`), MIT-licensed. They run today as GitHub Actions in your own
-workflows with your own `GITHUB_TOKEN`; a hosted GitHub App comes later
+workflows with your own `GITHUB_TOKEN`. Mainfast Pro is the same checks as a hosted GitHub App
 ([design note](intact/docs/github-app.md)).
 
 Name: main + steadfast ("hold main fast").
@@ -97,19 +97,13 @@ evidence:
 
 ## Free and Pro
 
-All five checks are **free and open source (MIT)** for:
+The five GitHub Actions are **free and open source (MIT)** for everyone, at any size:
 
-- **public repositories**, and
-- **private repositories with up to 5 active contributors**. Active = opened a pull request
-  or pushed in the last 30 days; bots are not counted.
-
-Private organisations above that pay for **Mainfast Pro: $4 per active contributor per
-month** (billing through Polar, coming). Pro is a fair-use request, not a lock:
-
-- The code is MIT for everyone, and no feature is switched off without a key.
-- On a private repository with more than 5 active contributors and no `MAINFAST_LICENSE`
-  key, each Action adds **one polite notice** to the job summary (Intact also to its check
-  run). It never fails, blocks or changes a check because of licensing.
+- The code is MIT for everyone, no feature is switched off without a key, and `extends:` org-wide
+  shared config is included. They never fail or block a merge for licensing.
+- On a private repository with more than 5 active contributors (opened a pull request or pushed
+  in the last 30 days; bots are not counted) and no `MAINFAST_LICENSE` key, each Action adds
+  **one polite notice** to the job summary (Intact also to its check run).
 - The count uses your workflow's `GITHUB_TOKEN` (PR authors from the pulls list, pushers
   from the repository activity API, else default-branch commit authors), once per run.
   Give the job `pull-requests: read` for an exact count; without it the notice counts
@@ -124,14 +118,23 @@ month** (billing through Polar, coming). Pro is a fair-use request, not a lock:
   and nothing changes without it. Pass it the same way; the job summary then says
   "Registered (free key)". It is not a Pro key, so a larger private repository still gets the notice.
 
-What Pro pays for, as it lands:
+**Mainfast Pro is the hosted GitHub App**, at **$4 per active contributor per month**, for private
+organisations above 5 active contributors. It is free for public repositories and for private
+organisations up to that limit. You buy it from the [dashboard](https://app.mainfast.dev), through Polar.
 
-| Pro feature | Status |
+| Pro includes | |
 | --- | --- |
-| **`extends:` org-wide shared config**: one policy file in another repository (or path) that every repository's `.mainfast.yml` builds on | In Mainfast Intact, Rollcall and Owners now (works for everyone in the open-source Action; the notice covers fairness). Migrations and Evidence accept the key and will apply it in their release passes |
-| **Alerts**: Slack and email when a check catches a drop on main, a stale migration ledger or an unprotected required check | Planned (needs the hosted side) |
-| **Hosted GitHub App**: no workflow files, config from the base branch, cached results per merge commit, org dashboard | Planned ([design](intact/docs/github-app.md)) |
-| **Support**: answers to issues within one business day | With the first paid plan |
+| **One install** | No workflow files; config from the base branch |
+| **Dashboard** | Findings and trends per organisation and repository |
+| **Alerts** | Slack and email for a drop on main, a stale migration ledger, a required check that stopped reporting, or a dormant code owner |
+| **Cached results** | A merge commit found clean is not checked twice |
+| **Support** | Answers to issues within one business day |
+
+A new install runs in full for 14 days, and from day 7 the checks and dashboard show the date
+blocking starts. After that, with no Pro, **every hosted check fails as "Mainfast Pro needed" and
+checks nothing, which blocks merges where it is required**, and the dashboard shows only the upgrade
+page. Data stays stored while the App is installed and returns on payment, and open pull requests
+are re-checked automatically. If the plan can't be determined, the checks run normally.
 
 Reading policy from the base branch is not a Pro feature: it is the default for every
 check, because a check a PR can switch off is not a check.
