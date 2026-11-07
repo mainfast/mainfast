@@ -9648,7 +9648,7 @@ async function publish(api, report, opts = {}) {
   const [owner, repo] = report.repo.split("/");
   const payload = checkRunPayload(report);
   const existing = (await api.listCheckRunsForRef(owner, repo, report.pr.headSha, CHECK_NAME)).find(
-    (r) => r.name === CHECK_NAME && r.head_sha === report.pr.headSha
+    (r) => r.name === CHECK_NAME && r.head_sha === report.pr.headSha && (!opts.checkRunApp || r.app?.slug === opts.checkRunApp)
   );
   const { name: _n, head_sha: _h, ...update } = payload;
   const run = existing ? await api.updateCheckRun(owner, repo, existing.id, update) : await api.createCheckRun(owner, repo, payload);

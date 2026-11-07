@@ -30,12 +30,14 @@ export async function publish(
     comment?: "always" | "on-flags" | "never";
     /** Login the token posts as, e.g. "my-app[bot]" for a GitHub App installation token. Default: `GET /user`, else github-actions[bot]. */
     commentAuthor?: string;
+    /** Only update a check run from this app (its slug). A GitHub App may not update another app's run: GitHub answers 403. */
+    checkRunApp?: string;
   } = {},
 ): Promise<PublishResult> {
   const [owner, repo] = report.repo.split("/") as [string, string];
   const payload = checkRunPayload(report);
   const existing = (await api.listCheckRunsForRef(owner, repo, report.pr.headSha, CHECK_NAME)).find(
-    (r) => r.name === CHECK_NAME && r.head_sha === report.pr.headSha,
+    (r) => r.name === CHECK_NAME && r.head_sha === report.pr.headSha && (!opts.checkRunApp || r.app?.slug === opts.checkRunApp),
   );
   const { name: _n, head_sha: _h, ...update } = payload;
   const run = existing ? await api.updateCheckRun(owner, repo, existing.id, update) : await api.createCheckRun(owner, repo, payload);

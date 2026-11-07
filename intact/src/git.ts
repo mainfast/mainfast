@@ -96,8 +96,13 @@ export class Git {
 
   /** File content at rev:path, or undefined when the path does not exist there. */
   show(rev: string, path: string): string | undefined {
-    const r = this.run(["cat-file", "blob", `${rev}:${path}`], { okStatus: [0, 128] });
-    return r.status === 0 ? r.stdout : undefined;
+    // Ask the tree first: in a partial clone a blob the promisor cannot deliver must be an error,
+    // not "this file does not exist", or a failed fetch would read as a deleted file.
+    const entry = this.run(["ls-tree", "-z", "--full-tree", rev, "--", path], { okStatus: [0, 128] });
+    if (entry.status !== 0 || !entry.stdout) return undefined;
+    const [, type, id] = /^\S+ (\S+) (\S+)\t/.exec(entry.stdout) ?? [];
+    if (type !== "blob" || !id) return undefined;
+    return this.out(["cat-file", "blob", id]);
   }
 
   blobId(rev: string, path: string): string | undefined {
