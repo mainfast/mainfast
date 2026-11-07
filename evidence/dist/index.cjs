@@ -7429,17 +7429,17 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan (sandbox until launch): a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro). tools/dev-sites/polar.mjs --apply prints the sandbox ids.",
+      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
-        free: "77fcbd42-f163-444e-9931-c98610f8063f",
-        pro: "9f2bb2ac-6b53-4c17-9cae-a2e2eccfad32"
+        free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
+        pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. Until launch `api`, organizationId and the benefit ids are the Polar SANDBOX ones (29 Oct 2026); at launch put production Polar and its ids here. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
-      api: "https://sandbox-api.polar.sh",
+      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      api: "https://api.polar.sh",
       sandboxApi: "https://sandbox-api.polar.sh",
-      organizationId: "f450cee3-327c-452e-a949-2557a22a7692",
+      organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
       orgEnv: "MAINFAST_POLAR_ORG",
       timeoutMs: 3e3
