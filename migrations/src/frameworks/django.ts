@@ -49,16 +49,29 @@ export function parseDjango(path: string, text: string, app: string): DjangoMigr
 
 const MIGRATION_FILE = /(^|\/)migrations\/\d{4}_[^/]+\.py$/;
 
-function appLabel(root: string): string {
-  return basename(dirname(root)) || basename(root);
+/**
+ * An app's label: `label` in its AppConfig when apps.py is readable, else the directory name when
+ * the migrations use it, else the label their dependencies on earlier migrations in this folder
+ * use. Custom labels are common (`authentik_providers_saml` for authentik/providers/saml), and a
+ * wrong label makes every migration look like a leaf.
+ */
+function appLabel(tree: Tree, root: string, files: string[]): string {
+  const dir = basename(dirname(root)) || basename(root);
+  const config = /^[ \t]+label\s*=\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]/m.exec(tree.read(`${dirname(root)}/apps.py`) ?? '');
+  if (config) return config[1]!;
+  const parsed = files.map((f) => parseDjango(f, tree.read(f) ?? '', dir));
+  const names = new Set(parsed.map((m) => m.name));
+  const counts = new Map<string, number>();
+  for (const m of parsed)
+    for (const [label, name] of m.deps) if (names.has(name) && name < m.name) counts.set(label, (counts.get(label) ?? 0) + 1);
+  if (!counts.size || counts.has(dir)) return dir;
+  return [...counts].sort((a, b) => b[1] - a[1])[0]![0];
 }
 
 function migrations(tree: Tree, root: string): DjangoMigration[] {
-  const app = appLabel(root);
-  return tree
-    .under(root)
-    .filter((f) => dirname(f) === root && MIGRATION_FILE.test(f))
-    .map((f) => parseDjango(f, tree.read(f) ?? '', app));
+  const files = tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f));
+  const app = appLabel(tree, root, files);
+  return files.map((f) => parseDjango(f, tree.read(f) ?? '', app));
 }
 
 export const django: Framework = {
@@ -70,7 +83,7 @@ export const django: Framework = {
   },
   inspect(tree, root) {
     const migs = migrations(tree, root);
-    const app = appLabel(root);
+    const app = migs[0]?.app ?? basename(dirname(root));
     const findings: Finding[] = [];
     const names = new Set(migs.map((m) => m.name));
 

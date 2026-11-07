@@ -1,7 +1,7 @@
 // Pure audit over a Snapshot: required checks (classic protection + active rulesets, resolved by
 // @mainfast/shared/required-checks, the same logic Evidence uses per PR) against what recent
 // merged and open PRs actually reported and what the workflow files can produce.
-import { classifyRequired, latestRuns, latestStatuses, pinnedApps, resolveRequiredChecks, sourceLabel, type CommitChecks, type Outcome, type RequiredSet } from '@mainfast/shared/required-checks';
+import { classifyRequired, latestRuns, latestStatuses, pinnedApps, resolveRequiredChecks, rulesetTargetsBranch, sourceLabel, type CommitChecks, type Outcome, type RequiredSet } from '@mainfast/shared/required-checks';
 import { CHECK_NAME } from './brand.js';
 import type { AuditReport, CheckTally, Finding, PullObservation, RequiredCheck, Snapshot } from './types.js';
 import { branchAllowed, filtersOf, parseWorkflows, producersOf, type JobInfo, type WorkflowInfo } from './workflows.js';
@@ -76,6 +76,8 @@ const prList = (ns: number[]) => ns.map((n) => `#${n}`).join(', ');
 const ALWAYS = /\b(always|failure|cancelled)\s*\(\s*\)/;
 
 const isMerged = (p: PullObservation) => (p.state ?? 'merged') === 'merged';
+/** With no merge for this long while PRs stay active, missing checks on open PRs may be what blocks them. */
+const STALLED_MERGES_DAYS = 7;
 /**
  * The run was going when the PR merged and finished later. A run that started after the merge is a
  * re-run, so it says nothing about the merge; one still queued at merge time looks the same.
@@ -116,6 +118,7 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
   const required = set.required.filter((r) => !ignore.has(r.context));
   const requiredNames = new Set(required.map((r) => r.context));
   const workflows = parseWorkflows(s.workflows);
+  const opaqueJobs = workflows.filter((w) => !w.callableOnly).flatMap((w) => w.jobs.filter((j) => j.opaque));
   const findings: Finding[] = [];
   const pulls = s.pulls;
   const merged = pulls.filter(isMerged);
@@ -132,6 +135,9 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
 
   // Rulesets that carry required checks but are not enforced.
   for (const r of set.notEnforced) {
+    // A ruleset aimed at other branches says nothing about this one.
+    const ruleset = s.rulesets.find((x) => x.id === r.rulesetId);
+    if (ruleset && !rulesetTargetsBranch(ruleset, s.branch, s.defaultBranch)) continue;
     const ctxs = r.contexts.filter((c) => !ignore.has(c));
     if (ctxs.length)
       findings.push({
@@ -243,32 +249,47 @@ export function audit(s: Snapshot, opts: AuditOptions = {}): AuditReport {
             severity: 'error',
             context: r.context,
             message: `\`${r.context}\` (required by ${r.sources.map(sourceLabel).join(', ')}) did not report on any of the ${pulls.length} sampled PRs. ${
-              producers.length ? `It is produced by ${producers.map((j) => `\`${j.workflow}\` job \`${j.id}\``).join(', ')}, so check that workflow's triggers.` : 'No job in .github/workflows produces this name.'
+              producers.length ? `It is produced by ${producers.map((j) => `\`${j.workflow}\` job \`${j.id}\``).join(', ')}, so check that workflow's triggers.` : `No job in .github/workflows produces this name${opaqueJobs.length ? `, though ${opaqueJobs.map((j) => `\`${j.workflow}\` job \`${j.id}\``).slice(0, 3).join(', ')} take their name from an expression and may produce it` : ''}.`
             }`,
             evidence: by.missing.slice(0, 10),
           });
         }
       }
     } else if (pulls.length) {
-      // missing on the newest PRs in a row, but present on older ones
-      let streak = 0;
-      for (const { p } of obs) {
-        if (!missingAt.has(p.number)) break;
-        streak++;
-      }
-      if (streak >= stoppedAfter && stoppedAfter > 0) {
-        const recent = obs.slice(0, streak);
-        const older = obs.slice(streak);
+      // Missing on the newest merged PRs in a row, but present on older ones. Open PRs do not count:
+      // their CI may not have reached this check, or a path or approval may be holding it.
+      const missingStreak = (list: typeof obs) => {
+        let n = 0;
+        for (const x of list) {
+          if (!missingAt.has(x.p.number)) break;
+          n++;
+        }
+        return n;
+      };
+      const mergedObs = obs.filter((x) => isMerged(x.p));
+      const streak = missingStreak(mergedObs);
+      const firstMerged = obs.findIndex((x) => isMerged(x.p));
+      const openFirst = firstMerged < 0 ? obs : obs.slice(0, firstMerged);
+      const lastMerge = Date.parse(mergedObs[0]?.p.mergedAt ?? '');
+      const stalled = !Number.isNaN(lastMerge) && Date.parse(s.collectedAt) - lastMerge >= STALLED_MERGES_DAYS * 86_400_000;
+      // The exception: a required check that vanished blocks every PR, so nothing merges at all.
+      const blockedOpen = stalled && streak < stoppedAfter ? missingStreak(openFirst) : 0;
+      if (stoppedAfter > 0 && (streak >= stoppedAfter || blockedOpen >= stoppedAfter)) {
+        const recent = streak >= stoppedAfter ? mergedObs.slice(0, streak) : openFirst.slice(0, blockedOpen);
+        const older = streak >= stoppedAfter ? mergedObs.slice(streak) : mergedObs;
+        const reportedBefore = older.filter((x) => !missingAt.has(x.p.number)).length;
         const appeared = [...seenNames.keys()].filter((n) => !requiredNames.has(n) && recent.every((x) => x.names.has(n)) && !older.some((x) => x.names.has(n)));
-        const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).sort((a, b) => b.s - a.s)[0];
+        // Only a similar name counts as the new name: any job added since would otherwise qualify.
+        const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).filter((x) => x.s >= 0.5).sort((a, b) => b.s - a.s)[0];
+        const onlyOpen = streak < stoppedAfter;
         // The job still exists behind a path filter, and path-filtered below reports that as an error.
         if (!best && onlyPathFiltered(producers, workflows)) {
           if (mergedBy.missing.length) findings.push(mergedWithout(r.context, mergedBy.missing));
         } else findings.push({
           code: best ? 'renamed' : 'stopped-reporting',
-          severity: 'error',
+          severity: onlyOpen ? 'warning' : 'error',
           context: r.context,
-          message: `\`${r.context}\` stopped reporting: missing on the ${streak} newest sampled PRs (${prList(recent.map((x) => x.p.number))}) after reporting on ${seen} older ones.${
+          message: `\`${r.context}\` stopped reporting: missing on the ${recent.length} newest ${onlyOpen ? `open PRs, with no merge in ${STALLED_MERGES_DAYS} days or more` : 'merged PRs'} (${prList(recent.map((x) => x.p.number))}) after reporting on ${reportedBefore} older ones.${
             best ? ` \`${best.n}\` first appears on exactly those PRs and is not required — the job was probably renamed and fell out of the required list.` : ''
           }`,
           evidence: recent.map((x) => x.p.number),
@@ -403,7 +424,8 @@ function staticFindings(context: string, producers: JobInfo[], workflows: Workfl
       });
     if (job.needs.length && !(cond && ALWAYS.test(cond))) {
       const needed = wf.jobs.filter((j) => job.needs.includes(j.id));
-      const unguarded = needed.filter((j) => !producesRequired(j, requiredSet));
+      // An opaque job might produce a required check, so it cannot be called unguarded.
+      const unguarded = needed.filter((j) => !j.opaque && !producesRequired(j, requiredSet));
       if (unguarded.length)
         out.push({
           code: 'skips-when-needs-fail',

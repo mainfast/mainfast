@@ -7688,6 +7688,19 @@ function splitRepo(full) {
 }
 
 // ../packages/shared/src/required-checks.ts
+function refMatches(pattern, ref) {
+  const escape = (t) => t.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  const source = pattern.split("**/").map((a) => a.split("**").map((b) => b.split("*").map(escape).join("[^/]*")).join(".*")).join("(?:.*/)?");
+  return new RegExp(`^${source}$`).test(ref);
+}
+function rulesetTargetsBranch(r, branch, defaultBranch) {
+  if (r.target && r.target !== "branch") return false;
+  const cond = r.conditions?.ref_name;
+  if (!cond) return true;
+  const ref = `refs/heads/${branch}`;
+  const hit = (p) => p === "~ALL" || (p === "~DEFAULT_BRANCH" ? defaultBranch === void 0 || defaultBranch === branch : refMatches(p, ref));
+  return (cond.include ?? []).some(hit) && !(cond.exclude ?? []).some(hit);
+}
 function resolveRequiredChecks(input) {
   const byContext = /* @__PURE__ */ new Map();
   const add = (context, src) => {
@@ -7875,6 +7888,12 @@ function triggers(on) {
   }
   return [];
 }
+function isCallableOnly(on) {
+  const events = typeof on === "string" ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === "object" ? Object.keys(on) : [];
+  return events.includes("workflow_call") && events.every((e) => e === "workflow_call" || e === "workflow_dispatch");
+}
+var EXPRESSION = /\$\{\{[^}]*\}\}/g;
+var isOpaqueName = (name) => /\$\{\{/.test(name) && !/[\p{L}\p{N}]/u.test(name.replace(EXPRESSION, ""));
 function namePattern(name) {
   const parts = name.split(/\$\{\{[^}]*\}\}/);
   return { source: parts.map(escapeRe).join(".+"), display: name.replace(/\$\{\{[^}]*\}\}/g, "\u2026") };
@@ -7884,7 +7903,7 @@ function parseWorkflow(file) {
   try {
     doc = (0, import_yaml.parse)(file.text);
   } catch (e) {
-    return { path: file.path, name: file.path, prTriggers: [], jobs: [], error: e instanceof Error ? e.message : String(e) };
+    return { path: file.path, name: file.path, prTriggers: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
   }
   const name = typeof doc?.name === "string" ? doc.name : file.path;
   const on = doc?.on ?? doc?.true;
@@ -7895,6 +7914,7 @@ function parseWorkflow(file) {
     const hasExpr = /\$\{\{/.test(rawName);
     const matrix = Boolean(j.strategy?.matrix);
     const reusable = typeof j.uses === "string";
+    const opaque = isOpaqueName(rawName);
     const { source, display } = namePattern(rawName);
     let src = source;
     let disp = display;
@@ -7911,21 +7931,22 @@ function parseWorkflow(file) {
       workflowName: name,
       id,
       rawName,
-      pattern: new RegExp(`^${src}$`),
+      pattern: opaque ? /(?!)/ : new RegExp(`^${src}$`),
       display: disp,
       matrix,
       reusable,
+      opaque,
       if: j.if === void 0 ? void 0 : String(j.if),
       needs: list(j.needs) ?? []
     });
   }
-  return { path: file.path, name, prTriggers: triggers(on), jobs };
+  return { path: file.path, name, prTriggers: triggers(on), callableOnly: isCallableOnly(on), jobs };
 }
 function parseWorkflows(files) {
   return files.map(parseWorkflow);
 }
 function producersOf(context, workflows) {
-  return workflows.flatMap((w) => w.jobs.filter((j) => j.pattern.test(context)));
+  return workflows.filter((w) => !w.callableOnly).flatMap((w) => w.jobs.filter((j) => j.pattern.test(context)));
 }
 function filtersOf(w) {
   const out = [];
@@ -7998,6 +8019,7 @@ function similarity(a, b) {
 var prList = (ns) => ns.map((n) => `#${n}`).join(", ");
 var ALWAYS = /\b(always|failure|cancelled)\s*\(\s*\)/;
 var isMerged = (p) => (p.state ?? "merged") === "merged";
+var STALLED_MERGES_DAYS = 7;
 var runningAtMerge = (run, mergedAt) => {
   if (!run?.startedAt || !run.completedAt || !mergedAt) return false;
   const merged = Date.parse(mergedAt);
@@ -8030,6 +8052,7 @@ function audit(s, opts = {}) {
   const required = set.required.filter((r) => !ignore.has(r.context));
   const requiredNames = new Set(required.map((r) => r.context));
   const workflows = parseWorkflows(s.workflows);
+  const opaqueJobs = workflows.filter((w) => !w.callableOnly).flatMap((w) => w.jobs.filter((j) => j.opaque));
   const findings = [];
   const pulls = s.pulls;
   const merged = pulls.filter(isMerged);
@@ -8043,6 +8066,8 @@ function audit(s, opts = {}) {
   for (const w of workflows)
     if (w.error) findings.push({ code: "workflow-unparsable", severity: "warning", message: `\`${w.path}\` is not valid YAML: ${w.error}` });
   for (const r of set.notEnforced) {
+    const ruleset = s.rulesets.find((x) => x.id === r.rulesetId);
+    if (ruleset && !rulesetTargetsBranch(ruleset, s.branch, s.defaultBranch)) continue;
     const ctxs = r.contexts.filter((c) => !ignore.has(c));
     if (ctxs.length)
       findings.push({
@@ -8145,29 +8170,41 @@ function audit(s, opts = {}) {
             code: "never-ran",
             severity: "error",
             context: r.context,
-            message: `\`${r.context}\` (required by ${r.sources.map(sourceLabel).join(", ")}) did not report on any of the ${pulls.length} sampled PRs. ${producers.length ? `It is produced by ${producers.map((j) => `\`${j.workflow}\` job \`${j.id}\``).join(", ")}, so check that workflow's triggers.` : "No job in .github/workflows produces this name."}`,
+            message: `\`${r.context}\` (required by ${r.sources.map(sourceLabel).join(", ")}) did not report on any of the ${pulls.length} sampled PRs. ${producers.length ? `It is produced by ${producers.map((j) => `\`${j.workflow}\` job \`${j.id}\``).join(", ")}, so check that workflow's triggers.` : `No job in .github/workflows produces this name${opaqueJobs.length ? `, though ${opaqueJobs.map((j) => `\`${j.workflow}\` job \`${j.id}\``).slice(0, 3).join(", ")} take their name from an expression and may produce it` : ""}.`}`,
             evidence: by.missing.slice(0, 10)
           });
         }
       }
     } else if (pulls.length) {
-      let streak = 0;
-      for (const { p } of obs) {
-        if (!missingAt.has(p.number)) break;
-        streak++;
-      }
-      if (streak >= stoppedAfter && stoppedAfter > 0) {
-        const recent = obs.slice(0, streak);
-        const older = obs.slice(streak);
+      const missingStreak = (list2) => {
+        let n = 0;
+        for (const x of list2) {
+          if (!missingAt.has(x.p.number)) break;
+          n++;
+        }
+        return n;
+      };
+      const mergedObs = obs.filter((x) => isMerged(x.p));
+      const streak = missingStreak(mergedObs);
+      const firstMerged = obs.findIndex((x) => isMerged(x.p));
+      const openFirst = firstMerged < 0 ? obs : obs.slice(0, firstMerged);
+      const lastMerge = Date.parse(mergedObs[0]?.p.mergedAt ?? "");
+      const stalled = !Number.isNaN(lastMerge) && Date.parse(s.collectedAt) - lastMerge >= STALLED_MERGES_DAYS * 864e5;
+      const blockedOpen = stalled && streak < stoppedAfter ? missingStreak(openFirst) : 0;
+      if (stoppedAfter > 0 && (streak >= stoppedAfter || blockedOpen >= stoppedAfter)) {
+        const recent = streak >= stoppedAfter ? mergedObs.slice(0, streak) : openFirst.slice(0, blockedOpen);
+        const older = streak >= stoppedAfter ? mergedObs.slice(streak) : mergedObs;
+        const reportedBefore = older.filter((x) => !missingAt.has(x.p.number)).length;
         const appeared = [...seenNames.keys()].filter((n) => !requiredNames.has(n) && recent.every((x) => x.names.has(n)) && !older.some((x) => x.names.has(n)));
-        const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).sort((a, b) => b.s - a.s)[0];
+        const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).filter((x) => x.s >= 0.5).sort((a, b) => b.s - a.s)[0];
+        const onlyOpen = streak < stoppedAfter;
         if (!best && onlyPathFiltered(producers, workflows)) {
           if (mergedBy.missing.length) findings.push(mergedWithout(r.context, mergedBy.missing));
         } else findings.push({
           code: best ? "renamed" : "stopped-reporting",
-          severity: "error",
+          severity: onlyOpen ? "warning" : "error",
           context: r.context,
-          message: `\`${r.context}\` stopped reporting: missing on the ${streak} newest sampled PRs (${prList(recent.map((x) => x.p.number))}) after reporting on ${seen} older ones.${best ? ` \`${best.n}\` first appears on exactly those PRs and is not required \u2014 the job was probably renamed and fell out of the required list.` : ""}`,
+          message: `\`${r.context}\` stopped reporting: missing on the ${recent.length} newest ${onlyOpen ? `open PRs, with no merge in ${STALLED_MERGES_DAYS} days or more` : "merged PRs"} (${prList(recent.map((x) => x.p.number))}) after reporting on ${reportedBefore} older ones.${best ? ` \`${best.n}\` first appears on exactly those PRs and is not required \u2014 the job was probably renamed and fell out of the required list.` : ""}`,
           evidence: recent.map((x) => x.p.number),
           hint: best ? `Replace \`${r.context}\` with \`${best.n}\` in ${r.sources.map(sourceLabel).join(" and ")}.` : void 0
         });
@@ -8291,7 +8328,7 @@ function staticFindings(context, producers, workflows, branch, requiredSet2) {
       });
     if (job.needs.length && !(cond && ALWAYS.test(cond))) {
       const needed = wf.jobs.filter((j) => job.needs.includes(j.id));
-      const unguarded = needed.filter((j) => !producesRequired(j, requiredSet2));
+      const unguarded = needed.filter((j) => !j.opaque && !producesRequired(j, requiredSet2));
       if (unguarded.length)
         out.push({
           code: "skips-when-needs-fail",
@@ -8339,7 +8376,8 @@ async function fetchWorkflows(gh, owner, repo, ref, notes) {
 async function collect(o) {
   const { gh, owner, repo } = o;
   const base = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
-  const branch = o.branch ?? (await gh.get(base)).default_branch;
+  const defaultBranch = o.defaultBranch ?? (o.branch ? void 0 : (await gh.get(base)).default_branch);
+  const branch = o.branch ?? defaultBranch;
   const b = encPath(branch);
   const req = await fetchRequiredSources(gh, owner, repo, branch);
   const notes = [...req.notes];
@@ -8370,6 +8408,7 @@ async function collect(o) {
   return {
     repository: `${owner}/${repo}`,
     branch,
+    defaultBranch,
     collectedAt: (o.now?.() ?? /* @__PURE__ */ new Date()).toISOString(),
     classic: req.classic,
     branchRules: req.branchRules,

@@ -10,6 +10,19 @@ Rollcall:
 - `protection-drift` no longer fires when only one layer pins a check to an app, which GitHub does by itself in classic branch protection.
 - `merged-while-pending` now catches a check that was running when the PR merged and finished later. Before, it only fired if the check was still unfinished when the audit ran. If that check later failed, it's reported here rather than as `merged-with-failure`.
 - Branches protected only by rulesets no longer get a note saying classic required checks are unknown.
+- A job named only by an expression (`name: ${{ matrix.x }}`) no longer counts as producing every required check, which blamed it for checks it has nothing to do with.
+- `stopped-reporting` and `renamed` no longer count open PRs that simply have not run a check yet. Open PRs count only when nothing has merged for 7 days, as a warning.
+- `renamed` now needs a similar name; any job added since no longer qualifies.
+- `ruleset-not-enforced` only reports rulesets that target the audited branch.
+- `not-on-pull-request` no longer fires on `workflow_call` reusable workflows.
+
+Migrations:
+
+- Django apps with a custom `AppConfig.label` no longer read as having every migration as a leaf. The label comes from `apps.py`, or else from the migrations' own dependencies.
+
+Owners:
+
+- Logins ending in a hyphen, which GitHub allows for older accounts, are no longer reported as `invalid-line`.
 
 Intact:
 

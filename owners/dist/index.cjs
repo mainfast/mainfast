@@ -7550,7 +7550,7 @@ function patternToRegExp(pattern) {
 function parseOwner(raw) {
   const team = raw.match(/^@([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+)$/);
   if (team) return { kind: "team", raw, org: team[1], slug: team[2].toLowerCase() };
-  const user = raw.match(/^@([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\[bot\])?)$/);
+  const user = raw.match(/^@([A-Za-z0-9][A-Za-z0-9-]*(?:\[bot\])?)$/);
   if (user) return { kind: "user", raw, login: user[1] };
   if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)) return { kind: "email", raw, email: raw };
   return void 0;
