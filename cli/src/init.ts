@@ -1,7 +1,8 @@
 // `init`: write the workflows and a starter config. Touches only fixed paths inside the repository,
 // never overwrites without force, never pushes and never changes branch protection.
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, sep } from "node:path";
+import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { readRepoFile, repoPathKind } from "@mainfast/shared/repo-file";
 import { PRODUCT_SLUGS, product, SUITE, type ProductSlug } from "@mainfast/shared/brand";
 import { CliError, repoRoot, SCHEMA, type Result } from "./common.ts";
 import { STARTER_CONFIG, WORKFLOWS, workflowPath } from "./templates.ts";
@@ -15,40 +16,22 @@ export interface InitOptions {
 
 export const hostedAppUrl = () => `https://github.com/apps/${SUITE.githubOrg}`;
 
-/** Refuses a path that passes through a symlink, which could lead outside the repository. */
-function assertNoSymlink(root: string, rel: string): void {
-  let cur = root;
-  for (const part of rel.split("/")) {
-    cur = join(cur, part);
-    if (existsSync(cur) || isLink(cur)) {
-      if (isLink(cur)) throw new CliError(`refusing to write through a symlink: ${cur.slice(root.length + sep.length)}`);
-    } else return;
-  }
-}
-
-function isLink(p: string): boolean {
-  try {
-    return lstatSync(p).isSymbolicLink();
-  } catch {
-    return false;
-  }
-}
-
 /** Workflow files in the repository that already use this check's action. */
 export function installedIn(root: string, slug: ProductSlug): string[] {
-  const dir = join(root, ".github/workflows");
-  if (!existsSync(dir)) return [];
+  const rel = ".github/workflows";
+  // Throws on a symlink: .github/workflows must be a real directory inside the repository.
+  if (repoPathKind(root, rel) !== "directory") return [];
   const action = product(slug).actionRef.split("@")[0]!;
-  return readdirSync(dir)
+  return readdirSync(join(root, rel))
     .filter((f) => /\.ya?ml$/.test(f))
     .filter((f) => {
       try {
-        return readFileSync(join(dir, f), "utf8").includes(`uses: ${action}@`);
+        return readRepoFile(root, `${rel}/${f}`)?.includes(`uses: ${action}@`) ?? false;
       } catch {
-        return false;
+        return false; // a symlink, a directory or an oversized file is not an installed check
       }
     })
-    .map((f) => `.github/workflows/${f}`);
+    .map((f) => `${rel}/${f}`);
 }
 
 function nextSteps(slugs: readonly ProductSlug[]): string[] {
@@ -74,10 +57,10 @@ export function runInit(opts: InitOptions): Result {
   const skipped: Array<{ path: string; reason: string }> = [];
 
   const place = (rel: string, content: string): void => {
-    assertNoSymlink(root, rel);
+    const current = readRepoFile(root, rel);
     const abs = join(root, rel);
-    const exists = existsSync(abs);
-    if (exists && readFileSync(abs, "utf8") === content) return void unchanged.push(rel);
+    const exists = current !== undefined;
+    if (current === content) return void unchanged.push(rel);
     if (exists && !opts.force) return void skipped.push({ path: rel, reason: "exists with other content; use force to replace it" });
     if (!opts.dryRun) {
       mkdirSync(dirname(abs), { recursive: true });
@@ -92,7 +75,7 @@ export function runInit(opts: InitOptions): Result {
     if (others.length) skipped.push({ path: rel, reason: `already installed in ${others.join(", ")}` });
     else place(rel, WORKFLOWS[slug]);
   }
-  if (existsSync(join(root, SUITE.configFileAlt))) skipped.push({ path: SUITE.configFile, reason: `${SUITE.configFileAlt} already exists` });
+  if (repoPathKind(root, SUITE.configFileAlt)) skipped.push({ path: SUITE.configFile, reason: `${SUITE.configFileAlt} already exists` });
   else place(SUITE.configFile, STARTER_CONFIG);
 
   const steps = nextSteps(slugs);

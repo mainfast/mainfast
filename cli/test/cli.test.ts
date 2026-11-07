@@ -119,6 +119,19 @@ describe("init", () => {
     expect(existsSync(join(outside, "workflows"))).toBe(false);
   });
 
+  it("refuses a symlinked file target, with or without force", () => {
+    const d = repo();
+    const outside = join(tmp(), "secret.yml");
+    writeFileSync(outside, "keep\n");
+    symlinkSync(outside, join(d, ".mainfast.yml"));
+    for (const flags of [[], ["--force"]]) {
+      const r = run(d, ["init", "--checks", "intact", ...flags]);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toMatch(/symlink/);
+    }
+    expect(readFileSync(outside, "utf8")).toBe("keep\n");
+  });
+
   it("refuses an unknown check, and a directory outside git", () => {
     expect(run(repo(), ["init", "--checks", "nope"]).code).toBe(2);
     expect(run(tmp(), ["init"]).code).toBe(2);
@@ -155,6 +168,77 @@ describe("doctor", () => {
     const r = run(d, ["doctor", "--json"]);
     expect(r.code).toBe(1);
     expect(r.json().config.ok).toBe(false);
+  });
+});
+
+describe("files that point outside the repository", () => {
+  const SECRET = "TOP-SECRET-OUTSIDE-THE-REPO";
+  const outsideFile = () => {
+    const f = join(tmp(), "outside");
+    writeFileSync(f, `${SECRET} @nobody\n`);
+    return f;
+  };
+
+  it("doctor does not follow a symlinked config, and says so", () => {
+    const d = repo();
+    symlinkSync(outsideFile(), join(d, ".mainfast.yml"));
+    const r = run(d, ["doctor", "--json"]);
+    expect(r.code).toBe(1);
+    expect(r.json().config.ok).toBe(false);
+    expect(r.json().config.error).toMatch(/symlink/);
+    expect(r.stdout + r.stderr).not.toContain(SECRET);
+  });
+
+  it("doctor does not follow a symlinked workflows directory or workflow", () => {
+    const d = repo();
+    const elsewhere = tmp();
+    writeFileSync(join(elsewhere, "a.yml"), "uses: mainfast/intact@v0\n");
+    mkdirSync(join(d, ".github"));
+    symlinkSync(elsewhere, join(d, ".github/workflows"));
+    const r = run(d, ["doctor", "--json"]);
+    expect(r.code).toBe(1);
+    expect(r.json().checks.intact.installed).toBe(false);
+    expect(r.json().missing.join(" ")).toMatch(/symlink/);
+
+    const e = repo();
+    mkdirSync(join(e, ".github/workflows"), { recursive: true });
+    symlinkSync(join(elsewhere, "a.yml"), join(e, ".github/workflows/a.yml"));
+    expect(run(e, ["doctor", "--json"]).json().checks.intact.installed).toBe(false);
+  });
+
+  it("doctor refuses an oversized config without reading it", () => {
+    const d = repo();
+    run(d, ["init", "--checks", "intact"]);
+    writeFileSync(join(d, ".mainfast.yml"), `version: 1\n#${"x".repeat(1024 * 1024)}\n`);
+    const j = run(d, ["doctor", "--json"]).json();
+    expect(j.config.ok).toBe(false);
+    expect(j.config.error).toMatch(/too large/);
+  });
+
+  it("audit owners does not read a symlinked CODEOWNERS", () => {
+    const d = repo();
+    symlinkSync(outsideFile(), join(d, "CODEOWNERS"));
+    const r = run(d, ["audit", "owners", "--offline", "--json"]);
+    expect(r.code).toBe(2);
+    expect(r.stderr).toMatch(/symlink/);
+    expect(r.stdout + r.stderr).not.toContain(SECRET);
+  });
+
+  it("check does not read a symlinked config", () => {
+    const d = droppedMerge();
+    symlinkSync(outsideFile(), join(d, ".mainfast.yml"));
+    const r = run(d, ["check", "--main", "main", "--json"]);
+    expect(r.code).toBe(2);
+    expect(r.stdout + r.stderr).not.toContain(SECRET);
+  });
+
+  it("check does not follow a local extends out of the repository", () => {
+    const d = droppedMerge();
+    const outside = outsideFile();
+    writeFileSync(join(d, ".mainfast.yml"), `version: 1\nextends: ../../../../../../../../../..${outside}\n`);
+    const r = run(d, ["check", "--main", "main", "--json"]);
+    expect(r.code).toBe(2);
+    expect(r.stdout + r.stderr).not.toContain(SECRET);
   });
 });
 
@@ -281,6 +365,18 @@ describe("mcp", () => {
       expect(JSON.stringify(check.structuredContent.report)).toContain("app.txt");
       expect(JSON.parse(check.content[0].text).ok).toBe(false);
 
+      expect(init_.annotations.destructiveHint).toBe(true);
+
+      const outside = repo();
+      for (const [tool, args] of [["init", { repo_path: outside, force: true }], ["doctor", { repo_path: outside }], ["check", { repo_path: outside }], ["audit", { repo_path: outside, check: "owners" }]] as const) {
+        const refused = (await send("tools/call", { name: tool, arguments: args })).result;
+        expect(refused.isError, tool).toBe(true);
+        expect(refused.content[0].text, tool).toMatch(/outside the working directory/);
+      }
+      expect(existsSync(join(outside, ".github"))).toBe(false);
+      const inRepo = (await send("tools/call", { name: "doctor", arguments: { repo_path: "." } })).result;
+      expect(inRepo.isError).toBeFalsy();
+
       const bad = (await send("tools/call", { name: "audit", arguments: { check: "rollcall" } })).result;
       expect(bad.isError).toBe(true);
       expect(noise).toEqual([]);
@@ -309,5 +405,42 @@ describe("the npm package", () => {
     const run_ = spawnSync("npx", ["--yes", "--package", join(dest, pack.filename), "mainfast", "init", "--dry-run", "--json"], { cwd: d, env: { ...CLEAN_ENV, npm_config_cache: tmp() }, encoding: "utf8" });
     expect(run_.status, run_.stderr).toBe(0);
     expect(JSON.parse(run_.stdout).written).toHaveLength(6);
+  });
+});
+
+describe("mcp client roots", () => {
+  it("allows a repository under a root the client declares, and only that", async () => {
+    const cwd = tmp();
+    const allowed = repo();
+    const denied = repo();
+    const child = spawn(process.execPath, [BIN, "mcp"], { cwd, env: CLEAN_ENV, stdio: ["pipe", "pipe", "pipe"] });
+    let buffer = "";
+    const replies = new Map<number, (m: Record<string, any>) => void>();
+    child.stdout.on("data", (b: Buffer) => {
+      buffer += b.toString();
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) >= 0) {
+        const m = JSON.parse(buffer.slice(0, nl));
+        buffer = buffer.slice(nl + 1);
+        // The server asks the client for its roots.
+        if (m.method === "roots/list") child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: m.id, result: { roots: [{ uri: `file://${allowed}` }] } })}\n`);
+        else replies.get(m.id)?.(m);
+      }
+    });
+    let id = 0;
+    const send = (method: string, params: unknown = {}) =>
+      new Promise<Record<string, any>>((resolve) => {
+        const n = ++id;
+        replies.set(n, resolve);
+        child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: n, method, params })}\n`);
+      });
+    try {
+      await send("initialize", { protocolVersion: "2025-06-18", capabilities: { roots: {} }, clientInfo: { name: "test", version: "1" } });
+      child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
+      expect((await send("tools/call", { name: "doctor", arguments: { repo_path: allowed } })).result.isError).toBeFalsy();
+      expect((await send("tools/call", { name: "doctor", arguments: { repo_path: denied } })).result.isError).toBe(true);
+    } finally {
+      child.kill();
+    }
   });
 });

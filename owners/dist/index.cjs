@@ -8614,6 +8614,9 @@ async function auditOwners(input) {
   return report;
 }
 
+// ../packages/shared/src/repo-file.ts
+var MAX_REPO_FILE_BYTES = 1024 * 1024;
+
 // src/load.ts
 async function codeownersAt(api, ref) {
   for (const p of CODEOWNERS_LOCATIONS) {

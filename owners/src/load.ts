@@ -3,8 +3,6 @@
 // (audit), the PR's own CODEOWNERS and tree from its head commit. The CLI's offline `lint` reads
 // a local checkout.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
 import type { CodeownersFile, OwnersApi, PrFile } from './api.js';
 import { CODEOWNERS_LOCATIONS } from './codeowners.js';
 import type { OwnersInput } from './audit.js';
@@ -12,6 +10,7 @@ import { CONFIG_FILE, CONFIG_FILE_ALT } from './brand.js';
 import { configFromDoc, parseConfig, type OwnersConfig } from './config.js';
 import { resolveConfig } from '@mainfast/shared/config';
 import type { GitHub } from '@mainfast/shared/github';
+import { readRepoFile } from '@mainfast/shared/repo-file';
 
 export function localFiles(repoDir: string): string[] {
   return execFileSync('git', ['ls-files', '-z'], { cwd: repoDir, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
@@ -21,8 +20,8 @@ export function localFiles(repoDir: string): string[] {
 
 export function localCodeowners(repoDir: string): CodeownersFile | undefined {
   for (const p of CODEOWNERS_LOCATIONS) {
-    const full = join(repoDir, p);
-    if (existsSync(full) && statSync(full).isFile()) return { path: p, text: readFileSync(full, 'utf8'), size: statSync(full).size };
+    const text = readRepoFile(repoDir, p);
+    if (text !== undefined) return { path: p, text, size: Buffer.byteLength(text) };
   }
   return undefined;
 }
