@@ -24,6 +24,11 @@ export interface JobInfo {
   display: string;
   matrix: boolean;
   reusable: boolean;
+  /**
+   * The name is only expressions (`${{ matrix.name }}`), so it could be anything. The job is never
+   * reported as producing a required check: claiming every check for it would blame it for all.
+   */
+  opaque: boolean;
   if?: string;
   needs: string[];
 }
@@ -33,6 +38,11 @@ export interface WorkflowInfo {
   name: string;
   /** Pull-request-ish triggers (pull_request, pull_request_target, merge_group). */
   prTriggers: PrFilters[];
+  /**
+   * Only runs when another workflow calls it (`workflow_call`, optionally `workflow_dispatch`).
+   * Its PR triggers live in the caller, and its checks report as "<caller job> / <job>".
+   */
+  callableOnly: boolean;
   jobs: JobInfo[];
   error?: string;
 }
@@ -68,6 +78,17 @@ function triggers(on: unknown): PrFilters[] {
   return [];
 }
 
+/** Whether the workflow runs only when called (or by hand), so no PR event starts it directly. */
+function isCallableOnly(on: unknown): boolean {
+  const events = typeof on === 'string' ? [on] : Array.isArray(on) ? on.map(String) : on && typeof on === 'object' ? Object.keys(on) : [];
+  return events.includes('workflow_call') && events.every((e) => e === 'workflow_call' || e === 'workflow_dispatch');
+}
+
+const EXPRESSION = /\$\{\{[^}]*\}\}/g;
+
+/** No letters or digits outside the expressions: `${{ matrix.x }}`, `${{ a }} / ${{ b }}`. */
+const isOpaqueName = (name: string) => /\$\{\{/.test(name) && !/[\p{L}\p{N}]/u.test(name.replace(EXPRESSION, ''));
+
 /** Pattern for a name that may contain ${{ expressions }}. */
 function namePattern(name: string): { source: string; display: string } {
   const parts = name.split(/\$\{\{[^}]*\}\}/);
@@ -79,7 +100,7 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
   try {
     doc = parse(file.text);
   } catch (e) {
-    return { path: file.path, name: file.path, prTriggers: [], jobs: [], error: e instanceof Error ? e.message : String(e) };
+    return { path: file.path, name: file.path, prTriggers: [], callableOnly: false, jobs: [], error: e instanceof Error ? e.message : String(e) };
   }
   const name = typeof doc?.name === 'string' ? doc.name : file.path;
   // YAML 1.1 parsers read a bare `on:` key as boolean true; the yaml package keeps "on"
@@ -91,6 +112,7 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
     const hasExpr = /\$\{\{/.test(rawName);
     const matrix = Boolean(j.strategy?.matrix);
     const reusable = typeof j.uses === 'string';
+    const opaque = isOpaqueName(rawName);
     const { source, display } = namePattern(rawName);
     let src = source;
     let disp = display;
@@ -109,15 +131,16 @@ export function parseWorkflow(file: WorkflowFile): WorkflowInfo {
       workflowName: name,
       id,
       rawName,
-      pattern: new RegExp(`^${src}$`),
+      pattern: opaque ? /(?!)/ : new RegExp(`^${src}$`),
       display: disp,
       matrix,
       reusable,
+      opaque,
       if: j.if === undefined ? undefined : String(j.if),
       needs: list(j.needs) ?? [],
     });
   }
-  return { path: file.path, name, prTriggers: triggers(on), jobs };
+  return { path: file.path, name, prTriggers: triggers(on), callableOnly: isCallableOnly(on), jobs };
 }
 
 export function parseWorkflows(files: WorkflowFile[]): WorkflowInfo[] {
@@ -125,7 +148,7 @@ export function parseWorkflows(files: WorkflowFile[]): WorkflowInfo[] {
 }
 
 export function producersOf(context: string, workflows: WorkflowInfo[]): JobInfo[] {
-  return workflows.flatMap((w) => w.jobs.filter((j) => j.pattern.test(context)));
+  return workflows.filter((w) => !w.callableOnly).flatMap((w) => w.jobs.filter((j) => j.pattern.test(context)));
 }
 
 export function filtersOf(w: WorkflowInfo): string[] {

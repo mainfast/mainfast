@@ -67,7 +67,7 @@ export async function run(): Promise<void> {
   const pulls = count('pulls', getInput('pulls', String(cfg.pulls)), 1, 100);
   const openPulls = count('open-pulls', getInput('open-pulls', String(cfg.openPulls)), 0, 100);
 
-  const snap = await collect({ gh, owner, repo, branch, pulls, openPulls });
+  const snap = await collect({ gh, owner, repo, branch, defaultBranch, pulls, openPulls });
   const report = audit(snap, { ignore: cfg.ignore, stoppedAfter: cfg.stoppedAfter });
   const md = toMarkdown(report, { runUrl: ctx.runUrl });
   appendSummary(md);

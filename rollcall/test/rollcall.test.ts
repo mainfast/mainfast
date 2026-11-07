@@ -315,7 +315,7 @@ describe('merged and open PRs', () => {
     const f = (code: string, ctx: string) => report.findings.find((x) => x.code === code && x.context === ctx);
     expect(f('skipped-as-success', 'typecheck')!.evidence).toEqual([120, 105]);
     expect(f('merged-with-failure', 'build')).toBeUndefined();
-    expect(f('renamed', 'lint')!.evidence).toEqual([121, 120, 108, 107, 106]);
+    expect(f('renamed', 'lint')!.evidence).toEqual([108, 107, 106]);
     expect(report.tallies.find((t) => t.context === 'build')).toMatchObject({ sampled: 10, open: 2, failed: 1 });
   });
 
@@ -417,5 +417,116 @@ describe('untrusted text is escaped everywhere it is rendered', () => {
 
   it('an unsafe run URL is dropped', () => {
     expect(toMarkdown(hostile(), { runUrl: 'javascript:alert(1)' })).not.toContain('javascript:');
+  });
+});
+
+// Regressions from the public-repo benchmark of 7 Nov 2026.
+describe('false positives found on real repositories', () => {
+  const at = '2026-11-07T00:00:00Z';
+  const checkRun = (name: string) => ({ id: 1, name, head_sha: 's', status: 'completed' as const, conclusion: 'success' as const, started_at: at, completed_at: at, app: { id: 15368, slug: 'github-actions' } });
+  const merged = (number: number, names: string[], mergedAt = `2026-11-0${number}T00:00:00Z`) => ({ number, title: '', headSha: 's', state: 'merged' as const, mergedAt, checkRuns: names.map(checkRun), statuses: [] });
+  const open = (number: number, names: string[], updatedAt = '2026-11-07T00:00:00Z') => ({ number, title: '', headSha: 's', state: 'open' as const, mergedAt: null, updatedAt, checkRuns: names.map(checkRun), statuses: [] });
+  const snap = (over: Partial<Snapshot>): Snapshot => ({ repository: 'a/b', branch: 'main', collectedAt: at, classic: undefined, branchRules: [], rulesets: [], pulls: [], workflows: [], notes: [], ...over } as Snapshot);
+  const codes = (r: ReturnType<typeof audit>, ctx?: string) => r.findings.filter((f) => !ctx || f.context === ctx).map((f) => `${f.severity} ${f.code}`);
+
+  describe('a job named only by an expression (PostHog terragrunt, cpython jit)', () => {
+    const wf = { path: '.github/workflows/jit.yml', text: 'on: {pull_request: {paths: ["jit/**"]}}\njobs:\n  jit:\n    name: ${{ matrix.target }}\n    needs: [setup]\n    if: github.repository == "a/b"\n    strategy: {matrix: {target: [x, y]}}\n    runs-on: x\n  setup:\n    runs-on: x\n' };
+
+    it('produces no required check, so it is blamed for none', () => {
+      expect(producersOf('Semgrep Checks Pass', [parseWorkflow(wf)])).toEqual([]);
+      const r = audit(snap({ classic: { contexts: ['Semgrep Checks Pass'], checks: [] }, workflows: [wf], pulls: [merged(1, ['Semgrep Checks Pass'])] }));
+      expect(r.findings).toEqual([]);
+    });
+
+    it('treats an expression with only punctuation around it the same way', () => {
+      const j = parseWorkflow({ path: 'w.yml', text: 'on: pull_request\njobs:\n  a:\n    name: "${{ matrix.a }} / ${{ matrix.b }}"\n    runs-on: x\n' }).jobs[0]!;
+      expect(j.opaque).toBe(true);
+    });
+
+    it('still matches a name with literal text around the expression', () => {
+      const w = parseWorkflow({ path: 'w.yml', text: 'on: pull_request\njobs:\n  a:\n    name: test-${{ matrix.os }}\n    runs-on: x\n' });
+      expect(producersOf('test-linux', [w]).map((j) => j.id)).toEqual(['a']);
+      expect(producersOf('lint', [w])).toEqual([]);
+    });
+
+    it('is named when a required check never ran, because it may be the producer', () => {
+      const r = audit(snap({ classic: { contexts: ['Zebra'], checks: [] }, workflows: [wf], pulls: [merged(1, ['other'])] }));
+      expect(r.findings.find((f) => f.code === 'never-ran')!.message).toContain('`.github/workflows/jit.yml` job `jit` take their name from an expression');
+    });
+  });
+
+  describe('open PRs and stopped-reporting (supabase)', () => {
+    const base = { classic: { contexts: ['ci'], checks: [] } };
+
+    it('does not read open PRs as stopped while merges keep reporting the check', () => {
+      const pulls = [open(9, ['lint']), open(8, ['lint']), merged(3, ['ci']), merged(2, ['ci'])];
+      expect(codes(audit(snap({ ...base, pulls })), 'ci')).toEqual([]);
+    });
+
+    it('still reports merged PRs that stopped, and names only those', () => {
+      const pulls = [open(9, ['lint']), merged(3, ['lint']), merged(2, ['lint']), merged(1, ['ci', 'lint'])];
+      const f = audit(snap({ ...base, pulls })).findings.find((x) => x.code === 'stopped-reporting')!;
+      expect(f.severity).toBe('error');
+      expect(f.evidence).toEqual([3, 2]);
+      expect(f.message).toContain('after reporting on 1 older ones');
+    });
+
+    it('warns when open PRs lack the check and nothing has merged for a week: it may be blocking them', () => {
+      const pulls = [open(9, ['lint']), open(8, ['lint']), merged(1, ['ci'], '2026-10-20T00:00:00Z')];
+      const f = audit(snap({ ...base, pulls })).findings.find((x) => x.code === 'stopped-reporting')!;
+      expect(f.severity).toBe('warning');
+      expect(f.evidence).toEqual([9, 8]);
+    });
+
+    it('reports a rename on merged PRs, and open PRs do not hide it', () => {
+      const pulls = [open(9, ['other']), merged(3, ['eslint']), merged(2, ['eslint']), merged(1, ['lint'])];
+      const r = audit(snap({ classic: { contexts: ['lint'], checks: [] }, pulls }));
+      expect(r.findings.find((x) => x.code === 'renamed')!.evidence).toEqual([3, 2]);
+    });
+  });
+
+  describe('a ruleset not enforced, and the branch it targets (cpython, next.js)', () => {
+    const rs = (conditions: unknown, over = {}) => ({ id: 7, name: 'r', target: 'branch', enforcement: 'evaluate', conditions, rules: [{ type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'ci' }] } }], ...over });
+    const found = (ruleset: unknown, branch = 'main', defaultBranch: string | undefined = 'main') =>
+      audit(snap({ branch, defaultBranch, rulesets: [ruleset] as Snapshot['rulesets'] })).findings.some((f) => f.code === 'ruleset-not-enforced');
+
+    it('ignores a ruleset aimed at another branch', () => {
+      expect(found(rs({ ref_name: { include: ['refs/heads/3.10', 'refs/heads/3.15'] } }))).toBe(false);
+      expect(found(rs({ ref_name: { include: ['~DEFAULT_BRANCH'] } }), 'release', 'main')).toBe(false);
+      expect(found(rs({ ref_name: { include: ['~ALL'], exclude: ['refs/heads/main'] } }))).toBe(false);
+      expect(found(rs({ ref_name: { include: ['refs/heads/release/*'] } }))).toBe(false);
+      expect(found(rs({ ref_name: { include: ['~ALL'] } }, { target: 'tag' }))).toBe(false);
+    });
+
+    it('still reports one that covers the audited branch', () => {
+      expect(found(rs({ ref_name: { include: ['refs/heads/main'] } }))).toBe(true);
+      expect(found(rs({ ref_name: { include: ['~DEFAULT_BRANCH'] } }))).toBe(true);
+      expect(found(rs({ ref_name: { include: ['~ALL'], exclude: ['refs/heads/dev'] } }))).toBe(true);
+      expect(found(rs({ ref_name: { include: ['refs/heads/r*'] } }), 'release')).toBe(true);
+      expect(found(rs({ ref_name: { include: ['refs/heads/release/**/*'] } }), 'release/a/b')).toBe(true);
+      expect(found(rs({ ref_name: { include: ['~DEFAULT_BRANCH'] } }), 'main', undefined)).toBe(true);
+      expect(found(rs(undefined))).toBe(true);
+    });
+  });
+
+  describe('a reusable workflow (workflow_call)', () => {
+    const called = { path: '.github/workflows/lib.yml', text: 'on: workflow_call\njobs:\n  build:\n    runs-on: x\n' };
+    const caller = { path: '.github/workflows/ci.yml', text: 'on: pull_request\njobs:\n  all:\n    uses: ./.github/workflows/lib.yml\n' };
+
+    it('is not blamed for lacking a pull_request trigger: that lives in the caller', () => {
+      const r = audit(snap({ classic: { contexts: ['all / build'], checks: [] }, workflows: [called, caller], pulls: [merged(1, ['all / build'])] }));
+      expect(r.findings).toEqual([]);
+      expect(r.tallies[0]!.producers).toEqual(['.github/workflows/ci.yml#all']);
+    });
+
+    it('does not count as producing a check under its own job name', () => {
+      expect(producersOf('build', [parseWorkflow(called)])).toEqual([]);
+    });
+
+    it('still reports a workflow with another non-PR trigger', () => {
+      const pushed = { path: 'p.yml', text: 'on: {push: {}, workflow_call: {}}\njobs:\n  build:\n    runs-on: x\n' };
+      const r = audit(snap({ classic: { contexts: ['build'], checks: [] }, workflows: [pushed], pulls: [merged(1, ['build'])] }));
+      expect(codes(r)).toContain('error not-on-pull-request');
+    });
   });
 });

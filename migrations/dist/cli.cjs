@@ -7876,12 +7876,22 @@ function parseDjango(path, text, app) {
   };
 }
 var MIGRATION_FILE = /(^|\/)migrations\/\d{4}_[^/]+\.py$/;
-function appLabel(root) {
-  return basename(dirname(root)) || basename(root);
+function appLabel(tree, root, files) {
+  const dir = basename(dirname(root)) || basename(root);
+  const config = /^[ \t]+label\s*=\s*['"]([A-Za-z_][A-Za-z0-9_]*)['"]/m.exec(tree.read(`${dirname(root)}/apps.py`) ?? "");
+  if (config) return config[1];
+  const parsed = files.map((f) => parseDjango(f, tree.read(f) ?? "", dir));
+  const names = new Set(parsed.map((m) => m.name));
+  const counts = /* @__PURE__ */ new Map();
+  for (const m of parsed)
+    for (const [label, name] of m.deps) if (names.has(name) && name < m.name) counts.set(label, (counts.get(label) ?? 0) + 1);
+  if (!counts.size || counts.has(dir)) return dir;
+  return [...counts].sort((a, b) => b[1] - a[1])[0][0];
 }
 function migrations(tree, root) {
-  const app = appLabel(root);
-  return tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f)).map((f) => parseDjango(f, tree.read(f) ?? "", app));
+  const files = tree.under(root).filter((f) => dirname(f) === root && MIGRATION_FILE.test(f));
+  const app = appLabel(tree, root, files);
+  return files.map((f) => parseDjango(f, tree.read(f) ?? "", app));
 }
 var django = {
   id: "django",
@@ -7892,7 +7902,7 @@ var django = {
   },
   inspect(tree, root) {
     const migs = migrations(tree, root);
-    const app = appLabel(root);
+    const app = migs[0]?.app ?? basename(dirname(root));
     const findings = [];
     const names = new Set(migs.map((m) => m.name));
     for (const [num, list4] of groupBy(migs, (m) => m.number)) {

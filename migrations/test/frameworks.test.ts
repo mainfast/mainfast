@@ -69,6 +69,31 @@ describe('alembic', () => {
 });
 
 describe('django', () => {
+  // authentik: authentik/providers/saml has label "authentik_providers_saml", so dependencies do not use the folder name.
+  describe('with a custom app label', () => {
+    const L = 'authentik/providers/saml/migrations';
+    const label = 'authentik_providers_saml';
+    const ledger = {
+      [`${L}/__init__.py`]: '',
+      [`${L}/0001_initial.py`]: djangoMig([]),
+      [`${L}/0002_price.py`]: djangoMig([[label, '0001_initial']]),
+      [`${L}/0003_more.py`]: djangoMig([[label, '0002_price'], ['other', '0001_initial']]),
+    };
+    const app = { 'authentik/providers/saml/apps.py': `class SamlConfig(AppConfig):\n    name = "authentik.providers.saml"\n    label = "${label}"\n` };
+
+    for (const [how, files] of [['from apps.py', { ...ledger, ...app }], ['from the dependencies, with no apps.py', ledger]] as const) {
+      it(`does not read every migration as a leaf: label ${how}`, () => {
+        const r = race(files, { 'main.txt': 'm' }, { [`${L}/0004_branch.py`]: djangoMig([[label, '0003_more']]) });
+        expect(codes(analyze({ repo: r.dir, mainRef: 'main', headRef: 'feature' }))).toEqual([]);
+      });
+
+      it(`still reports two leaves: label ${how}`, () => {
+        const r = race(files, { [`${L}/0004_main.py`]: djangoMig([[label, '0003_more']]) }, { [`${L}/0004_branch.py`]: djangoMig([[label, '0003_more']]) });
+        expect(codes(analyze({ repo: r.dir, mainRef: 'main', headRef: 'feature' }))).toContain('django:multiple-leaves:error');
+      });
+    }
+  });
+
   const M = 'shop/migrations';
   const base = {
     [`${M}/__init__.py`]: '',

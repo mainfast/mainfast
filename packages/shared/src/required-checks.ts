@@ -48,6 +48,29 @@ export interface Ruleset {
   rules?: BranchRule[];
 }
 
+/** A ref pattern from a ruleset condition: `*` stays within a path segment, `**` crosses them. */
+function refMatches(pattern: string, ref: string): boolean {
+  const escape = (t: string) => t.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  const source = pattern
+    .split("**/")
+    .map((a) => a.split("**").map((b) => b.split("*").map(escape).join("[^/]*")).join(".*"))
+    .join("(?:.*/)?");
+  return new RegExp(`^${source}$`).test(ref);
+}
+
+/**
+ * Whether a ruleset's `conditions.ref_name` covers a branch. With no such condition (some org
+ * rulesets) or an unknown default branch and `~DEFAULT_BRANCH`, it counts as a match.
+ */
+export function rulesetTargetsBranch(r: Pick<Ruleset, "target" | "conditions">, branch: string, defaultBranch?: string): boolean {
+  if (r.target && r.target !== "branch") return false;
+  const cond = r.conditions?.ref_name;
+  if (!cond) return true;
+  const ref = `refs/heads/${branch}`;
+  const hit = (p: string) => p === "~ALL" || (p === "~DEFAULT_BRANCH" ? defaultBranch === undefined || defaultBranch === branch : refMatches(p, ref));
+  return (cond.include ?? []).some(hit) && !(cond.exclude ?? []).some(hit);
+}
+
 export interface RequiredSource {
   kind: "classic" | "ruleset";
   rulesetId?: number;

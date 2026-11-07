@@ -47,6 +47,8 @@ export interface WorkflowFile {
 export interface Snapshot {
   repository: string;
   branch: string;
+  /** The repository's default branch, for rulesets aimed at `~DEFAULT_BRANCH`. Unknown counts as a match. */
+  defaultBranch?: string;
   collectedAt: string;
   classic: ClassicRequiredChecks | null;
   /** Active rules for the branch, as returned by rules/branches. */

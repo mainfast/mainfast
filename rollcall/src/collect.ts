@@ -10,6 +10,8 @@ export interface CollectOptions {
   owner: string;
   repo: string;
   branch?: string;
+  /** The repository's default branch when the caller knows it. Without `branch` it is looked up. */
+  defaultBranch?: string;
   /** How many recently merged PRs to sample. */
   pulls?: number;
   /** How many open PRs to sample (default 10; 0 = none). */
@@ -52,7 +54,8 @@ export async function fetchWorkflows(gh: GitHub, owner: string, repo: string, re
 export async function collect(o: CollectOptions): Promise<Snapshot> {
   const { gh, owner, repo } = o;
   const base = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
-  const branch = o.branch ?? (await gh.get<{ default_branch: string }>(base)).default_branch;
+  const defaultBranch = o.defaultBranch ?? (o.branch ? undefined : (await gh.get<{ default_branch: string }>(base)).default_branch);
+  const branch = o.branch ?? defaultBranch!;
   const b = encPath(branch);
 
   // Classic protection ("Get a branch" first: read access is enough), active rules, all rulesets.
@@ -97,6 +100,7 @@ export async function collect(o: CollectOptions): Promise<Snapshot> {
   return {
     repository: `${owner}/${repo}`,
     branch,
+    defaultBranch,
     collectedAt: (o.now?.() ?? new Date()).toISOString(),
     classic: req.classic,
     branchRules: req.branchRules,

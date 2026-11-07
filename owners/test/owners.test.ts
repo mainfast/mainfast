@@ -629,3 +629,12 @@ describe('cli lint (offline, real git repo)', () => {
     log.mockRestore();
   });
 });
+
+// home-assistant/core: @viiru- and @freeDom- are real accounts, so GitHub's own validation accepts them.
+describe('owner names', () => {
+  it('accepts a trailing hyphen and still refuses a leading one', async () => {
+    const { parseOwner } = await import('../src/codeowners.js');
+    expect(parseOwner('@viiru-')).toEqual({ kind: 'user', raw: '@viiru-', login: 'viiru-' });
+    expect(parseOwner('@-viiru')).toBeUndefined();
+  });
+});
