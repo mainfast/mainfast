@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 (2026-11-08)
+
+- The plan notice says where to find the Pro key, and offers the hosted App as the way to pay without a key.
+
 ## 0.1.2 (2026-11-08)
 
 - `mainfast` CLI: clearer help, error and report text, American spelling, real plurals.

@@ -1,0 +1,22 @@
+{
+  "tool": "Mainfast Intact",
+  "version": "0.1.0",
+  "repo": "/Users/luspav/development/mainfast/mainfast",
+  "range": "origin/main..HEAD",
+  "mainRef": "origin/main",
+  "merges": [],
+  "summary": {
+    "merges": 0,
+    "clean": 0,
+    "conflictResolution": 0,
+    "withFindings": 0,
+    "unsupported": 0,
+    "errors": 0,
+    "findings": {
+      "error": 0,
+      "warning": 0,
+      "notice": 0,
+      "off": 0
+    }
+  }
+}

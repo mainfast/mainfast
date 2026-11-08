@@ -17,6 +17,10 @@ export interface SuiteBrand {
   docsUrl: string;
   issuesUrl: string;
   pricingUrl: string;
+  /** The hosted GitHub App's install page. */
+  appUrl: string;
+  /** The App's dashboard, where Pro is bought. */
+  dashboardUrl: string;
   npmScope: string;
   configFile: string;
   configFileAlt: string;

@@ -128,11 +128,14 @@ The five GitHub Actions are **free and open source (MIT)** for everyone, at any 
   from the repository activity API, else default-branch commit authors), once per run.
   Give the job `pull-requests: read` for an exact count; without it the notice counts
   pushers only. If the API refuses, there is no notice.
-- If you have a key, save it as the `MAINFAST_LICENSE` secret and pass
-  `license: ${{ secrets.MAINFAST_LICENSE }}` to each step. The key is checked once per run with
-  Polar's public license-key endpoint (only the key and the organization id are sent, with a
-  3-second timeout); if Polar cannot be reached the key counts as valid. A key Polar reports as
-  unknown, revoked or expired is ignored with one log line, as if no key were set.
+- To remove the notice once your organization has Pro: copy the Mainfast Pro key from your Polar
+  account (or Polar's email), save it as the `MAINFAST_LICENSE` secret and pass
+  `license: ${{ secrets.MAINFAST_LICENSE }}` to each step. One key covers every repository.
+  The key is checked once per run with Polar (only the key and our Polar organization ID are
+  sent); if Polar cannot be reached, the key counts as valid.
+- Prefer no keys? Install the [Mainfast GitHub App](https://github.com/apps/mainfast) and buy Pro
+  from its [dashboard](https://app.mainfast.dev). The App runs the checks for you with no key,
+  and you can then delete the Mainfast workflows.
 
 **Mainfast Pro is the hosted GitHub App**, at **$4 per active contributor per month**, for private
 organizations above 5 active contributors. It is free for public repositories and for private

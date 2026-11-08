@@ -14595,7 +14595,7 @@ var import_node_child_process = require("node:child_process");
 // package.json
 var package_default = {
   name: "mainfast",
-  version: "0.1.2",
+  version: "0.1.3",
   description: "Set up and run Mainfast, GitHub checks that stop merges from silently breaking main. CLI and MCP server.",
   license: "MIT",
   author: "Mainfast authors",
@@ -14707,6 +14707,8 @@ var brand_default = {
     docsUrl: "https://github.com/mainfast/mainfast#readme",
     issuesUrl: "https://github.com/mainfast/mainfast/issues",
     pricingUrl: "https://mainfast.dev/pricing",
+    appUrl: "https://github.com/apps/mainfast",
+    dashboardUrl: "https://app.mainfast.dev",
     npmScope: "@mainfast",
     configFile: ".mainfast.yml",
     configFileAlt: ".mainfast.yaml",
