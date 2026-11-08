@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 (2026-11-08)
+
+- `mainfast` CLI: clearer help, error and report text, American spelling, real plurals.
+
 ## 0.1.1 (2026-11-08)
 
 First release of Mainfast Intact, Migrations, Rollcall, Owners and Evidence.
