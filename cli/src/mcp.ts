@@ -18,14 +18,14 @@ const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v 
 export const TOOLS = [
   {
     name: "init",
-    description: `WRITES FILES in the repository: the workflow of each chosen check under .github/workflows and a starter ${SUITE.configFile}. Never replaces a file with other content unless force is true. Does not commit, push or change branch protection. Pass dry_run: true to see what it would do without writing.`,
+    description: `WRITES FILES in the repository: the workflow of each chosen check under .github/workflows and a starter ${SUITE.configFile}. Never replaces a file that has different content unless force is true. Does not commit, push or change branch protection. Pass dry_run: true to see what it would do without writing.`,
     inputSchema: {
       type: "object",
       properties: {
         repo_path: repoPath,
         checks: { type: "array", items: { type: "string", enum: [...PRODUCT_SLUGS] }, description: "Default: all five." },
-        dry_run: { type: "boolean", description: "Report only, write nothing. Default: false." },
-        force: { type: "boolean", description: "Replace files that have other content. Default: false." },
+        dry_run: { type: "boolean", description: "Show what would change without writing anything. Default: false." },
+        force: { type: "boolean", description: "Replace files that have different content. Default: false." },
       },
       additionalProperties: false,
     },
@@ -40,7 +40,7 @@ export const TOOLS = [
   },
   {
     name: "check",
-    description: "Reads only. Runs Mainfast Intact locally on the merge commits in this branch: did a merge silently drop main's changes or add an unrelated edit? Run it before pushing a merge. ok is false when there are findings.",
+    description: "Reads only. Runs Mainfast Intact locally on the merge commits in this branch: did a merge silently drop main's changes or add an unrelated edit? Run it before pushing a merge. ok is false when a finding is at or above fail_on.",
     inputSchema: {
       type: "object",
       properties: {
@@ -48,7 +48,7 @@ export const TOOLS = [
         commit: { type: "string", description: "One merge commit. Default: every merge commit in main..HEAD." },
         range: { type: "string", description: "A range, A..B." },
         main: { type: "string", description: "The main branch. Default: from the config or origin." },
-        fail_on: { type: "string", enum: ["error", "warning", "notice"], description: "Lowest level that counts as a finding. Default: warning." },
+        fail_on: { type: "string", enum: ["error", "warning", "notice"], description: "Lowest level that fails the check (ok false). Default: warning." },
       },
       additionalProperties: false,
     },
@@ -64,7 +64,7 @@ export const TOOLS = [
         check: { type: "string", enum: [...AUDIT_CHECKS] },
         main: { type: "string", description: "The main branch, for migrations and evidence." },
         pr: { type: "integer", description: "For evidence: evaluate this pull request through the API." },
-        offline: { type: "boolean", description: "For owners: lint offline even with a token." },
+        offline: { type: "boolean", description: "For owners: run the offline lint even when a token is set." },
       },
       required: ["check"],
       additionalProperties: false,

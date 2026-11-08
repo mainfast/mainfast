@@ -93,7 +93,7 @@ export async function run(): Promise<void> {
       });
     } catch (e) {
       // pull_request from a fork gets a read-only token; the job summary and annotations still carry the result
-      if (e instanceof GitHubError && (e.status === 403 || e.status === 404)) annotate('warning', `could not comment, label or set the commit status on the PR (${e.status}); token is read-only (fork PR) or lacks pull-requests/issues/statuses write?`);
+      if (e instanceof GitHubError && (e.status === 403 || e.status === 404)) annotate('warning', `Could not comment, label or set the commit status on the PR (${e.status}). The token is read-only (fork PR) or lacks pull-requests: write, issues: write or statuses: write.`);
       else throw e;
     }
   }

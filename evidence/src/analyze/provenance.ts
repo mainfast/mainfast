@@ -3,6 +3,8 @@
 import type { AgentMatchers } from "../config.ts";
 import type { PrSnapshot } from "../types.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface AgentDef {
   id: string;
   name: string;
@@ -294,7 +296,7 @@ export function detectProvenance(snap: PrSnapshot, m: AgentMatchers): Provenance
           add({
             agent: GIT_AI_TOOL_TO_AGENT[lc(t.tool)] ?? t.tool,
             source: "git_ai",
-            detail: `${short}: git-ai note, ${s.aiLines} AI line(s)${"model" in t && t.model ? `, ${t.model}` : ""}`,
+            detail: `${short}: git-ai note, ${plural(s.aiLines, "AI line")}${"model" in t && t.model ? `, ${t.model}` : ""}`,
           });
         }
       }

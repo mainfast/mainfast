@@ -1,4 +1,4 @@
-# Copy to .github/workflows/owners.yml.
+# Copy to .github/workflows/mainfast-owners.yml.
 # No checkout step: Owners reads CODEOWNERS, .mainfast.yml and the tree through the API at the
 # right refs (the PR's base branch, the PR's head when it edits CODEOWNERS, the default branch
 # for the weekly audit), never from a checkout.

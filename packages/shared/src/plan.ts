@@ -1,4 +1,4 @@
-// Licence / plan gate. Soft and honest: it never fails a check and never blocks a feature.
+// License / plan gate. Soft and honest: it never fails a check and never blocks a feature.
 //
 // Every Mainfast check is free and MIT-licensed for public repositories and for private
 // repositories with at most 5 active contributors (opened a pull request or pushed in the
@@ -6,14 +6,14 @@
 // month. When a private repository is over the limit and no Pro key is set, the action
 // adds one polite notice to the job summary (and Intact to its check run). That is all.
 //
-// Licence keys (optional, input `license` or env MAINFAST_LICENSE) are Polar licence keys.
+// License keys (optional, input `license` or env MAINFAST_LICENSE) are Polar license keys.
 // There are two: a Pro key, and a free key (a $0 Polar checkout) that only registers you:
 // no feature needs it. A key is checked once per run with Polar's public customer-portal
 // endpoint, POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}, the
-// same call Hourcairn makes (hourcairn_shared/licence.py): no merchant secret, nothing but the
-// key and the organisation id is sent. The check is non-fatal: offline, a timeout, a 5xx or
+// same call Hourcairn makes (hourcairn_shared/license.py): no merchant secret, nothing but the
+// key and the organization id is sent. The check is non-fatal: offline, a timeout, a 5xx or
 // an unreadable answer counts as a valid key ("unverified"); only a key Polar itself refuses
-// (unknown, revoked, disabled, expired, another organisation, not a Mainfast benefit) is
+// (unknown, revoked, disabled, expired, another organization, not a Mainfast benefit) is
 // treated as no key, with one log line. The key is never logged or written to the summary.
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -29,7 +29,7 @@ export type PlanStatus =
   | "over-limit" // private, over the limit, no Pro key: notice
   | "unknown"; // could not tell (API refused); no notice
 
-/** What the licence key turned out to be. Absent: no key given (or the gate could not decide). */
+/** What the license key turned out to be. Absent: no key given (or the gate could not decide). */
 export type KeyState =
   | "pro" // Polar confirmed a Mainfast Pro key
   | "free" // Polar confirmed the free key: registered, not Pro
@@ -43,7 +43,7 @@ export interface PlanResult {
   notice?: string;
   /** Why the gate could not decide, for the log. */
   reason?: string;
-  /** Set when a licence key was given. */
+  /** Set when a license key was given. */
   key?: KeyState;
   /** Why a key was refused (never contains the key), for the one log line. */
   keyReason?: string;
@@ -61,7 +61,7 @@ export interface LicenseCheck {
   reason?: string;
 }
 
-/** Checks a licence key. Must never throw for a network problem (checkPlan also guards it). */
+/** Checks a license key. Must never throw for a network problem (checkPlan also guards it). */
 export type LicenseValidator = (key: string, ctx: { owner: string; repo: string; activeContributors?: number }) => Promise<LicenseCheck>;
 
 /** Accepts any non-empty key without a network call (tests; and the placeholder-org build). */
@@ -77,7 +77,7 @@ export interface PolarValidatorOptions {
   fetch?: PolarFetch;
   /** API base; default env MAINFAST_POLAR_API, else brand.json suite.polar.api (production Polar). */
   api?: string;
-  /** Polar organisation id; default env MAINFAST_POLAR_ORG, else brand.json suite.polar.organizationId. */
+  /** Polar organization id; default env MAINFAST_POLAR_ORG, else brand.json suite.polar.organizationId. */
   organizationId?: string;
   benefitIds?: { free: string; pro: string };
   timeoutMs?: number;
@@ -97,10 +97,10 @@ export function planForBenefit(benefitId: unknown, ids: { free: string; pro: str
 
 /**
  * The real validator: Polar's customer-portal validate endpoint (mirrors Hourcairn's
- * `_validate` / `_from_key_payload`). 200 + status "granted" (or none) + our organisation +
+ * `_validate` / `_from_key_payload`). 200 + status "granted" (or none) + our organization +
  * a known benefit + not expired -> valid with its plan. 404 or any of those failing ->
  * refused. Everything else (no network, timeout, 5xx, other HTTP status, bad JSON) ->
- * valid, offline. A placeholder organisation id sends nothing.
+ * valid, offline. A placeholder organization id sends nothing.
  */
 export function polarValidator(opts: PolarValidatorOptions = {}): LicenseValidator {
   const env = opts.env ?? process.env;
@@ -113,7 +113,7 @@ export function polarValidator(opts: PolarValidatorOptions = {}): LicenseValidat
   return async (rawKey) => {
     const key = rawKey.trim();
     if (!key) return { valid: false, offline: true, reason: "empty key" };
-    if (PLACEHOLDER_ORG.test(org)) return offline; // no organisation configured yet: nothing to ask
+    if (PLACEHOLDER_ORG.test(org)) return offline; // no organization configured yet: nothing to ask
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);
     let status: number;
@@ -121,7 +121,7 @@ export function polarValidator(opts: PolarValidatorOptions = {}): LicenseValidat
     try {
       const res = await doFetch(`${api}/v1/customer-portal/license-keys/validate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-licence` },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-license` },
         body: JSON.stringify({ key, organization_id: org }),
         signal: ctrl.signal,
       });
@@ -146,7 +146,7 @@ export function polarValidator(opts: PolarValidatorOptions = {}): LicenseValidat
       return { valid: false, offline: false, reason: `Polar reports the key as ${JSON.stringify(String(lk.status))}` };
     }
     if (lk.organization_id && lk.organization_id !== org) {
-      return { valid: false, offline: false, reason: `the key belongs to another Polar organisation, not ${SUITE.name}` };
+      return { valid: false, offline: false, reason: `the key belongs to another Polar organization, not ${SUITE.name}` };
     }
     const plan = planForBenefit(lk.benefit_id, ids);
     if (!plan) return { valid: false, offline: false, reason: `the key is not a ${SUITE.name} key (unknown benefit)` };
@@ -166,7 +166,7 @@ export interface PlanOptions {
   repo: string;
   /** Event payload; `repository.private` saves an API call. */
   event?: { repository?: { private?: boolean } };
-  /** Licence key (input `license`, else env MAINFAST_LICENSE). */
+  /** License key (input `license`, else env MAINFAST_LICENSE). */
   license?: string;
   productName: string;
   now?: Date;
@@ -291,8 +291,8 @@ export async function checkPlan(opts: PlanOptions): Promise<PlanResult> {
       return { status: "unknown", reason: describe(e) };
     }
   }
-  const licence = opts.license?.trim() ?? "";
-  if (isPrivate !== true) return withKey({ status: "public" }, licence ? await checkKey(opts, licence) : undefined);
+  const license = opts.license?.trim() ?? "";
+  if (isPrivate !== true) return withKey({ status: "public" }, license ? await checkKey(opts, license) : undefined);
 
   const limit = SUITE.plan.freeActiveContributors;
   const key = `${owner}/${repo}`.toLowerCase();
@@ -323,7 +323,7 @@ export async function checkPlan(opts: PlanOptions): Promise<PlanResult> {
       }
     }
   }
-  const check = licence ? await checkKey(opts, licence, active) : undefined;
+  const check = license ? await checkKey(opts, license, active) : undefined;
   const state = keyState(check);
   // A confirmed Pro key is Pro at any size; an unverified key gets the benefit of the doubt.
   if (state === "pro" || (state === "unverified" && active > limit)) return withKey({ status: "licensed", activeContributors: active }, check);
@@ -345,11 +345,11 @@ function withKey(result: PlanResult, check: LicenseCheck | undefined): PlanResul
 }
 
 /** Validates the key once per run: memory, then the RUNNER_TEMP file (stores a hash, never the key). */
-async function checkKey(opts: PlanOptions, licence: string, activeContributors?: number): Promise<LicenseCheck> {
-  const h = keyHash(licence);
+async function checkKey(opts: PlanOptions, license: string, activeContributors?: number): Promise<LicenseCheck> {
+  const h = keyHash(license);
   const hit = keyMemo.get(h);
   if (hit) return hit;
-  const file = opts.cacheDir ? join(opts.cacheDir, `mainfast-licence-${h}.json`) : undefined;
+  const file = opts.cacheDir ? join(opts.cacheDir, `mainfast-license-${h}.json`) : undefined;
   if (file && existsSync(file)) {
     try {
       const c = JSON.parse(readFileSync(file, "utf8")) as { runId?: string; check?: LicenseCheck };
@@ -361,7 +361,7 @@ async function checkKey(opts: PlanOptions, licence: string, activeContributors?:
       /* ignore a broken cache */
     }
   }
-  const check = await (opts.validate ?? polarValidator())(licence, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
+  const check = await (opts.validate ?? polarValidator())(license, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
     (): LicenseCheck => ({ valid: true, offline: true }),
   );
   keyMemo.set(h, check);
@@ -398,7 +398,7 @@ export async function planGate(
       runId: env.GITHUB_RUN_ID,
     });
     if (result.key === "refused") {
-      process.stdout.write(`${SUITE.name}: the licence key was not accepted (${result.keyReason}); running as without a key. The check result is unaffected.\n`);
+      process.stdout.write(`${SUITE.name}: the license key was not accepted (${result.keyReason}); continuing without a key. The check result is unaffected.\n`);
     } else if (result.key === "free" && !result.notice) {
       appendSummary(`\n<sub>${SUITE.name}: Registered (free key).</sub>\n`, env);
     }

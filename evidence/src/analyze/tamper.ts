@@ -6,6 +6,8 @@ import type { FileChange } from "../types.ts";
 import { parseHunks, type DiffLine } from "../diff/patch.ts";
 import type { Finding } from "./finding.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export type TestLang = "js" | "python" | "go";
 
 interface LangRules {
@@ -178,13 +180,13 @@ export function evaluateTamper(files: FileChange[], policy: EvidencePolicy): Tam
     findings.push({
       id: "tests_removed",
       title: "Fewer test cases than before",
-      detail: `Net ${net.cases} test case(s) across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`,
+      detail: `Net ${plural(net.cases, "test case")} across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`,
     });
   if (net.assertions < 0)
     findings.push({
       id: "assertions_dropped",
       title: "Assertion count dropped",
-      detail: `Net ${net.assertions} assertion(s) across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`,
+      detail: `Net ${plural(net.assertions, "assertion")} across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`,
     });
 
   const loc = (kind: string, pick: (s: TestFileStats) => DiffLine[]) =>
@@ -195,15 +197,15 @@ export function evaluateTamper(files: FileChange[], policy: EvidencePolicy): Tam
       findings.push({ id, title, detail: locations.map((l) => `\`${l.path}:${l.line}\` ${l.message.slice(kind.length + 2)}`).join("\n"), locations });
   };
   lineFinding("skip_added", "Tests skipped", "skip added", (s) => s.skips);
-  lineFinding("focus_added", "Focused test added (.only / fit) — other tests in the file stop running", "focus added", (s) => s.focus);
+  lineFinding("focus_added", "Focused test added (.only / fit) — the other tests in the file are skipped", "focus added", (s) => s.focus);
   lineFinding("assertions_commented_out", "Assertions commented out", "commented-out assertion", (s) => s.commentedOut);
   lineFinding("trivial_assertion_added", "Assertion that cannot fail", "trivial assertion", (s) => s.trivial);
 
   if (unanalyzed.length)
     findings.push({
       id: "diff_unanalyzed",
-      title: "Some files could not be analysed",
-      detail: `GitHub returned no patch for ${list(unanalyzed)} (diff too large). Run with a full checkout to analyse them locally.`,
+      title: "Some files could not be analyzed",
+      detail: `GitHub returned no patch for ${list(unanalyzed)} (diff too large). Run with a full checkout (\`fetch-depth: 0\`) to analyze them locally.`,
     });
   return { touched, testStats, net, addedTestCases, unanalyzed, findings };
 }

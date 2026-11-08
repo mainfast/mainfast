@@ -27,10 +27,10 @@ export interface SuiteBrand {
     freeActiveContributors: number;
     windowDays: number;
     proPricePerContributorMonth: string;
-    /** Polar licence-key benefit id per plan: `pro` is Mainfast Pro, `free` the optional free key. */
+    /** Polar license-key benefit id per plan: `pro` is Mainfast Pro, `free` the optional free key. */
     benefitIds: { free: string; pro: string };
   };
-  /** Polar's public licence-key API (customer portal: no merchant secret). */
+  /** Polar's public license-key API (customer portal: no merchant secret). */
   polar: { api: string; organizationId: string; apiEnv: string; orgEnv: string; timeoutMs: number };
 }
 

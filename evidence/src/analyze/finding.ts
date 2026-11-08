@@ -1,6 +1,6 @@
 import type { FlagId } from "../types.ts";
 
-/** An analyser result before policy assigns it a severity (or drops it). */
+/** An analyzer result before policy assigns it a severity (or drops it). */
 export interface Finding {
   id: FlagId;
   title: string;

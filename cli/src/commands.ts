@@ -7,10 +7,10 @@ export const AUDIT_CHECKS = ["rollcall", "owners", "migrations", "evidence"] as 
 export type AuditCheck = (typeof AUDIT_CHECKS)[number];
 
 export const AUDIT_NEEDS: Record<AuditCheck, string> = {
-  rollcall: "A GitHub origin remote, and GITHUB_TOKEN or GH_TOKEN for a private repository. Branch protection also needs Administration: read. No checkout needed.",
-  owners: "Nothing for offline lint. With a GitHub origin remote and a token: the full audit, including whether owners exist and have write access.",
-  migrations: "A checkout with the main branch fetched. No token.",
-  evidence: "A checkout with the main branch fetched for local mode, which skips check-based evidence. For pr mode: a GitHub origin remote and a token.",
+  rollcall: "A GitHub origin remote. A private repository also needs GITHUB_TOKEN or GH_TOKEN, and reading branch protection needs Administration: read. No checkout needed.",
+  owners: "Nothing for the offline lint. With a GitHub origin remote and a token it runs the full audit, which also checks that each owner exists and has write access.",
+  migrations: "A checkout with the main branch fetched. No token needed.",
+  evidence: "A checkout with the main branch fetched; this local run skips the evidence that comes from CI checks. To evaluate a pull request: a GitHub origin remote and a token.",
 };
 
 export interface CheckOptions {
@@ -69,12 +69,12 @@ function auditArgs(root: string, o: AuditOptions): string[] {
       return ["check", "--repo", root, "--main", mainRef(root, o.main), "--format", "json"];
     case "evidence":
       if (o.pr !== undefined) {
-        if (!Number.isInteger(o.pr) || o.pr <= 0) throw new CliError("pr: expected a pull request number");
+        if (!Number.isInteger(o.pr) || o.pr <= 0) throw new CliError("--pr: expected a pull request number");
         return ["pr", "--repo", needRepo(), "--pr", String(o.pr), "--json"];
       }
       return ["local", "--base", mainRef(root, o.main), "--repo", root, "--json"];
     default:
-      throw new CliError(`unknown check: ${o.check}; one of ${AUDIT_CHECKS.join(", ")}`);
+      throw new CliError(`unknown check: ${o.check} (expected one of ${AUDIT_CHECKS.join(", ")})`);
   }
 }
 

@@ -7723,14 +7723,14 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
+      _benefitIds: "Polar license-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
         free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
         pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      _comment: "License keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
@@ -7742,7 +7742,7 @@ var brand_default = {
     intact: {
       productName: "Mainfast Intact",
       tagline: "prove merge commits did not silently drop changes from main",
-      description: "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      description: "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       npmName: "@mainfast/intact",
       cliName: "mainfast",
       configSection: "intact",
@@ -7768,7 +7768,7 @@ var brand_default = {
     rollcall: {
       productName: "Mainfast Rollcall",
       tagline: "required-check integrity audit",
-      description: "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported \u2014 never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift \u2014 and keeps one tracking issue open while something is wrong.",
+      description: "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       npmName: "@mainfast/rollcall",
       cliName: "mainfast-rollcall",
       configSection: "rollcall",
@@ -7780,7 +7780,7 @@ var brand_default = {
     owners: {
       productName: "Mainfast Owners",
       tagline: "CODEOWNERS drift check",
-      description: "CODEOWNERS drift \u2014 unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      description: "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       npmName: "@mainfast/owners",
       cliName: "mainfast-owners",
       configSection: "owners",
@@ -7792,7 +7792,7 @@ var brand_default = {
     evidence: {
       productName: "Mainfast Evidence",
       tagline: "proof, not review, for pull requests written by coding agents",
-      description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      description: "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       npmName: "@mainfast/evidence",
       cliName: "mainfast-evidence",
       configSection: "evidence",
@@ -8089,6 +8089,7 @@ function branchAllowed(t, branch) {
 }
 
 // src/audit.ts
+var plural = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 function requiredSet(s) {
   return resolveRequiredChecks({ classic: s.classic, branchRules: s.branchRules, rulesets: s.rulesets });
 }
@@ -8101,7 +8102,7 @@ var FIXES = {
   "stopped-reporting": "Find the commit that removed or renamed the job, then restore it or update the required list.",
   "matrix-name-mismatch": "Require each matrix leg by its full name, or add an `if: always()` gate job with the required name that fails unless every leg succeeded.",
   "skipped-as-success": "Make the required check a gate job with `if: always()` that fails when its dependencies did not succeed, or move the condition from the job into its steps.",
-  "path-filtered": "Drop the paths filter and skip inside the job (e.g. a paths-filter step + step conditions), or require a gate job that always runs.",
+  "path-filtered": "Drop the paths filter and skip inside the job (for example, a paths-filter step with step conditions), or require a gate job that always runs.",
   "branch-filtered": "Add this branch to the workflow's `pull_request` branches filter (or remove the filter).",
   "not-on-pull-request": "Add a `pull_request` trigger (and `merge_group` if you use a merge queue).",
   "app-mismatch": "Pin the requirement to the app that reports it (GitHub Actions is 15368 on github.com), or to any source.",
@@ -8168,7 +8169,7 @@ function mergedWithout(context, missing) {
     code: "merged-without",
     severity: "warning",
     context,
-    message: `${missing.length} merged PR(s) have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
+    message: `${plural(missing.length, "merged PR")} have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
     evidence: missing.slice(0, 10)
   };
 }
@@ -8498,6 +8499,7 @@ function producesRequired(j, required) {
 }
 
 // src/collect.ts
+var plural2 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 async function soft2(notes, what, fn, fallback) {
   try {
     return await fn();
@@ -8553,7 +8555,7 @@ async function collect(o) {
       if (!obs.checkRuns.length && !obs.statuses.length) silent++;
       else pulls.push(obs);
     }
-    if (silent) notes.push(`${silent} open PR(s) had no check runs or statuses on their head yet and were not counted`);
+    if (silent) notes.push(`${plural2(silent, "open PR")} ${silent === 1 ? "had no check runs or statuses on its head yet and was" : "had no check runs or statuses on their head yet and were"} not counted`);
   }
   pulls.sort((x, y) => String(y.mergedAt ?? y.updatedAt ?? "").localeCompare(String(x.mergedAt ?? x.updatedAt ?? "")));
   const workflows = o.workflows ?? await fetchWorkflows(gh, owner, repo, branch, notes);
@@ -8725,6 +8727,7 @@ function mdCell(s, max = MAX_INLINE) {
 }
 
 // src/report.ts
+var plural3 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var cellCode = (s) => mdCode(s).replace(/\|/g, "\\|");
 var prRefs = (ns) => ns.map((n) => `#${n}`).join(", ");
 function rulesUnread(r) {
@@ -8735,13 +8738,14 @@ function title(r) {
   const e = r.findings.filter((f) => f.severity === "error").length;
   const w = r.findings.length - e;
   return plainText(
-    r.findings.length ? `${e} error(s), ${w} warning(s) in ${r.required.length} required check(s)` : `${r.required.length} required check(s) report as intended`,
+    r.findings.length ? `${plural3(e, "error")}, ${plural3(w, "warning")} in ${plural3(r.required.length, "required check")}` : `${plural3(r.required.length, "required check")} report as intended`,
     255,
     true
   );
 }
 function sampleLine(r) {
-  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ""} PR(s)`;
+  const total = r.sampledPulls.length + r.sampledOpen.length;
+  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ""} ${total === 1 ? "PR" : "PRs"}`;
 }
 function toMarkdown(r, o = {}) {
   const h = o.heading ?? "###";
@@ -8801,6 +8805,7 @@ function toText(r) {
 }
 
 // src/publish.ts
+var plural4 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var repoPath = (owner, repo) => `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
 function conclusionOf(report, failOn) {
   return reaches(report.findings, failOn) ? "failure" : report.findings.length ? "neutral" : "success";
@@ -8858,7 +8863,7 @@ async function syncTrackingIssue(o) {
     return { action: "updated", number: mine.number, url: mine.html_url };
   }
   if (!mine) return { action: "none" };
-  const summary = report.findings.length ? `${report.findings.length} finding(s) remain below the \`issueOn\` level; see the ${PRODUCT} check run.` : "Every required check reports as intended.";
+  const summary = report.findings.length ? `${plural4(report.findings.length, "finding")} remain below the \`issueOn\` level; see the ${PRODUCT} check run.` : "Every required check reports as intended.";
   await gh.request("PATCH", `${base}/issues/${mine.number}`, {
     body: [ISSUE_MARKER, `Resolved by the ${PRODUCT} audit of ${mdCode(report.branch)} on ${report.collectedAt.slice(0, 10)}: ${summary}`].join("\n"),
     state: "closed",

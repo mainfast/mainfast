@@ -1,4 +1,5 @@
-# Variant: the org-token comes from a GitHub App (Organization > Members: read, Repository >
+# A variant of owners.yml: use one or the other, as .github/workflows/mainfast-owners.yml.
+# Here the org-token comes from a GitHub App (Organization > Members: read, Repository >
 # Metadata: read) instead of a personal token, so it does not expire with a person's account.
 name: Code owners (app token)
 on:

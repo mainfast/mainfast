@@ -4,16 +4,25 @@
 coding agent, OpenAI Codex, Cursor, Devin, Dawnpatch, Aider, or your own bot).
 
 AI reviewers read the code. Evidence checks the *proof*: did tests actually run on the commit
-being merged, did every required check really pass, and did the agent touch the things that decide
-whether its own work gets judged (CI workflows, CODEOWNERS, test config, the tests themselves)?
+being merged, did every required check really pass, and did the agent change the things that
+judge its own work (CI workflows, CODEOWNERS, test config, the tests themselves)?
 
-> Licence: MIT; free for public repos and private repos with up to 5 active contributors
-> ([Free and Pro](../README.md#free-and-pro)).
+Part of the [Mainfast suite](../README.md). MIT-licensed and free for public repositories and for
+private ones with up to 5 active contributors; see [Free and Pro](../README.md#free-and-pro).
+
+## Quick start
+
+1. Copy [`examples/workflows/evidence.yml`](examples/workflows/evidence.yml) to
+   `.github/workflows/mainfast-evidence.yml`.
+2. Change `workflows: [CI]` to the name of your test workflow.
+3. To gate merges on it, require the `Mainfast Evidence` check in your ruleset or branch protection.
+
+The workflow has two jobs; [GitHub Action](#github-action) explains why.
 
 ## What it posts
 
-One check run named **Mainfast Evidence** per PR head sha (updated in place on re-runs), and one
-sticky PR comment that is edited on every push:
+One check run named **Mainfast Evidence** per PR head commit (updated in place on re-runs), and one
+PR comment that is updated on every push:
 
 ```
 ### Mainfast Evidence: FAIL — 3 failing
@@ -36,10 +45,8 @@ head `b7f3c2a` · Claude Code
 - **Tests skipped** (`skip_added`) — `src/price.test.ts:18` it.skip("formats zero", () => {
 ```
 
-Line-level flags (skips, secrets, uncovered lines) also become check-run annotations (max 50).
-
-Under each flag the card gives a one-line fix. Try it without GitHub:
-`npm run build && node dist/cli.cjs pr --repo octo-org/widgets --pr 42 --fixture examples/fixture-pr.json`.
+Under each flag the card gives a one-line fix. Line-level flags (skips, secrets, uncovered lines)
+also become check-run annotations (up to 50).
 
 ## Provenance: is this an agent PR?
 
@@ -60,8 +67,8 @@ The card lists every signal and any commits in the PR with no agent signal (huma
 
 ### Built-in agents: what is verified
 
-Checked on 28 Oct 2026 against public docs and public PRs. A signal that turns out wrong only
-misses a detection; no signal can loosen the gate. Add your own with `agents:` in the policy.
+Last checked on 28 Oct 2026 against public docs and public PRs. A wrong signal can only miss an
+agent PR; no signal can loosen the gate. Add your own with `agents:` in `.mainfast.yml`.
 
 | Agent | Verified (source) | Not verified (best guess) |
 |---|---|---|
@@ -71,20 +78,17 @@ misses a detection; no signal can loosen the gate. Add your own with `agents:` i
 | OpenAI Codex | `chatgpt-codex-connector[bot]` is the Codex GitHub app's identity (it posts Codex reviews, e.g. openai/openai-cookbook#2201) | that it authors PRs or commits; the `codex/` branch prefix; a co-author trailer; `chatgpt.com/codex/tasks/` links in the PR body |
 | Cursor | `Co-authored-by: Cursor <cursoragent@cursor.com>` on agent commits (Cursor forum, staff reply); "Made with Cursor" attribution on Agent commits and PRs (cursor.com Git docs); `cursor/` branches for background agents (Cursor forum) | `cursor[bot]` as a PR author (it is the Bugbot reviewer's login) |
 | Devin | `devin/<timestamp>-<slug>` branches and `Link to Devin run: https://…devin.ai/sessions/…` in the PR body (public Devin PRs, e.g. colinhacks/zod#3893); the "Devin.ai Integration" GitHub app (docs.devin.ai) and its `devin-ai-integration` account opening PRs (public contributor listings) | the bot's noreply email; the exact co-author trailer (docs.devin.ai only says a "Co-authored (Devin + you)" mode exists) |
-| Aider | — | `aider:` commit prefix, `Co-authored-by: aider` trailer, `aider/` branches (from memory) |
+| Aider | — | `aider:` commit prefix, `Co-authored-by: aider` trailer, `aider/` branches |
 | Dawnpatch | our own agent (`dawnpatch[bot]`, `dawnpatch/`) | — |
-
-Removed in this pass because nothing public showed them: the logins `claude` (a plain user name),
-`codex[bot]`, `cursor-agent[bot]`, and the loose "codex task" body phrase.
 
 ## Flags
 
-Every flag below is one line on the card with its fix (`mainfast-evidence flags` prints the list).
+Each flag that fires is one line on the card, with its fix.
 
 | Flag | Default | Fires when | Fix |
 |---|---|---|---|
 | `tests_not_run_on_head` | fail | no check run / status matching `test_checks` exists **for the head sha**. If tests ran on an earlier push, the card says which commit. Check data for any other sha is ignored. | Run the test workflow on this commit (push again or re-run CI); evidence from an earlier push does not count. |
-| `tests_failed` | fail | a test check on head failed, was cancelled, timed out or needs action | Fix the failing tests on this commit, or have the agent fix them, then push. |
+| `tests_failed` | fail | a test check on head failed, was canceled, timed out or needs action | Fix the failing tests on this commit, or have the agent fix them, then push. |
 | `tests_skipped` | warn | no test check on head failed or is running, but one or more concluded `skipped` (an `if:` or path filter); a skipped *required* check also fires `required_check_skipped` | Make the test job run on this commit (check its `if:` and path filters), or set `tests_skipped: fail` to require it. |
 | `tests_empty` | fail | test checks are green but their output says 0 tests / no test files | Point the test job at the real tests (glob, working directory, test discovery) so it runs more than zero. |
 | `required_check_missing` | fail | a required check (rulesets, classic protection if readable, `required_checks`) never reported on head | Restore the job name the ruleset requires (or update the ruleset after a rename), and drop path filters on required jobs. |
@@ -95,15 +99,15 @@ Every flag below is one line on the card with its fix (`mainfast-evidence flags`
 | `touched_workflows` | fail | `.github/workflows/**`, `.github/actions/**`, other CI configs | Have a human review the CI change, or move it to its own PR; agents should not edit what judges them. |
 | `touched_codeowners` | fail | `CODEOWNERS`, `.github/CODEOWNERS`, `docs/CODEOWNERS` | Have a code owner review the CODEOWNERS change in a separate, human-authored PR. |
 | `touched_lockfiles` | warn | npm/yarn/pnpm/bun/poetry/uv/pdm/Pipfile/go.sum/Cargo/Gemfile/composer lockfiles | Check the dependency change is intended (`npm ci` / lockfile diff), or set `touched_lockfiles: off`. |
-| `touched_tests` | warn | an existing test file lost lines, was renamed or deleted (adding tests is fine) | Check each removed or rewritten test line is intended; keep the old assertions unless the behaviour changed. |
+| `touched_tests` | warn | an existing test file lost lines, was renamed or deleted (adding tests is fine) | Check each removed or rewritten test line is intended; keep the old assertions unless the behavior changed. |
 | `touched_test_config` | warn | jest/vitest/playwright/karma/mocha config, `pytest.ini`, `tox.ini`, coverage config | Review the test-config change: coverage thresholds, excluded paths and test globs can switch tests off. |
 | `touched_policy` | fail | the PR edits `.mainfast.yml` (the base branch's policy is used regardless) | Change `.mainfast.yml` in a separate, human-reviewed PR; this PR is judged by the base branch's policy anyway. |
-| `tests_deleted` | fail | a test file was deleted | Restore the deleted test file, or explain in the PR why the behaviour it covered is gone. |
+| `tests_deleted` | fail | a test file was deleted | Restore the deleted test file, or explain in the PR why the behavior it covered is gone. |
 | `tests_removed` | fail | net test-case count across the diff dropped (moving tests between files nets to 0) | Restore the removed test cases, or replace them with equivalent ones. |
 | `assertions_dropped` | fail | net assertion count across test files dropped; tautologies do not count as assertions | Restore the dropped assertions; a test without them passes whatever the code does. |
 | `assertions_commented_out` | fail | an added comment line contains an assertion | Uncomment the assertion and fix the code it was catching, or delete it on purpose with a reason. |
 | `skip_added` | fail | `.skip`, `xit`, `xdescribe`, `.todo`, `@pytest.mark.skip/skipif/xfail`, `@unittest.skip`, `pytest.skip()`, `self.skipTest()`, `t.Skip()` | Remove the skip marker and fix the test, or open an issue and link it next to the skip. |
-| `focus_added` | fail | `.only`, `fit`, `fdescribe` (silently stops every other test in the file) | Remove `.only` / `fit` / `fdescribe`; they stop every other test in the file. |
+| `focus_added` | fail | `.only`, `fit`, `fdescribe` (silently stops every other test in the file) | Remove `.only` / `fit` / `fdescribe`; they make the runner skip every other test in the file. |
 | `trivial_assertion_added` | warn | `expect(true).toBe(true)`, `assert True`, `assert x == x`, `assert.True(t, true)` | Replace the always-true assertion with one that checks the code's result. |
 | `claim_tests_added_unbacked` | fail | the PR text says tests were added; no new test case is in the diff | Add the tests the description promises, or correct the description. |
 | `claim_tests_pass_unbacked` | fail | the PR text says tests pass / CI is green; test checks on head did not pass | Wait for the test checks on this commit to pass, or correct the description. |
@@ -118,14 +122,14 @@ Conclusion: any `fail` flag → **failure**; otherwise checks still running → 
 otherwise warnings → `warn_conclusion` (success by default). Non-agent PRs (with `apply_to:
 agents`) → **success**, "Not an agent PR".
 
-Required checks are read and classified by the suite's shared logic
-(`@mainfast/shared/required-checks`, the same Mainfast Rollcall audits with): active rulesets
+Required checks are read with the same code Mainfast Rollcall uses
+(`@mainfast/shared/required-checks`): active rulesets
 (`GET /rules/branches/{branch}`), classic protection from "Get a branch" (contents: read; the
 admin-only endpoint only as a fallback, and a refusal there is a card note, not an error), latest
 run per name on the head sha, worst of check run + status, and app pins (a required check pinned to
 an app is not satisfied by a run another app posted under that name).
 
-## Policy: `.mainfast.yml`
+## Configuration: `.mainfast.yml`
 
 Evidence reads only the `evidence:` section, **from the PR's base commit** (a PR cannot loosen its
 own gate). Unknown keys and bad values are reported on the card, never silently ignored. Full
@@ -162,12 +166,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
   workflow_run:
-    workflows: [CI]
+    workflows: [CI]   # the name of your test workflow
     types: [completed]
 permissions: {}
 jobs:
   pr:   # same-repository PRs, every push
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     permissions: { contents: read, checks: write, pull-requests: write, statuses: read }
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -176,6 +181,7 @@ jobs:
         with: { wait-for-checks: "600" }
   ci:   # after CI finishes; also the only job that sees fork PRs. No checkout.
     if: github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
     permissions: { contents: read, checks: write, pull-requests: write, statuses: read, actions: read }
     steps:
       - uses: mainfast/evidence@v0
@@ -196,7 +202,7 @@ jobs:
 ### `workflow_run`, forks and what runs where
 
 - `pull_request` runs the workflow file **from the PR** with an ordinary token. For a fork PR that
-  token is read-only, so Evidence could not post; the example skips forks in the `pr` job.
+  token is read-only, so Evidence could not post. The example skips forks in the `pr` job.
 - `workflow_run` runs the workflow file **from the default branch**, with the base repository's
   token (write, per `permissions:`) and its secrets, even when the run that triggered it came from
   a fork. An agent that edits the Evidence workflow in its PR cannot switch this copy off (and
@@ -209,15 +215,15 @@ jobs:
     (or branch's) own `.mainfast.yml` is never read, on any trigger;
   - nothing in the workflow passes a secret to PR content; the Action's only secret is the token,
     used for API calls. Add no secret-using steps to this job;
-  - event text (branch names, PR titles, commit messages) is attacker-chosen for a fork: never
-    interpolate `${{ github.event.workflow_run.head_branch }}` and friends into a `run:` step;
+  - for a fork, event text (branch names, PR titles, commit messages) is chosen by whoever opened
+    the PR: never put `${{ github.event.workflow_run.head_branch }}` or similar into a `run:` step;
   - the coverage artifact is data the PR's CI run produced (a fork can write anything into it). For
     a **same-repo** PR it is parsed as lcov / Cobertura and never executed. For a **fork** PR it is
     ignored: coverage shows as "not available on fork PRs (artifact comes from the fork's own CI)"
     on the card, with no `coverage_below_threshold` or `coverage_missing` flag either way (the CLI
     `pr` command does the same for a fork PR).
-- `workflow_run.pull_requests` is empty for fork PRs (observed GitHub behaviour; the docs do not
-  say it). Evidence then looks the PR up by the run's head sha: `GET /commits/{sha}/pulls`, then
+- `workflow_run.pull_requests` is empty for fork PRs (GitHub behaves this way, though its docs
+  do not say so). Evidence then looks the PR up by the run's head sha: `GET /commits/{sha}/pulls`, then
   open PRs filtered by `head=<fork owner>:<branch>`, then up to 300 open PRs. A candidate counts
   only if GitHub's PR record is open, its head sha equals the run's head sha and its base
   repository is this repository. If a listed PR has moved on to a newer commit, the run is
@@ -238,30 +244,15 @@ jobs:
 
 Inputs and outputs: see [`action.yml`](action.yml).
 
-## CLI
+## Run it locally
 
-```
-mainfast-evidence local --base main [--head HEAD] [--body-file pr.md] [--coverage lcov.info] [--format text|markdown] [--json]
-mainfast-evidence pr --repo owner/name --pr 42 [--token …] [--post [--comment-author me]] [--fixture routes.json] [--format …] [--json]
-mainfast-evidence flags
-```
-
-Output is plain text in a terminal (no Markdown escapes) and the Markdown card when piped;
-`--format` picks one.
-
-`local` works from git alone (diff, test weakening, claims, secrets, provenance, git-ai notes);
-check-based evidence is reported as not evaluated. Exit codes: 0 pass/warn, 1 fail, 2 usage, 3 pending.
-
-## Library
-
-```ts
-import { parsePolicy, collectSnapshot, evaluate, renderCard, RestClient } from "@mainfast/evidence";
+```sh
+npx mainfast audit evidence            # this branch against main, from git alone
+npx mainfast audit evidence --pr 42    # a pull request, through the API (needs GITHUB_TOKEN or GH_TOKEN)
 ```
 
-Every analyser is pure over a `PrSnapshot` (`src/types.ts`); `collectSnapshot` builds one from the
-REST API and `localSnapshot` from git; `renderCard` / `renderText` render a report. No `.d.ts` is
-shipped yet (`dist/lib.cjs` bundles the private `@mainfast/shared`, which a per-file declaration
-emit would reference).
+Without `--pr` it works from git alone (diff, test weakening, claims, secrets, provenance, git-ai
+notes); check-based evidence is reported as not evaluated. It only reads and posts nothing.
 
 ## Development
 
@@ -270,6 +261,22 @@ npm install
 npm run typecheck && npm test && npm run build   # or: npm run all
 ```
 
+The package's own CLI, from your build (run in `evidence/`):
+
+```
+node dist/cli.cjs local --base main [--head HEAD] [--body-file pr.md] [--coverage lcov.info] [--format text|markdown] [--json]
+node dist/cli.cjs pr --repo owner/name --pr 42 [--token …] [--post [--comment-author me]] [--fixture routes.json] [--format …] [--json]
+node dist/cli.cjs flags                # list every flag
+node dist/cli.cjs pr --repo octo-org/widgets --pr 42 --fixture examples/fixture-pr.json   # try it without GitHub
+```
+
+Output is plain text in a terminal and the Markdown card when piped; `--format` picks one. Exit
+codes: 0 pass or warn, 1 fail, 2 usage, 3 pending.
+
+The library (`dist/lib.cjs`) exports `parsePolicy`, `collectSnapshot`, `evaluate`, `renderCard` and
+`RestClient`. Every analyzer is pure over a `PrSnapshot` (`src/types.ts`); `collectSnapshot` builds
+one from the REST API and `localSnapshot` from git. No `.d.ts` is shipped yet.
+
 `dist/` is committed for the Action (`dist/index.cjs` = the Action, `dist/cli.cjs`, `dist/lib.cjs`). Tests
 use recorded REST payloads (`test/fixtures/github/`, shaped per the 2022-11-28 REST docs) served
 through `mockFetch`; no test calls GitHub (`test/setup.ts` replaces the global `fetch` with one
@@ -277,4 +284,4 @@ that throws). Diff analysis tests build real temporary git repos.
 
 ## Report a problem
 
-Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. You don't need a key or a paid plan. Issues are public, so leave out private code and secrets.

@@ -7,6 +7,8 @@ import { mdCell, mdCode, mdText, oneLine, plainText, safeUrl } from '@mainfast/s
 import { DOCS_URL, PRODUCT } from './brand.js';
 import type { Finding, OwnersReport } from './types.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const MAX_PATHS = 50;
 const MAX_ROWS = 100;
 const MAX_MD = 65_000;
@@ -36,15 +38,15 @@ export function headline(r: OwnersReport): string {
   const current = r.findings.filter((f) => f.scope === 'current');
   const proposed = r.findings.filter((f) => f.scope === 'proposed');
   if (r.mode === 'pr') {
-    const files = r.unowned.length ? `${r.unowned.length} of ${r.checkedFiles} changed file(s) have no code owner` : 'every changed file has a code owner';
+    const files = r.unowned.length ? `${r.unowned.length} of ${plural(r.checkedFiles, "changed file")} ${r.unowned.length === 1 ? "has" : "have"} no code owner` : 'every changed file has a code owner';
     const pe = errors(proposed);
     const pw = proposed.length - pe;
-    const p = r.proposed ? (proposed.length ? `; this PR's CODEOWNERS: ${pe} error(s), ${pw} warning(s)` : "; this PR's CODEOWNERS looks right") : '';
+    const p = r.proposed ? (proposed.length ? `; this PR's CODEOWNERS: ${plural(pe, "error")}, ${plural(pw, "warning")}` : "; this PR's CODEOWNERS looks right") : '';
     return plainText(`${files}${p}`, 255, true);
   }
   const e = errors(current);
   return plainText(
-    current.length ? `${e} error(s), ${current.length - e} warning(s) in ${r.codeownersPath ?? 'CODEOWNERS'}` : `${r.codeownersPath ?? 'CODEOWNERS'} is healthy`,
+    current.length ? `${plural(e, "error")}, ${plural(current.length - e, "warning")} in ${r.codeownersPath ?? 'CODEOWNERS'}` : `${r.codeownersPath ?? 'CODEOWNERS'} is healthy`,
     255,
     true,
   );
@@ -90,7 +92,7 @@ export function toMarkdown(r: OwnersReport, o: MarkdownOptions = {}): string {
     out.push(`#### This PR's CODEOWNERS (${where})`, '');
     out.push(...(proposed.length ? table(proposed) : ['No problems found: valid syntax, every owner can review, no dead or shadowed lines.']), '');
   }
-  if (r.notes.length) out.push('**Not checked / notes**', '', ...r.notes.map((n) => `- ${mdCell(n, 1000)}`), '');
+  if (r.notes.length) out.push('**Notes**', '', ...r.notes.map((n) => `- ${mdCell(n, 1000)}`), '');
   const run = safeUrl(o.runUrl);
   out.push(`${run ? `[run](${run}) · ` : ''}[docs](${DOCS_URL})`);
   const md = out.join('\n');

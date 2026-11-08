@@ -1,22 +1,23 @@
-# Licences
+# Licenses
 
-Everything in this directory is open source under the MIT licence,
+Everything in this repository is open source under the MIT license,
 Copyright (c) 2026 Mainfast authors. The full text is in [LICENSE](LICENSE); each
 package carries the same file so it stays licensed when copied or published alone.
 
-| Path | What | Licence |
+| Path | What | License |
 | --- | --- | --- |
-| `intact/` | Mainfast Intact (Action, CLI, library, Claude Code plugin) | MIT ([intact/LICENSE](intact/LICENSE)) |
+| `intact/` | Mainfast Intact (Action, CLI, library) | MIT ([intact/LICENSE](intact/LICENSE)) |
 | `migrations/` | Mainfast Migrations | MIT ([migrations/LICENSE](migrations/LICENSE)) |
 | `rollcall/` | Mainfast Rollcall | MIT ([rollcall/LICENSE](rollcall/LICENSE)) |
 | `owners/` | Mainfast Owners | MIT ([owners/LICENSE](owners/LICENSE)) |
 | `evidence/` | Mainfast Evidence | MIT ([evidence/LICENSE](evidence/LICENSE)) |
 | `packages/shared/` | `@mainfast/shared` (GitHub client, Actions I/O, config loader, plan gate) | MIT ([packages/shared/LICENSE](packages/shared/LICENSE)) |
+| `cli/` | `mainfast`, the CLI and MCP server on npm | MIT ([cli/LICENSE](cli/LICENSE)) |
 | `schema/`, `docs/`, `scripts/` | Config schema, docs, build and brand scripts | MIT ([LICENSE](LICENSE)) |
 
-## The licence and the plan are separate things
+## The license and the plan are separate things
 
-The code is MIT for everyone. The plan is a fair-use request, not a licence condition:
+The code is MIT for everyone. The plan is a fair-use request, not a condition of the license:
 
 - **Free**: public repositories, and private repositories with up to 5 active
   contributors (opened a pull request or pushed in the last 30 days; bots excluded).
@@ -28,9 +29,9 @@ See [README.md#free-and-pro](README.md#free-and-pro).
 
 ## Third-party code
 
-The bundles in `*/dist/` and `intact/plugin/scripts/` inline these runtime dependencies:
+The bundles in `*/dist/` inline these runtime dependencies:
 
-| Package | Licence |
+| Package | License |
 | --- | --- |
 | [`yaml`](https://github.com/eemeli/yaml) | ISC |
 

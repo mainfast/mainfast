@@ -77,7 +77,7 @@ export async function main(argv: string[]): Promise<number> {
     console.log(values.format === 'json' ? JSON.stringify(entries, null, 2) : recheckMarkdown(entries, values['main-branch']!));
     return 0;
   }
-  console.error(`unknown command ${cmd}\n\n${USAGE}`);
+  console.error(`unknown command: ${cmd}\n\n${USAGE}`);
   return 2;
 }
 

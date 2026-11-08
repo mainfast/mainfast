@@ -1,5 +1,5 @@
-// brand.json carries a real (sandbox) Polar organisation id, so the default licence validator
-// would call Polar. The all-zeros organisation turns it off for every test: tests that check
+// brand.json carries a real (sandbox) Polar organization id, so the default license validator
+// would call Polar. The all-zeros organization turns it off for every test: tests that check
 // validation inject a fake fetch and their own options.
 import { defineConfig } from "vitest/config";
 

@@ -27,7 +27,7 @@ export function git(cwd: string, args: string[]): string | undefined {
 /** The top of the working tree containing `dir`. Nothing here reads or writes outside it. */
 export function repoRoot(dir: string): string {
   const root = git(dir, ["rev-parse", "--show-toplevel"]);
-  if (!root) throw new CliError(`not inside a git working tree: ${dir}`);
+  if (!root) throw new CliError(`not inside a git repository: ${dir}`);
   return root;
 }
 
@@ -50,7 +50,7 @@ export function mainRef(root: string, given?: string): string {
   const head = git(root, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
   if (head) return head;
   for (const r of ["origin/main", "origin/master", "main", "master"]) if (git(root, ["rev-parse", "--verify", "--quiet", `${r}^{commit}`])) return r;
-  throw new CliError("cannot tell the main branch: pass --main");
+  throw new CliError("could not find the main branch; pass --main");
 }
 
 /** GITHUB_TOKEN, else GH_TOKEN. The value never leaves this process's children. */

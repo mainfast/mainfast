@@ -1,6 +1,8 @@
 import { BRAND } from "./brand.ts";
 import type { CheckReport, Finding, MergeReport } from "./types.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const LEVEL_LABEL = { error: "ERROR", warning: "WARN ", notice: "NOTE ", off: "OFF  " } as const;
 
 const STATUS_LABEL: Record<MergeReport["status"], string> = {
@@ -11,6 +13,8 @@ const STATUS_LABEL: Record<MergeReport["status"], string> = {
   "not-a-merge": "skip  not a merge commit",
   error: "ERROR analysis failed",
 };
+
+const n = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 export function lineRef(f: Finding): string {
   if (!f.mergeLines) return f.path;
@@ -71,7 +75,7 @@ export function formatMerge(m: MergeReport): string[] {
     if (g.length > 1) {
       const refs = g.slice(1).map((f) => (f.mergeLines ? String(f.mergeLines.start) : "file"));
       const shown = refs.slice(0, 30).join(", ") + (refs.length > 30 ? `, ... (${refs.length - 30} more)` : "");
-      out.push(`          and ${g.length - 1} more ${g[0]!.kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0]!.path} at line ${shown}`);
+      out.push(`          and ${g.length - 1} more ${g[0]!.kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0]!.path} at line${refs.length === 1 ? "" : "s"} ${shown}`);
       out.push(`          (a resolution that took one side's whole file looks like this; --json lists every hunk)`);
     }
   }
@@ -112,8 +116,8 @@ export function formatHuman(r: CheckReport): string {
   const s = r.summary;
   out.push(
     `summary: ${s.clean} clean, ${s.conflictResolution} resolved, ${s.withFindings} with findings` +
-      `${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} errors` : ""}` +
-      ` | ${s.findings.error} error, ${s.findings.warning} warning, ${s.findings.notice} notice`,
+      `${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} failed to analyze` : ""}` +
+      ` | ${n(s.findings.error, "error")}, ${n(s.findings.warning, "warning")}, ${n(s.findings.notice, "notice")}`,
   );
   return out.join("\n") + "\n";
 }
@@ -123,10 +127,10 @@ export function formatMarkdown(r: CheckReport): string {
   const s = r.summary;
   const out: string[] = [];
   const failed = s.findings.error + s.findings.warning > 0 || s.errors > 0;
-  out.push(`## ${BRAND.productName}: ${failed ? "merge dropped or invented changes" : "merges intact"}`);
+  out.push(`## ${BRAND.productName}: ${failed ? "a merge dropped changes or added unexpected ones" : "merges intact"}`);
   out.push("");
-  out.push(`${r.merges.length} merge commit(s) checked${r.range ? ` in \`${r.range}\`` : ""}. ` +
-    `${s.findings.error} error, ${s.findings.warning} warning, ${s.findings.notice} notice.`);
+  out.push(`${plural(r.merges.length, "merge commit")} checked${r.range ? ` in \`${r.range}\`` : ""}. ` +
+    `${n(s.findings.error, "error")}, ${n(s.findings.warning, "warning")}, ${n(s.findings.notice, "notice")}.`);
   out.push("");
   for (const m of r.merges) {
     out.push(`### \`${m.merge.short}\` ${escapeMd(m.merge.subject)}: ${m.status}`);
@@ -147,7 +151,7 @@ export function formatMarkdown(r: CheckReport): string {
         }
         if (g.length > 1) {
           const refs = g.slice(1).map((x) => (x.mergeLines ? String(x.mergeLines.start) : "file")).slice(0, 30);
-          out.push(`  - and ${g.length - 1} more like it at line ${refs.join(", ")}${g.length - 1 > 30 ? ", ..." : ""}`);
+          out.push(`  - and ${g.length - 1} more like it at line${refs.length === 1 ? "" : "s"} ${refs.join(", ")}${g.length - 1 > 30 ? ", ..." : ""}`);
         }
       }
     }

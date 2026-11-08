@@ -5,6 +5,8 @@ import type { CheckRunInfo, ChecksSnapshot, CommitStatusInfo, PrSnapshot } from 
 import type { Finding } from "./finding.ts";
 import { checkRunState, classifyRequired, commitStatusState, latestBy, runOrder, type CheckState, type CommitChecks } from "@mainfast/shared/required-checks";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 // Check-state classification and "worst state wins" are shared with Mainfast Rollcall
 // (@mainfast/shared/required-checks), so both read a check run or status the same way.
 export type { CheckState };
@@ -122,7 +124,7 @@ export function evaluateChecks(snap: PrSnapshot, policy: EvidencePolicy): Checks
       title: "No test check ran on the head commit",
       detail: staleTestsOn
         ? `Tests ran on earlier commit ${staleTestsOn.sha.slice(0, 7)} (${staleTestsOn.tests.map((t) => `${t.name}: ${t.state}`).join(", ")}) but not on head ${short}. Evidence from an earlier commit does not cover the code being merged.`
-        : `No check run or status on ${short} matches the test-check patterns (${policy.testChecks.join(", ")}).`,
+        : `No check run or status on ${short} matches the \`test_checks\` patterns (${policy.testChecks.join(", ")}).`,
     });
   } else if (testsState === "failed") {
     const bad = tests.filter((t) => t.state !== "success");
@@ -137,12 +139,12 @@ export function evaluateChecks(snap: PrSnapshot, policy: EvidencePolicy): Checks
     findings.push({
       id: "tests_skipped",
       title: ran ? "Some test checks were skipped on the head commit" : "Every test check was skipped on the head commit",
-      detail: `${skipped.map((t) => `${t.name}: skipped`).join(", ")} — ${ran ? `${ran} other test check(s) passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`,
+      detail: `${skipped.map((t) => `${t.name}: skipped`).join(", ")} — ${ran ? `${plural(ran, "other test check")} passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`,
     });
   } else if (testsState === "empty") {
     findings.push({
       id: "tests_empty",
-      title: "Test checks passed but report running zero tests",
+      title: "Test checks passed but ran zero tests",
       detail: tests.map((t) => `${t.name}: "${t.summary}"`).join("; "),
     });
   }
@@ -150,7 +152,7 @@ export function evaluateChecks(snap: PrSnapshot, policy: EvidencePolicy): Checks
   const contexts = [...new Set([...(snap.required?.contexts ?? []), ...policy.requiredChecks])].filter((c) => c !== CHECK_NAME);
   const requiredSources = [...(snap.required?.sources ?? []), ...(policy.requiredChecks.length ? [".mainfast.yml required_checks"] : [])];
   // What head reported for each required context: the shared classification (latest run per name
-  // on this sha, worst of run + status, app pins honoured), the same Mainfast Rollcall uses.
+  // on this sha, worst of run + status, app pins honored), the same Mainfast Rollcall uses.
   const keep = keeper(policy);
   const commit: CommitChecks = {
     sha: headSha,
@@ -169,7 +171,7 @@ export function evaluateChecks(snap: PrSnapshot, policy: EvidencePolicy): Checks
     findings.push({
       id: "required_check_missing",
       title: "Required check never reported on the head commit",
-      detail: `${missing.map((r) => (r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`)).join(", ")} — nothing that satisfies it ran on ${short} under that name (renamed job, path filter, the workflow was edited out, or another app posted the name).`,
+      detail: `${missing.map((r) => (r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`)).join(", ")} — no check under that name that satisfies the rule ran on ${short}. Usual causes: a renamed job, a path filter, a removed workflow, or another app posting the name.`,
     });
   if (skipped.length)
     findings.push({

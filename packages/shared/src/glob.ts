@@ -1,4 +1,4 @@
-// gitignore-flavoured glob -> RegExp, shared by every `.mainfast.yml` path list:
+// gitignore-flavored glob -> RegExp, shared by every `.mainfast.yml` path list:
 // - `**` spans directories, `*` and `?` stay within one segment, `{a,b}` alternates;
 // - a pattern without `/` matches the basename anywhere (`yarn.lock` ~ `apps/web/yarn.lock`);
 // - a leading `/` anchors to the repository root (`/CODEOWNERS` only matches the root file);

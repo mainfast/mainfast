@@ -13,6 +13,8 @@ import { DEFAULT_CONFIG, type OwnersConfig } from './config.js';
 import { matchesAny } from '@mainfast/shared/glob';
 import type { Finding, OrgChecks, OwnersReport, OwnerStatus, Scope } from './types.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface ProposedInput {
   /** Commit the proposed file was read at (the PR head). */
   ref?: string;
@@ -266,7 +268,7 @@ const ownersIn = (rules: Rule[]) => rules.flatMap((r) => r.owners);
 function orgNote(org: OrgChecks, checker: OwnerChecker, api: OwnersApi): string | undefined {
   const { usersUnchecked: u, teamsUnchecked: t } = checker;
   if (!u && !t) return undefined;
-  const what = [t ? `${t} team owner(s) (existence and write access)` : '', u ? `org membership of ${u} user owner(s)` : ''].filter(Boolean).join(' and ');
+  const what = [t ? `${plural(t, "team owner")} (existence and write access)` : '', u ? `org membership of ${plural(u, "user owner")}` : ''].filter(Boolean).join(' and ');
   const why =
     org === 'refused'
       ? `the \`org-token\` was refused (${api.orgRefusal ?? 'error'}); it needs Organization → Members: read for ${api.owner}`
@@ -386,7 +388,7 @@ export async function auditOwners(input: OwnersInput): Promise<OwnersReport> {
               code: 'unowned-files',
               severity: cfg.requireOwners ? 'error' : 'warning',
               scope: 'current',
-              message: `${unowned.length} changed file(s) have no code owner in \`${co.path}\` on \`${input.ref ?? 'the base branch'}\` (the file GitHub uses to request reviews)`,
+              message: `${plural(unowned.length, "changed file")} ${unowned.length === 1 ? "has" : "have"} no code owner in \`${co.path}\` on \`${input.ref ?? 'the base branch'}\` (the file GitHub uses to request reviews)`,
               paths: unowned,
             }
           : {
@@ -453,14 +455,14 @@ export async function auditOwners(input: OwnersInput): Promise<OwnersReport> {
     report.orgChecks = 'untrusted-pr';
     if (checker.publicOnly)
       notes.push(
-        `This PR comes from a fork or from an author without write access, so owners were checked for public account existence only: team, org membership and repository access checks (and GitHub's own CODEOWNERS errors) would show private org data to the PR author. ${checker.publicOnly} owner(s) count as valid here; the scheduled audit checks them in full.`,
+        `This PR comes from a fork or from an author without write access, so owners were checked for public account existence only: team, org membership and repository access checks (and GitHub's own CODEOWNERS errors) would show private org data to the PR author. ${plural(checker.publicOnly, "owner")} count as valid here; the scheduled audit checks them in full.`,
       );
     report.owners = [...checker.statuses.values()];
   } else if (checker && api) {
     report.orgChecks = await api.orgChecks();
     const note = orgNote(report.orgChecks, checker, api);
     if (note) notes.push(note);
-    if (checker.permUnknown) notes.push(`Repository permission of ${checker.permUnknown} user owner(s) could not be read (403); they count as valid.`);
+    if (checker.permUnknown) notes.push(`Repository permission of ${plural(checker.permUnknown, "user owner")} could not be read (403); they count as valid.`);
     if (co && days > 0) {
       const sts = [...new Set(ownersIn(co.rules).map(key))].map((k) => checker.statuses.get(k)).filter((s): s is OwnerStatus => !!s);
       await dormancy(sts, api, cfg, days, now, report.orgChecks);
@@ -469,7 +471,7 @@ export async function auditOwners(input: OwnersInput): Promise<OwnersReport> {
       if (report.dormancy.capped) {
         const total = sts.filter((s) => s.reviews !== undefined).length;
         notes.push(
-          `Dormancy checked for ${total} of ${total + report.dormancy.skipped} owner(s): stopped after ${report.dormancy.searches} search request(s) (${
+          `Dormancy checked for ${total} of ${plural(total + report.dormancy.skipped, "owner")}: stopped after ${plural(report.dormancy.searches, "search request")} (${
             api.searchStop ?? `owners.maxSearches is ${cfg.maxSearches}`
           }). The order rotates weekly, so the next runs cover the rest.`,
         );

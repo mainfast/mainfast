@@ -5,6 +5,8 @@ import { encPath, GitHub, GitHubError } from '@mainfast/shared/github';
 import { fetchRequiredSources } from '@mainfast/shared/required-checks';
 import type { CheckRun, CommitStatus, PullObservation, Snapshot, WorkflowFile } from './types.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface CollectOptions {
   gh: GitHub;
   owner: string;
@@ -90,7 +92,7 @@ export async function collect(o: CollectOptions): Promise<Snapshot> {
       if (!obs.checkRuns.length && !obs.statuses.length) silent++;
       else pulls.push(obs);
     }
-    if (silent) notes.push(`${silent} open PR(s) had no check runs or statuses on their head yet and were not counted`);
+    if (silent) notes.push(`${plural(silent, "open PR")} ${silent === 1 ? "had no check runs or statuses on its head yet and was" : "had no check runs or statuses on their head yet and were"} not counted`);
   }
   // Newest first: merged PRs by merge time, open PRs by last update.
   pulls.sort((x, y) => String(y.mergedAt ?? y.updatedAt ?? '').localeCompare(String(x.mergedAt ?? x.updatedAt ?? '')));

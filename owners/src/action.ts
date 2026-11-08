@@ -22,6 +22,8 @@ import { GitHub, GitHubError, resolveCommentAuthor, splitRepo } from '@mainfast/
 import { plainText } from '@mainfast/shared/markdown';
 import { planGate } from '@mainfast/shared/plan';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const isAccessError = (e: unknown) => e instanceof GitHubError && [403, 404, 410].includes(e.status);
 
 export async function run(): Promise<void> {
@@ -80,7 +82,7 @@ export async function run(): Promise<void> {
   }
   // Plan notice for large private repositories; never changes the result (see @mainfast/shared/plan).
   await planGate({ gh, owner, repo, event: ctx.event, productName: PRODUCT });
-  if (reaches(report.findings, failOn)) setFailed(`${PRODUCT}: ${report.findings.filter((f) => f.severity === 'error').length} error(s), ${report.findings.filter((f) => f.severity === 'warning').length} warning(s)`);
+  if (reaches(report.findings, failOn)) setFailed(`${PRODUCT}: ${plural(report.findings.filter((f) => f.severity === 'error').length, "error")}, ${plural(report.findings.filter((f) => f.severity === 'warning').length, "warning")}`);
 }
 
 if (!process.env.VITEST) run().catch((e) => setFailed(plainText(e instanceof Error ? e.message : String(e), 4000)));

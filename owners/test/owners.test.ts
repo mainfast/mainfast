@@ -156,7 +156,7 @@ describe('audit mode', () => {
       'unknown-user @ghost',
     ]);
     expect(r.notes).toHaveLength(1);
-    expect(r.notes[0]).toContain('Not checked: 4 team owner(s)');
+    expect(r.notes[0]).toContain('Not checked: 4 team owners');
     expect(r.notes[0]).toContain('Members: read');
     expect(r.notes[0]).toContain('`org-token`');
     const md = toMarkdown(r);
@@ -257,7 +257,7 @@ describe('dormancy and the search rate limit (30 a minute)', () => {
     const r = await auditOwners({ repository: 'acme/app', codeowners: { path: 'CODEOWNERS', text: '* @alice @dave\n' }, files: ['a'], api: a, now, config: parseConfig('owners:\n  maxSearches: 1\n') });
     expect(fetch.calls.filter((c) => c.path.startsWith('/search/'))).toHaveLength(1);
     expect(r.dormancy).toMatchObject({ days: 180, searches: 1, skipped: 1, capped: true });
-    expect(r.notes.join('\n')).toContain('Dormancy checked for 1 of 2 owner(s)');
+    expect(r.notes.join('\n')).toContain('Dormancy checked for 1 of 2 owners');
     expect(r.notes.join('\n')).toContain('owners.maxSearches is 1');
   });
 
@@ -301,7 +301,7 @@ describe('pr mode', () => {
     expect(fetch.calls.some((c) => c.path.startsWith('/search/'))).toBe(false); // never on a PR
     expect(fetch.calls.some((c) => c.path.includes('/codeowners/errors'))).toBe(false); // base-file errors belong to the audit
     const md = toMarkdown(r);
-    expect(md).toContain('3 of 4 changed file(s) have no code owner');
+    expect(md).toContain('3 of 4 changed files have no code owner');
     expect(md).toContain('Judged with `.github/CODEOWNERS` on `main`');
     expect(md).toContain('- `tools/new-script.sh`');
     expect(md).toContain('/tools/ @OWNER');
@@ -392,7 +392,7 @@ describe('pr mode', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('honours owners.ignore and passes when everything is owned', async () => {
+  it('honors owners.ignore and passes when everything is owned', async () => {
     const { api: a } = api();
     const r = await auditOwners({
       repository: 'acme/app',

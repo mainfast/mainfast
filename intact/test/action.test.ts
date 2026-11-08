@@ -81,7 +81,7 @@ describe("runAction", () => {
     const all = logs.join("");
     expect(all).toMatch(/::error file=config.txt,line=5,endLine=5,title=Mainfast Intact%3A dropped \(main side\)::/);
     expect(all).toContain(`Introduced by ${fix.slice(0, 7)} "Raise timeout to 30" (Ana Main)`);
-    expect(readFileSync(summary, "utf8")).toContain("merge dropped or invented changes");
+    expect(readFileSync(summary, "utf8")).toContain("a merge dropped changes or added unexpected ones");
     expect(parseOutputs(readFileSync(output, "utf8")).status).toBe("fail");
   });
 
@@ -159,7 +159,7 @@ describe("runAction", () => {
       }
     });
 
-    it("still fails when a merge could not be analysed", () => {
+    it("still fails when a merge could not be analyzed", () => {
       const report = { summary: { errors: 1, findings: { error: 0, warning: 0, notice: 0 } } } as any;
       expect(exitCodeFor(report, "off")).toBe(2);
     });

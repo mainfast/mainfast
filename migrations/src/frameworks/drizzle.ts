@@ -6,6 +6,8 @@ import type { Tree } from '../git.js';
 import type { CompareContext, Finding, Framework } from '../types.js';
 import { basename, dirname, groupBy, uniq } from './common.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface JournalEntry {
   idx: number;
   version?: string;
@@ -67,7 +69,7 @@ export const drizzle: Framework = {
         root,
         code: 'journal-unreadable',
         severity: 'error',
-        message: `${jp} is missing or is not valid JSON (unresolved merge markers?)`,
+        message: `${jp} is missing or is not valid JSON (check for leftover merge conflict markers)`,
         files: [jp],
         hint: 'Resolve the journal: union the entries by tag and re-index idx sequentially.',
         key: `drizzle:${root}:unreadable`,
@@ -200,7 +202,7 @@ export const drizzle: Framework = {
         code: 'journal-fork',
         severity,
         message:
-          `main added ${mainAdded.length} migration(s) since this branch forked (${missingFromHead.map((e) => e.tag).join(', ')}) ` +
+          `main added ${plural(mainAdded.length, "migration")} since this branch forked (${missingFromHead.map((e) => e.tag).join(', ')}) ` +
           `and the branch added ${headAdded.length} (${headAdded.map((e) => e.tag).join(', ')}). The branch's snapshot was generated against a schema that is no longer main's.`,
         files: [jp],
         hint: 'Merge main, union the journal entries by tag, re-index idx sequentially, and fix the branch snapshot\'s single prevId (or delete the branch migration and re-run drizzle-kit generate).',
