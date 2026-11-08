@@ -7520,6 +7520,8 @@ var brand_default = {
     docsUrl: "https://github.com/mainfast/mainfast#readme",
     issuesUrl: "https://github.com/mainfast/mainfast/issues",
     pricingUrl: "https://mainfast.dev/pricing",
+    appUrl: "https://github.com/apps/mainfast",
+    dashboardUrl: "https://app.mainfast.dev",
     npmScope: "@mainfast",
     configFile: ".mainfast.yml",
     configFileAlt: ".mainfast.yaml",
