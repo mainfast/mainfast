@@ -1,3 +1,6 @@
 node_modules/
 coverage/
 *.log
+
+# reports the Action writes when run outside a runner
+mainfast-*.json
