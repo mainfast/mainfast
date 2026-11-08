@@ -7422,7 +7422,7 @@ var brand_default = {
     intact: {
       productName: "Mainfast Intact",
       tagline: "prove merge commits did not silently drop changes from main",
-      description: "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      description: "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       npmName: "@mainfast/intact",
       cliName: "mainfast",
       configSection: "intact",
@@ -7448,7 +7448,7 @@ var brand_default = {
     rollcall: {
       productName: "Mainfast Rollcall",
       tagline: "required-check integrity audit",
-      description: "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported \u2014 never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift \u2014 and keeps one tracking issue open while something is wrong.",
+      description: "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       npmName: "@mainfast/rollcall",
       cliName: "mainfast-rollcall",
       configSection: "rollcall",
@@ -7460,7 +7460,7 @@ var brand_default = {
     owners: {
       productName: "Mainfast Owners",
       tagline: "CODEOWNERS drift check",
-      description: "CODEOWNERS drift \u2014 unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      description: "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       npmName: "@mainfast/owners",
       cliName: "mainfast-owners",
       configSection: "owners",
@@ -7472,7 +7472,7 @@ var brand_default = {
     evidence: {
       productName: "Mainfast Evidence",
       tagline: "proof, not review, for pull requests written by coding agents",
-      description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      description: "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       npmName: "@mainfast/evidence",
       cliName: "mainfast-evidence",
       configSection: "evidence",
@@ -8180,6 +8180,7 @@ function classifyRequired(context, c, sources = []) {
 }
 
 // src/analyze/checks.ts
+var plural = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 function keeper(policy) {
   const ignored = policy.ignoreChecks.map(nameMatcher);
   return (name) => name !== CHECK_NAME && !ignored.some((m) => m(name));
@@ -8252,7 +8253,7 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "tests_not_run_on_head",
       title: "No test check ran on the head commit",
-      detail: staleTestsOn ? `Tests ran on earlier commit ${staleTestsOn.sha.slice(0, 7)} (${staleTestsOn.tests.map((t) => `${t.name}: ${t.state}`).join(", ")}) but not on head ${short}. Evidence from an earlier commit does not cover the code being merged.` : `No check run or status on ${short} matches the test-check patterns (${policy.testChecks.join(", ")}).`
+      detail: staleTestsOn ? `Tests ran on earlier commit ${staleTestsOn.sha.slice(0, 7)} (${staleTestsOn.tests.map((t) => `${t.name}: ${t.state}`).join(", ")}) but not on head ${short}. Evidence from an earlier commit does not cover the code being merged.` : `No check run or status on ${short} matches the \`test_checks\` patterns (${policy.testChecks.join(", ")}).`
     });
   } else if (testsState === "failed") {
     const bad = tests.filter((t) => t.state !== "success");
@@ -8267,12 +8268,12 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "tests_skipped",
       title: ran ? "Some test checks were skipped on the head commit" : "Every test check was skipped on the head commit",
-      detail: `${skipped2.map((t) => `${t.name}: skipped`).join(", ")} \u2014 ${ran ? `${ran} other test check(s) passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`
+      detail: `${skipped2.map((t) => `${t.name}: skipped`).join(", ")} \u2014 ${ran ? `${plural(ran, "other test check")} passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`
     });
   } else if (testsState === "empty") {
     findings.push({
       id: "tests_empty",
-      title: "Test checks passed but report running zero tests",
+      title: "Test checks passed but ran zero tests",
       detail: tests.map((t) => `${t.name}: "${t.summary}"`).join("; ")
     });
   }
@@ -8296,7 +8297,7 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "required_check_missing",
       title: "Required check never reported on the head commit",
-      detail: `${missing.map((r) => r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`).join(", ")} \u2014 nothing that satisfies it ran on ${short} under that name (renamed job, path filter, the workflow was edited out, or another app posted the name).`
+      detail: `${missing.map((r) => r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`).join(", ")} \u2014 no check under that name that satisfies the rule ran on ${short}. Usual causes: a renamed job, a path filter, a removed workflow, or another app posting the name.`
     });
   if (skipped.length)
     findings.push({
@@ -8315,6 +8316,7 @@ function evaluateChecks(snap, policy) {
 }
 
 // src/analyze/claims.ts
+var plural2 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var NEGATION = /\b(no|not|n't|without|never|skip(?:ped)?|none)\b[^.\n]{0,25}$/i;
 var PATTERNS = {
   tests_added: [
@@ -8356,7 +8358,7 @@ function evaluateClaims(title, body, tamper, checks) {
 ${body}`)) {
     if (c.kind === "tests_added") {
       const n = tamper.addedTestCases;
-      if (n > 0) claims.push({ ...c, verdict: "backed", why: `${n} test case(s) added` });
+      if (n > 0) claims.push({ ...c, verdict: "backed", why: `${plural2(n, "test case")} added` });
       else {
         const why = tamper.testStats.length === 0 ? "the diff changes no test files" : `test files changed but no new test case was added (net assertions ${tamper.net.assertions >= 0 ? "+" : ""}${tamper.net.assertions})`;
         claims.push({ ...c, verdict: "unbacked", why });
@@ -8647,6 +8649,7 @@ function compress(lines) {
 }
 
 // src/analyze/provenance.ts
+var plural3 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var AGENT_CATALOG = [
   {
     // Verified: claude[bot] and the claude/ prefix are the defaults of anthropics/claude-code-action
@@ -8878,7 +8881,7 @@ function detectProvenance(snap, m) {
           add({
             agent: GIT_AI_TOOL_TO_AGENT[lc(t.tool)] ?? t.tool,
             source: "git_ai",
-            detail: `${short}: git-ai note, ${s.aiLines} AI line(s)${"model" in t && t.model ? `, ${t.model}` : ""}`
+            detail: `${short}: git-ai note, ${plural3(s.aiLines, "AI line")}${"model" in t && t.model ? `, ${t.model}` : ""}`
           });
         }
       }
@@ -8967,7 +8970,7 @@ function evaluateSize(files, policy) {
   const over = [];
   if (policy.diff.maxLines > 0 && lines > policy.diff.maxLines) over.push(`${lines} changed lines (limit ${policy.diff.maxLines})`);
   if (policy.diff.maxFiles > 0 && counted.length > policy.diff.maxFiles) over.push(`${counted.length} files (limit ${policy.diff.maxFiles})`);
-  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Large agent PRs hide changes; split it.` });
+  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Split it so each part can be reviewed properly.` });
   return {
     files: files.length,
     additions: files.reduce((n, f) => n + f.additions, 0),
@@ -8978,6 +8981,7 @@ function evaluateSize(files, policy) {
 }
 
 // src/analyze/tamper.ts
+var plural4 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var LANG_RULES = {
   js: {
     testCase: /(?:^|[\s;(,])[xf]?(?:it|test)(?:\.[a-zA-Z]+)*\s*(?:\(|`)/,
@@ -9096,13 +9100,13 @@ function evaluateTamper(files, policy) {
     findings.push({
       id: "tests_removed",
       title: "Fewer test cases than before",
-      detail: `Net ${net.cases} test case(s) across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`
+      detail: `Net ${plural4(net.cases, "test case")} across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`
     });
   if (net.assertions < 0)
     findings.push({
       id: "assertions_dropped",
       title: "Assertion count dropped",
-      detail: `Net ${net.assertions} assertion(s) across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`
+      detail: `Net ${plural4(net.assertions, "assertion")} across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`
     });
   const loc = (kind, pick) => testStats.flatMap((s) => pick(s).map((l) => ({ path: s.path, line: l.line, message: `${kind}: ${l.text.trim().slice(0, 160)}` })));
   const lineFinding = (id, title, kind, pick) => {
@@ -9111,14 +9115,14 @@ function evaluateTamper(files, policy) {
       findings.push({ id, title, detail: locations.map((l) => `\`${l.path}:${l.line}\` ${l.message.slice(kind.length + 2)}`).join("\n"), locations });
   };
   lineFinding("skip_added", "Tests skipped", "skip added", (s) => s.skips);
-  lineFinding("focus_added", "Focused test added (.only / fit) \u2014 other tests in the file stop running", "focus added", (s) => s.focus);
+  lineFinding("focus_added", "Focused test added (.only / fit) \u2014 the other tests in the file are skipped", "focus added", (s) => s.focus);
   lineFinding("assertions_commented_out", "Assertions commented out", "commented-out assertion", (s) => s.commentedOut);
   lineFinding("trivial_assertion_added", "Assertion that cannot fail", "trivial assertion", (s) => s.trivial);
   if (unanalyzed.length)
     findings.push({
       id: "diff_unanalyzed",
-      title: "Some files could not be analysed",
-      detail: `GitHub returned no patch for ${list(unanalyzed)} (diff too large). Run with a full checkout to analyse them locally.`
+      title: "Some files could not be analyzed",
+      detail: `GitHub returned no patch for ${list(unanalyzed)} (diff too large). Run with a full checkout (\`fetch-depth: 0\`) to analyze them locally.`
     });
   return { touched, testStats, net, addedTestCases, unanalyzed, findings };
 }
@@ -9181,15 +9185,15 @@ var FLAG_FIXES = {
   touched_workflows: "Have a human review the CI change, or move it to its own PR; agents should not edit what judges them.",
   touched_codeowners: "Have a code owner review the CODEOWNERS change in a separate, human-authored PR.",
   touched_lockfiles: "Check the dependency change is intended (`npm ci` / lockfile diff), or set `touched_lockfiles: off`.",
-  touched_tests: "Check each removed or rewritten test line is intended; keep the old assertions unless the behaviour changed.",
+  touched_tests: "Check each removed or rewritten test line is intended; keep the old assertions unless the behavior changed.",
   touched_test_config: "Review the test-config change: coverage thresholds, excluded paths and test globs can switch tests off.",
   touched_policy: "Change `.mainfast.yml` in a separate, human-reviewed PR; this PR is judged by the base branch's policy anyway.",
-  tests_deleted: "Restore the deleted test file, or explain in the PR why the behaviour it covered is gone.",
+  tests_deleted: "Restore the deleted test file, or explain in the PR why the behavior it covered is gone.",
   tests_removed: "Restore the removed test cases, or replace them with equivalent ones.",
   assertions_dropped: "Restore the dropped assertions; a test without them passes whatever the code does.",
   assertions_commented_out: "Uncomment the assertion and fix the code it was catching, or delete it on purpose with a reason.",
   skip_added: "Remove the skip marker and fix the test, or open an issue and link it next to the skip.",
-  focus_added: "Remove `.only` / `fit` / `fdescribe`; they stop every other test in the file.",
+  focus_added: "Remove `.only` / `fit` / `fdescribe`; they make the runner skip every other test in the file.",
   trivial_assertion_added: "Replace the always-true assertion with one that checks the code's result.",
   claim_tests_added_unbacked: "Add the tests the description promises, or correct the description.",
   claim_tests_pass_unbacked: "Wait for the test checks on this commit to pass, or correct the description.",
@@ -9479,6 +9483,7 @@ function safeUrl(u) {
 }
 
 // src/render.ts
+var plural5 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var MAX_SUMMARY = 65e3;
 var MAX_CELL_ITEM = 200;
 var MAX_LIST = 20;
@@ -9526,9 +9531,9 @@ function testsCell(r, e = MD) {
 function requiredCell(r, e = MD) {
   const c = r.checks;
   if (!c.evaluated) return "not evaluated (offline)";
-  const unknown = c.notes.some((n) => /classic required checks unknown/.test(n)) ? " (classic protection unreadable; list them in `required_checks`)" : "";
+  const unknown = c.notes.some((n) => /classic required checks unknown/.test(n)) ? " (could not read branch protection; list the checks in `required_checks`)" : "";
   if (!c.required.length)
-    return c.requiredSources.length ? `none configured${unknown}` : "unknown (no ruleset/protection readable; set `required_checks`)";
+    return c.requiredSources.length ? `none configured${unknown}` : "unknown (could not read rulesets or branch protection; list the checks in `required_checks`)";
   const ok = c.required.filter((x) => x.state === "success").length;
   const bad = c.required.filter((x) => x.state !== "success").map((x) => `${e.t(x.context, MAX_CELL_ITEM)}: ${e.t(x.state, 40)}`);
   return `${ok}/${c.required.length} passed${bad.length ? ` \u2014 ${joinCapped(bad, ", ")}` : ""}${unknown}`;
@@ -9539,7 +9544,7 @@ function coverageCell(r, e = MD) {
   if (!c.present) return "no report";
   const format = e.t(String(c.format), 40);
   if (c.pct === void 0) return `no instrumented changed lines (${format})`;
-  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${c.notInReport.length} changed file(s) not in report` : ""}`;
+  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${plural5(c.notInReport.length, "changed file")} not in report` : ""}`;
 }
 function tamperCell(r) {
   const t = r.tamper.touched;
@@ -9554,7 +9559,7 @@ function tamperCell(r) {
   const w = [];
   const s = r.tamper.testStats;
   const skips = s.reduce((n, x) => n + x.skips.length + x.focus.length, 0);
-  if (skips) w.push(`${skips} skip/focus marker(s)`);
+  if (skips) w.push(`${plural5(skips, "skip/focus marker")}`);
   if (r.tamper.net.assertions < 0) w.push(`assertions ${r.tamper.net.assertions}`);
   if (r.tamper.net.cases < 0) w.push(`test cases ${r.tamper.net.cases}`);
   return [...parts, ...w].join(", ") || "nothing sensitive touched";
@@ -9572,7 +9577,7 @@ function renderCard(r, opts = {}) {
   const checkUrl = safeUrl(opts.checkUrl);
   if (checkUrl) meta.push(`[check run](${checkUrl})`);
   lines.push(meta.join(" \xB7 "), "");
-  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy gates agent PRs only (${mdCode("apply_to: all")} gates every PR).`, "");
+  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy checks agent PRs only (set ${mdCode("apply_to: all")} to check every PR).`, "");
   if (r.applies) {
     lines.push("| Evidence | On this commit |", "|---|---|");
     lines.push(`| Tests ran | ${testsCell(r)} |`);
@@ -9580,7 +9585,7 @@ function renderCard(r, opts = {}) {
     lines.push(`| Changed-line coverage | ${coverageCell(r)} |`);
     lines.push(`| Sensitive files / test weakening | ${tamperCell(r)} |`);
     lines.push(`| Description claims | ${claimsCell(r)} |`);
-    lines.push(`| Diff size | +${r.size.additions} \u2212${r.size.deletions} in ${r.size.files} file(s) |`);
+    lines.push(`| Diff size | +${r.size.additions} \u2212${r.size.deletions} in ${plural5(r.size.files, "file")} |`);
     lines.push(`| Secret-like strings | ${r.secrets.length ? `${r.secrets.length} found` : "none"} |`, "");
     const section = (sev, heading) => {
       const fs = r.flags.filter((f) => f.severity === sev);
@@ -9615,7 +9620,7 @@ function renderCard(r, opts = {}) {
     for (const w of r.policyWarnings.slice(0, 50)) lines.push(`- ${mdText(w)}`);
     lines.push("", "</details>", "");
   }
-  lines.push(`<sub>Evidence is for ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. Policy read from the base branch. [What is this?](${DOCS_URL})</sub>`);
+  lines.push(`<sub>This evidence covers ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. The policy is read from the base branch. [What is this?](${DOCS_URL})</sub>`);
   const out = lines.join("\n");
   return out.length > MAX_SUMMARY ? `${out.slice(0, MAX_SUMMARY - 40)}
 
@@ -9626,7 +9631,7 @@ function renderText(r) {
   const out = [];
   out.push(`${PRODUCT_NAME}: ${badge(r)} \u2014 ${headline(r, (s) => e.t(s))}`);
   out.push(`head ${r.pr.headSha.slice(0, 7)} \xB7 ${r.provenance.agents.length ? r.provenance.agents.map((a) => e.t(a, 60)).join(", ") : "no agent detected"}`);
-  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy gates agent PRs only (apply_to: all gates every PR).`);
+  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy checks agent PRs only (set apply_to: all to check every PR).`);
   if (r.applies) {
     const rows = [
       ["Tests ran", testsCell(r, e)],
@@ -9634,7 +9639,7 @@ function renderText(r) {
       ["Changed-line coverage", coverageCell(r, e)],
       ["Sensitive files", tamperCell(r)],
       ["Description claims", claimsCell(r, e)],
-      ["Diff size", `+${r.size.additions} \u2212${r.size.deletions} in ${r.size.files} file(s)`],
+      ["Diff size", `+${r.size.additions} \u2212${r.size.deletions} in ${plural5(r.size.files, "file")}`],
       ["Secret-like strings", r.secrets.length ? `${r.secrets.length} found` : "none"]
     ];
     out.push("");

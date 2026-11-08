@@ -128,7 +128,7 @@ export async function run(deps: RunDeps): Promise<{ report?: EvidenceReport; exi
     log("info", `Fork PR: coverage ${FORK_COVERAGE_NOTE}; ignored.`);
   } else if (coverageFiles.length) {
     const { report, missing, refused } = loadCoverage(policyCoverage, workspace, inputCoverage);
-    if (missing.length) log("warning", `Coverage file(s) not found: ${missing.join(", ")}`);
+    if (missing.length) log("warning", `Coverage ${missing.length === 1 ? "file" : "files"} not found: ${missing.join(", ")}`);
     for (const r of refused) log("warning", `Coverage file not read: ${r.reason}`);
     snap = { ...snap, coverage: report };
   }

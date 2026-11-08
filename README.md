@@ -1,11 +1,9 @@
 # Mainfast
 
-GitHub checks that stop merges from silently breaking `main`. Five checks, one config
-file (`.mainfast.yml`), MIT-licensed. They run today as GitHub Actions in your own
-workflows with your own `GITHUB_TOKEN`. Mainfast Pro is the same checks as a hosted GitHub App
-([design note](intact/docs/github-app.md)).
-
-Name: main + steadfast ("hold main fast").
+Five GitHub checks that stop merges from silently breaking `main`. They share one config file
+(`.mainfast.yml`) and are MIT-licensed. Each check runs as a GitHub Action in your own
+workflows, with your own `GITHUB_TOKEN`. Mainfast Pro runs the same checks as a hosted GitHub App
+([how the App works](intact/docs/github-app.md)).
 
 ## The five checks
 
@@ -13,15 +11,18 @@ Name: main + steadfast ("hold main fast").
 | --- | --- | --- | --- |
 | **Mainfast Intact** | A merge commit that silently dropped main's changes (a conflict "resolved" with `--ours`, a lost hunk) or slipped in an unrelated edit (evil merge) | `pull_request`, `push` | [`intact/`](intact/) |
 | **Mainfast Migrations** | Database migrations that would fork or reorder the migration history once merged (Alembic, Django, Prisma, Rails, Flyway, Drizzle); re-checks open PRs when main moves and blocks the stale ones with a commit status | `pull_request`, `push` to main | [`migrations/`](migrations/) |
-| **Mainfast Rollcall** | Required checks that do not protect anything: never ran, skipped-as-success, renamed, path-filtered, drifted, merged while pending | weekly schedule, `push` to main (workflows), `branch_protection_rule`, manual after a ruleset edit | [`rollcall/`](rollcall/) |
-| **Mainfast Owners** | CODEOWNERS drift: files a PR touches that the base branch's CODEOWNERS does not own, mistakes in a PR's CODEOWNERS edit (before merge), owners who left or lost access, missing teams, dead patterns; weekly audit adds dormant owners | `pull_request`, weekly schedule | [`owners/`](owners/) |
-| **Mainfast Evidence** | Agent-written PRs without proof: tests not run (or skipped) on the head commit, deleted or weakened tests, unbacked "tests pass" claims, touched workflows/policy. Gates agent PRs only by default (others pass as "not an agent PR"); fork PRs get a card through `workflow_run` without any PR code being checked out | `pull_request`, `workflow_run` | [`evidence/`](evidence/) |
+| **Mainfast Rollcall** | Required checks that do not protect anything: never ran, skipped but counted as passing, renamed, path-filtered, drifted, merged while pending | weekly schedule, `push` to main that changes workflows, `branch_protection_rule`, by hand after a ruleset edit | [`rollcall/`](rollcall/) |
+| **Mainfast Owners** | CODEOWNERS drift: files a PR touches that the base branch's CODEOWNERS does not own, mistakes in a PR's own CODEOWNERS edit (before merge), owners who left or lost access, missing teams, dead patterns. The weekly audit also finds dormant owners | `pull_request`, weekly schedule | [`owners/`](owners/) |
+| **Mainfast Evidence** | Agent-written PRs without proof: tests not run (or skipped) on the head commit, deleted or weakened tests, unbacked "tests pass" claims, edits to workflows or `.mainfast.yml`. By default it gates only agent PRs (other PRs pass as "Not an agent PR"). Fork PRs get a card through `workflow_run`, without any PR code being checked out | `pull_request`, `workflow_run` | [`evidence/`](evidence/) |
 
 ## Install
 
-Each check is one step in a workflow. Copy the ones you want into `.github/workflows/`
-(full examples with comments in each folder's `examples/`). Third-party actions are pinned to
-full commit SHAs.
+Each check is its own workflow. The quickest way to add them is `npx mainfast init`
+([see below](#set-up-with-one-command)). To do it by hand, copy the example workflow of each check
+you want into `.github/workflows/`. Third-party actions in the examples are pinned to full commit
+SHAs.
+
+Intact, for example:
 
 ```yaml
 # .github/workflows/mainfast-intact.yml
@@ -45,57 +46,41 @@ jobs:
         # Report-only by default. `with: { fail-on: warning }` fails the job on dropped changes and evil merges.
 ```
 
-```yaml
-# Mainfast Migrations, pull_request + push to main (permissions: contents read, pull-requests write, statuses write)
-# Sets the blocking `mainfast/migrations` status by default; require it in branch protection.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with: { fetch-depth: 0 }
-      - uses: mainfast/migrations@v0
+The other checks:
 
-# Mainfast Rollcall, weekly + on workflow/protection changes; no checkout needed
-# (permissions: contents read, pull-requests read, statuses read, checks write, issues write)
-      - uses: mainfast/rollcall@v0
-
-# Mainfast Owners, pull_request + weekly schedule; no checkout needed (permissions: contents read, pull-requests write)
-# Optional org-token (Organization > Members: read) for org membership and team checks.
-      - uses: mainfast/owners@v0
-        with: { org-token: "${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}" }
-
-# Mainfast Evidence, two jobs (permissions: contents read, checks write, pull-requests write, statuses read; + actions read on workflow_run)
-# pull_request job (same-repo PRs): checkout of the PR head for a local diff, then the action.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with: { fetch-depth: 0, ref: "${{ github.event.pull_request.head.sha }}" }
-      - uses: mainfast/evidence@v0
-# workflow_run job (after CI; also fork PRs): NO checkout, the diff comes from the API.
-      - uses: mainfast/evidence@v0
-        with: { local-diff: "false" }
-```
+| Check | Workflow to copy | Permissions | Notes |
+| --- | --- | --- | --- |
+| Migrations | [`mainfast-migrations.yml`](migrations/examples/mainfast-migrations.yml) | `contents: read`, `pull-requests: write`, `statuses: write` | Sets the blocking `mainfast/migrations` commit status; require it in branch protection. |
+| Rollcall | [`rollcall.yml`](rollcall/examples/rollcall.yml) | `contents: read`, `pull-requests: read`, `statuses: read`, `checks: write`, `issues: write` | No checkout needed. |
+| Owners | [`owners.yml`](owners/examples/owners.yml) | `contents: read`, `pull-requests: write` | No checkout needed. An optional `org-token` (Organization > Members: read) adds org membership and team checks. |
+| Evidence | [`evidence.yml`](evidence/examples/workflows/evidence.yml) | `contents: read`, `checks: write`, `pull-requests: write`, `statuses: read`, plus `actions: read` in the `workflow_run` job | Two jobs: one for same-repository PRs, and one that runs after your CI, also covers fork PRs and never checks out PR code. |
 
 The examples use the moving tag `@v0`, which follows each new release. To stay on one exact version and choose when to update, replace `@v0` with a full commit SHA.
 
-One command, `npx mainfast`, sets the checks up and runs them locally; see [Using with an agent](#using-with-an-agent).
+## Set up with one command
 
-## Using with an agent
-
-Any coding agent can set Mainfast up with one command, run from the repository root:
+Run this from the repository root (it works the same for you and for a coding agent):
 
 ```bash
 npx mainfast init
 ```
 
-It writes the workflow files and a starter `.mainfast.yml`, never overwrites a file without
-`--force`, and lists what is left to do, such as making a check required. It does not push or
-change branch protection. Every command takes `--json`, with exit codes 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error:
+It writes the workflow files and a starter `.mainfast.yml`, then lists what is left to do, such as
+making a check required. It never overwrites a file unless you pass `--force`, and it does not
+commit, push or change branch protection.
 
 | Command | What it does |
 | --- | --- |
 | `mainfast init [--checks intact,owners] [--dry-run]` | Install the checks in this repository |
 | `mainfast doctor` | What is installed, whether the config parses, what is missing |
 | `mainfast check` | Run Intact on the merge commits in this branch, before you push |
-| `mainfast audit <rollcall\|owners\|migrations\|evidence>` | Run one check locally; read-only |
+| `mainfast audit <rollcall\|owners\|migrations\|evidence>` | Run one check locally; it only reads |
 
-Token: `GITHUB_TOKEN` or `GH_TOKEN`, never printed. The same commands are available to any MCP
-client as tools, over stdio:
+Every command takes `--json`. Exit codes: `0` nothing failed (warnings may still be listed), `1` a
+finding that fails or something missing, `2` error. The token comes from `GITHUB_TOKEN` or
+`GH_TOKEN` and is never printed.
+
+The same commands are available to any MCP client as tools, over stdio:
 
 ```json
 {
@@ -105,8 +90,8 @@ client as tools, over stdio:
 }
 ```
 
-The command installs the Actions. The [hosted GitHub App](https://github.com/apps/mainfast) is a
-separate option, installed on GitHub.
+`mainfast init` sets up the Actions. The [hosted GitHub App](https://github.com/apps/mainfast) is
+the other option: it needs no workflow files, and you install it on GitHub.
 
 ## One config file
 
@@ -134,16 +119,16 @@ evidence:
 
 The five GitHub Actions are **free and open source (MIT)** for everyone, at any size:
 
-- The code is MIT for everyone, no feature is switched off without a key, and `extends:` org-wide
-  shared config is included. They never fail or block a merge for licensing.
+- No feature needs a key, and org-wide shared config (`extends:`) is included. The Actions never
+  fail or block a merge over licensing.
 - On a private repository with more than 5 active contributors (opened a pull request or pushed
   in the last 30 days; bots are not counted) and no `MAINFAST_LICENSE` key, each Action adds
-  **one polite notice** to the job summary (Intact also to its check run).
+  **one notice** to the job summary (Intact also to its check run).
 - The count uses your workflow's `GITHUB_TOKEN` (PR authors from the pulls list, pushers
   from the repository activity API, else default-branch commit authors), once per run.
   Give the job `pull-requests: read` for an exact count; without it the notice counts
   pushers only. If the API refuses, there is no notice.
-- With a key, save it as the `MAINFAST_LICENSE` secret and pass
+- If you have a key, save it as the `MAINFAST_LICENSE` secret and pass
   `license: ${{ secrets.MAINFAST_LICENSE }}` to each step. The key is checked once per run with
   Polar's public licence-key endpoint (only the key and the organisation id are sent, with a
   3-second timeout); if Polar cannot be reached the key counts as valid. A key Polar reports as
@@ -173,7 +158,7 @@ check, because a check a PR can switch off is not a check.
 ## Report a problem
 
 Found a bug or a false positive, or want something added? [Open an issue](https://github.com/mainfast/mainfast/issues),
-for any of the five checks. Anyone can, free, with no key. Issues are public, so leave out private
+for any of the five checks. You don't need a key or a paid plan. Issues are public, so leave out private
 code and secrets; report security problems as [SECURITY.md](SECURITY.md) describes.
 
 ## Repository layout

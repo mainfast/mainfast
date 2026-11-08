@@ -3,6 +3,8 @@ import type { MigrationsReport } from './engine.js';
 import type { Finding } from './types.js';
 import { mdCell, mdCode, mdInline, mdText } from '@mainfast/shared/markdown';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 // Everything from the repository or the PR (branch names, paths, revision ids, file names inside
 // messages) is untrusted: it goes through @mainfast/shared/markdown, never raw.
 
@@ -16,13 +18,13 @@ export function toMarkdown(r: MigrationsReport, opts: { title?: string } = {}): 
   lines.push(`### ${opts.title ?? PRODUCT}`);
   lines.push('');
   if (!r.roots.length) {
-    lines.push('No migration ledgers found.');
+    lines.push('No migrations found for a supported framework.');
     return lines.join('\n');
   }
   lines.push(
     r.findings.length
-      ? `**${errors} error(s), ${warnings} warning(s)** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
-      : `Migration ledgers stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`,
+      ? `**${plural(errors, "error")}, ${plural(warnings, "warning")}** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
+      : `Migrations stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`,
   );
   lines.push('');
   if (r.findings.length) {
@@ -35,7 +37,7 @@ export function toMarkdown(r: MigrationsReport, opts: { title?: string } = {}): 
     lines.push('');
   }
   lines.push(
-    `<details><summary>Ledgers checked (${r.roots.length})</summary>\n\n` +
+    `<details><summary>Migration directories checked (${r.roots.length})</summary>\n\n` +
       r.roots.map((x) => `- ${x.framework}: ${mdCode(x.root, 200)}${x.touched ? ' (changed in this PR)' : ''}`).join('\n') +
       (r.preExisting.length ? `\n\nAlready on main, not caused by this PR: ${r.preExisting.length}\n` +
         r.preExisting.map((f) => `- ${f.framework} ${mdCode(f.root, 200)}: ${mdInline(f.message, 1000)}`).join('\n') : '') +

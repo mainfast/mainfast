@@ -10,6 +10,8 @@ import { reaches, type Level } from './config.js';
 import { codeBlock, title, toMarkdown } from './report.js';
 import type { AuditReport } from './types.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const repoPath = (owner: string, repo: string) => `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
 
 export function conclusionOf(report: AuditReport, failOn: Level): 'failure' | 'neutral' | 'success' {
@@ -109,7 +111,7 @@ export async function syncTrackingIssue(o: IssueOptions): Promise<IssueResult> {
     return { action: 'updated', number: mine.number, url: mine.html_url };
   }
   if (!mine) return { action: 'none' };
-  const summary = report.findings.length ? `${report.findings.length} finding(s) remain below the \`issueOn\` level; see the ${PRODUCT} check run.` : 'Every required check reports as intended.';
+  const summary = report.findings.length ? `${plural(report.findings.length, "finding")} remain below the \`issueOn\` level; see the ${PRODUCT} check run.` : 'Every required check reports as intended.';
   await gh.request('PATCH', `${base}/issues/${mine.number}`, {
     body: [ISSUE_MARKER, `Resolved by the ${PRODUCT} audit of ${mdCode(report.branch)} on ${report.collectedAt.slice(0, 10)}: ${summary}`].join('\n'),
     state: 'closed',

@@ -241,7 +241,7 @@ describe("Polar licence validation", () => {
     expect((await refused({ status: 200, body: lk({ status: "revoked" }) })).reason).toContain('"revoked"');
     expect((await refused({ status: 200, body: lk({ status: "disabled" }) })).reason).toContain('"disabled"');
     expect((await refused({ status: 200, body: lk({ expires_at: "2026-10-01T00:00:00Z" }) })).reason).toContain("expired on 2026-10-01");
-    expect((await refused({ status: 200, body: lk({ organization_id: "99999999-0000-0000-0000-000000000000" }) })).reason).toContain("another Polar organisation");
+    expect((await refused({ status: 200, body: lk({ organization_id: "99999999-0000-0000-0000-000000000000" }) })).reason).toContain("another Polar organization");
     expect((await refused({ status: 200, body: lk({ benefit_id: "someone-elses-benefit" }) })).reason).toContain("unknown benefit");
     // a future expiry is fine
     expect(await refused({ status: 200, body: lk({ expires_at: "2027-01-01T00:00:00Z" }) })).toMatchObject({ valid: true, plan: "pro" });
@@ -356,7 +356,7 @@ describe("plan gate with licence keys", () => {
     const r3 = await planGate({ ...base, gh: client(routes({ pulls: six.map((l) => pr(l)) })).gh, event: priv, env, validate: validator(revoked.f) });
     expect(r3).toMatchObject({ status: "over-limit", key: "refused" });
     const logs = out.join("");
-    expect(logs.match(/licence key was not accepted/g)).toHaveLength(1);
+    expect(logs.match(/license key was not accepted/g)).toHaveLength(1);
     expect(logs).toContain("revoked");
     expect(readFileSync(summary, "utf8")).toContain("Mainfast Pro is $4");
 

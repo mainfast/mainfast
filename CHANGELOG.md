@@ -2,10 +2,11 @@
 
 ## 0.1.0 (unreleased)
 
+First release of Mainfast Intact, Migrations, Rollcall, Owners and Evidence.
+
 - `mainfast`: one command for people and agents, `npx mainfast init|doctor|check|audit`, with `--json`, and `mainfast mcp`, an MCP server over stdio with the same tools.
 - Removed the Claude Code plugin.
 - Evidence: coverage paths from `.mainfast.yml` are read only from inside the repository, not through a symlink or `..`. The `coverage-files` input and `--coverage` are unchanged.
-First release of Mainfast Intact, Migrations, Rollcall, Owners and Evidence.
 
 Rollcall:
 

@@ -62,7 +62,7 @@ describe('recheck open PRs on push to main', () => {
     const heads = fetch.calls.filter((c) => c.path.endsWith('/statuses'));
     expect(heads).toHaveLength(2);
     expect(fetch.calls.filter((c) => !c.matched)).toEqual([]);
-    expect(recheckMarkdown(entries, 'main')).toContain('2 open PR(s) checked, 1 stale.');
+    expect(recheckMarkdown(entries, 'main')).toContain('2 open PRs checked, 1 stale.');
   });
 
   it('status: false sets no commit status (comment and label still happen)', async () => {

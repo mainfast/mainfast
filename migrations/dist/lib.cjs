@@ -7441,7 +7441,7 @@ var brand_default = {
     intact: {
       productName: "Mainfast Intact",
       tagline: "prove merge commits did not silently drop changes from main",
-      description: "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      description: "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       npmName: "@mainfast/intact",
       cliName: "mainfast",
       configSection: "intact",
@@ -7467,7 +7467,7 @@ var brand_default = {
     rollcall: {
       productName: "Mainfast Rollcall",
       tagline: "required-check integrity audit",
-      description: "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported \u2014 never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift \u2014 and keeps one tracking issue open while something is wrong.",
+      description: "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       npmName: "@mainfast/rollcall",
       cliName: "mainfast-rollcall",
       configSection: "rollcall",
@@ -7479,7 +7479,7 @@ var brand_default = {
     owners: {
       productName: "Mainfast Owners",
       tagline: "CODEOWNERS drift check",
-      description: "CODEOWNERS drift \u2014 unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      description: "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       npmName: "@mainfast/owners",
       cliName: "mainfast-owners",
       configSection: "owners",
@@ -7491,7 +7491,7 @@ var brand_default = {
     evidence: {
       productName: "Mainfast Evidence",
       tagline: "proof, not review, for pull requests written by coding agents",
-      description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      description: "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       npmName: "@mainfast/evidence",
       cliName: "mainfast-evidence",
       configSection: "evidence",
@@ -7848,7 +7848,7 @@ var alembic = {
         root,
         code: "multiple-heads",
         severity: labelled ? "warning" : "error",
-        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labelled ? " Some revisions carry branch_labels, so this may be an intentional multi-branch ledger." : ""),
+        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labelled ? " Some revisions set branch_labels, so the multiple heads may be intended." : ""),
         files: heads.map((h) => h.path),
         hint: `alembic merge -m "merge heads" ${heads.map((h) => h.revision).join(" ")}  (or re-parent the branch's revision onto main's head)`,
         // keyed on the count so a PR that adds a third head to a two-head main is still reported
@@ -7976,6 +7976,7 @@ var django = {
 };
 
 // src/frameworks/drizzle.ts
+var plural = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var ZERO_ID = "00000000-0000-0000-0000-000000000000";
 function parseJournal(text) {
   if (text === void 0) return void 0;
@@ -8015,7 +8016,7 @@ var drizzle = {
         root,
         code: "journal-unreadable",
         severity: "error",
-        message: `${jp} is missing or is not valid JSON (unresolved merge markers?)`,
+        message: `${jp} is missing or is not valid JSON (check for leftover merge conflict markers)`,
         files: [jp],
         hint: "Resolve the journal: union the entries by tag and re-index idx sequentially.",
         key: `drizzle:${root}:unreadable`
@@ -8143,7 +8144,7 @@ var drizzle = {
         root: ctx.root,
         code: "journal-fork",
         severity,
-        message: `main added ${mainAdded.length} migration(s) since this branch forked (${missingFromHead.map((e) => e.tag).join(", ")}) and the branch added ${headAdded.length} (${headAdded.map((e) => e.tag).join(", ")}). The branch's snapshot was generated against a schema that is no longer main's.`,
+        message: `main added ${plural(mainAdded.length, "migration")} since this branch forked (${missingFromHead.map((e) => e.tag).join(", ")}) and the branch added ${headAdded.length} (${headAdded.map((e) => e.tag).join(", ")}). The branch's snapshot was generated against a schema that is no longer main's.`,
         files: [jp],
         hint: "Merge main, union the journal entries by tag, re-index idx sequentially, and fix the branch snapshot's single prevId (or delete the branch migration and re-run drizzle-kit generate).",
         key: `drizzle:${ctx.root}:journal-fork`
@@ -8568,6 +8569,7 @@ function mdCell(s, max = MAX_INLINE) {
 }
 
 // src/report.ts
+var plural2 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var short = (sha) => sha.slice(0, 7);
 var icon = (f) => f.severity === "error" ? "error" : "warning";
 function toMarkdown(r, opts = {}) {
@@ -8577,11 +8579,11 @@ function toMarkdown(r, opts = {}) {
   lines.push(`### ${opts.title ?? PRODUCT}`);
   lines.push("");
   if (!r.roots.length) {
-    lines.push("No migration ledgers found.");
+    lines.push("No migrations found for a supported framework.");
     return lines.join("\n");
   }
   lines.push(
-    r.findings.length ? `**${errors} error(s), ${warnings} warning(s)** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).` : `Migration ledgers stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
+    r.findings.length ? `**${plural2(errors, "error")}, ${plural2(warnings, "warning")}** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).` : `Migrations stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
   );
   lines.push("");
   if (r.findings.length) {
@@ -8594,7 +8596,7 @@ function toMarkdown(r, opts = {}) {
     lines.push("");
   }
   lines.push(
-    `<details><summary>Ledgers checked (${r.roots.length})</summary>
+    `<details><summary>Migration directories checked (${r.roots.length})</summary>
 
 ` + r.roots.map((x) => `- ${x.framework}: ${mdCode(x.root, 200)}${x.touched ? " (changed in this PR)" : ""}`).join("\n") + (r.preExisting.length ? `
 
@@ -8771,6 +8773,7 @@ ${body}`;
 }
 
 // src/publish.ts
+var plural3 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 async function publish(report, o) {
   const stale = !report.ok;
   const base = `/repos/${o.owner}/${o.repo}`;
@@ -8812,7 +8815,7 @@ Resolved: migrations are consistent with ${mdCode(report.main.ref)} at ${report.
     await o.gh.request("POST", `${base}/statuses/${report.head.sha}`, {
       state,
       context: STATUS_CONTEXT,
-      description: (stale ? `${errors} migration error(s) against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
+      description: (stale ? `${plural3(errors, "migration error")} against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
       target_url: o.targetUrl
     });
     result.status = state;
@@ -8821,6 +8824,7 @@ Resolved: migrations are consistent with ${mdCode(report.main.ref)} at ${report.
 }
 
 // src/recheck.ts
+var plural4 = (n, noun) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 var MAIN_REF = "refs/mainfast/main";
 var prRef = (n) => `refs/mainfast/pr/${n}`;
 async function recheckOpenPrs(o) {
@@ -8889,7 +8893,7 @@ function recheckMarkdown(entries, mainBranch) {
   const lines = [
     `### Open PRs re-checked against ${mdCode(mainBranch)}`,
     "",
-    `${entries.length} open PR(s) checked, ${stale.length} stale.`,
+    `${plural4(entries.length, "open PR")} checked, ${stale.length} stale.`,
     ""
   ];
   if (entries.length) {

@@ -1,11 +1,37 @@
 # Mainfast Owners
 
-CODEOWNERS drift check. On a pull request it lists the changed files that no
-working code owner covers, and lints the PR's own CODEOWNERS edit before it is
+Finds CODEOWNERS drift. On a pull request it lists the changed files that no
+working code owner covers, and checks the PR's own CODEOWNERS edit before it is
 merged, all in one PR comment. Once a week it audits the whole CODEOWNERS file
-against the repository and the GitHub API, dormant owners included.
+against the repository and the GitHub API, including owners who have gone dormant.
 
-Licence: MIT; free for public repos and private repos with up to 5 active contributors ([Free and Pro](../README.md#free-and-pro)).
+Part of the [Mainfast suite](../README.md). MIT-licensed and free for public repositories and for
+private ones with up to 5 active contributors; see [Free and Pro](../README.md#free-and-pro).
+
+## Quick start
+
+Add this as `.github/workflows/mainfast-owners.yml`. No checkout step is needed:
+
+```yaml
+name: Code owners
+on:
+  pull_request:
+  schedule: [{ cron: "23 6 * * 1" }]   # weekly audit
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  owners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mainfast/owners@v0
+        with:
+          org-token: ${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}   # optional, see "Creating the org-token"
+```
+
+Without the `org-token` secret, org membership and team checks are skipped with one note and
+everything else still runs. Full examples and every input: [GitHub Action](#github-action).
 
 ## PR mode and audit mode
 
@@ -14,14 +40,14 @@ Licence: MIT; free for public repos and private repos with up to 5 active contri
 | CODEOWNERS judged | the **base branch's** file, the one GitHub uses to request reviews | the default branch's file (or `ref:`) |
 | Files checked | the PR's changed files | every tracked file |
 | Owners looked up | only those deciding a changed file | all of them |
-| PR edits CODEOWNERS | the PR's version is **linted separately** (own section): syntax GitHub ignores, unknown owners, patterns matching nothing, shadowed lines, GitHub's own errors at the head commit | — |
-| Dormant owners | **never** (search API budget) | **on**, 180 days by default (`owners.dormantDays`, `0` off) |
+| PR edits CODEOWNERS | the PR's version is **checked separately** (in its own section): syntax GitHub ignores, unknown owners, patterns matching nothing, shadowed lines, GitHub's own errors at the head commit | — |
+| Dormant owners | **never** (to save the search API rate limit) | **on**, 180 days by default (`owners.dormantDays`, `0` off) |
 | `.mainfast.yml` | from the base branch | from the default branch |
 | Output | job summary, annotations, one sticky PR comment | job summary, annotations, outputs; fails at `fail-on` |
 
 Everything is read **through the API at those refs, never from a checkout**, so
-no `actions/checkout` step is needed and a PR cannot loosen its own check (a
-PR's `.mainfast.yml` or CODEOWNERS never decides its own result).
+no `actions/checkout` step is needed and a PR cannot loosen its own check: a
+PR's own `.mainfast.yml` or CODEOWNERS never decides its result.
 
 **Judged with the base.** A PR that adds `tools/` and a CODEOWNERS line for it
 still shows `tools/` as unowned: until the line is merged GitHub requests no
@@ -32,9 +58,9 @@ section, a problem already present on the base branch (same line, or same
 owner) is shown as "already on the base branch" and is never an error, so a PR
 that fixes one line is not blocked by an old one.
 
-**Fork PRs and outside authors.** A PR's comment, job summary and annotations
-are readable by its author, who could put any `@user` or `@org/team` into
-CODEOWNERS to probe the org. So unless the PR comes from the same repository
+**Fork PRs and outside authors.** The author of a PR can read its comment, job
+summary and annotations, and could put any `@user` or `@org/team` into
+CODEOWNERS to find out what exists in the org. So unless the PR comes from the same repository
 **and** its author is an `OWNER`, `MEMBER` or `COLLABORATOR`, owners are checked
 for **public account existence only** (`GET /users/{u}`), GitHub's CODEOWNERS
 errors are not fetched (they name teams that do not resolve), and one note says
@@ -71,23 +97,6 @@ examples from GitHub's CODEOWNERS docs.
 
 ## GitHub Action
 
-```yaml
-on:
-  pull_request:
-  schedule: [{ cron: "23 6 * * 1" }]
-  workflow_dispatch:
-permissions:
-  contents: read
-  pull-requests: write
-jobs:
-  owners:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: mainfast/owners@v0
-        with:
-          org-token: ${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}   # optional, see below
-```
-
 Full examples: [`examples/owners.yml`](examples/owners.yml) (PR + weekly audit,
 fine-grained token) and [`examples/owners-app-token.yml`](examples/owners-app-token.yml)
 (the org-token from a GitHub App, `actions/create-github-app-token` pinned to
@@ -110,12 +119,12 @@ instead of the API), `ref` (audit), `comment`, `comment-author`, `dormant-days`
 | `contents: read` | CODEOWNERS and `.mainfast.yml` at the base/default branch and the PR head, git tree, GitHub's CODEOWNERS errors | the run stops (nothing to judge) |
 | `pull-requests: write` | the PR's changed files (read) and the one sticky comment | read only: no comment, a warning annotation, the result stands; none: PR mode stops |
 | *(metadata: read, always granted)* | `GET /users/{u}`, collaborator permission | — |
-| search (any token) | dormancy, audit only, ≤ `maxSearches` requests | — |
+| search (any token) | dormancy, audit only, at most `maxSearches` requests | — |
 | **`org-token`** with Organization → Members: read | org membership (`owner-left-org`), team existence and access, team-member dormancy | skipped with **one note** ("needs a token with Organization → Members: read"); teams count as valid, users are still checked for existence and write access |
 
-`GITHUB_TOKEN` cannot have any organization permission, so it can never see
-private org membership or teams; Owners does not guess (no per-owner "missing"
-findings), it says once what it did not check.
+`GITHUB_TOKEN` cannot have any organisation permission, so it can never see
+private org membership or teams. Owners does not guess (no per-owner "missing"
+findings); it says once what it did not check.
 
 ### Creating the org-token
 
@@ -123,7 +132,7 @@ Either works; store the result as a secret (`MAINFAST_OWNERS_ORG_TOKEN`).
 
 - **Fine-grained personal access token** (github.com → Settings → Developer
   settings → Fine-grained tokens → Generate): *Resource owner* = the
-  organization; *Repository access* = the repositories Owners runs in;
+  organisation; *Repository access* = the repositories Owners runs in;
   *Repository permissions* → Metadata: Read-only (set automatically);
   *Organization permissions* → **Members: Read-only**. Nothing else. The org may
   need to approve it (Settings → Personal access tokens). It expires and is tied
@@ -150,7 +159,7 @@ the order rotates weekly, so the next runs cover the rest.
 
 ### The PR comment
 
-One comment, found again by its marker **and** its author: only a comment that
+Owners keeps one comment per PR, found again by its marker **and** its author: only a comment that
 starts with the marker and was written by the token's own identity
 (`comment-author` input, else `GET /user`, else `github-actions[bot]`) is ever
 edited, so a marker pasted into someone else's comment is ignored. Set
@@ -160,14 +169,14 @@ earlier comment is edited to "Resolved". Unchanged results leave it untouched.
 ### Untrusted text
 
 File paths, CODEOWNERS patterns and lines, owners, team slugs, branch names and
-GitHub's own error text are escaped with the suite's helpers
-(`@mainfast/shared/markdown`) in the comment, the job summary and the suggested
-lines: no HTML, no links, no `@` mentions (paths and owners are code spans), no
-table breakouts, no forged marker. Annotations are plain text. Tests use hostile
+GitHub's own error text are escaped (`@mainfast/shared/markdown`) in the
+comment, the job summary and the suggested lines: no HTML, no links, no `@`
+mentions (paths and owners are code spans), nothing that breaks out of a table,
+no fake marker. Annotations are plain text. Tests use hostile
 file names (`<!--`, the marker, `|`, backticks, `<img>`, links, newlines) and
 hostile owners and GitHub errors.
 
-## Config
+## Configuration
 
 `.mainfast.yml`, section `owners:` ([reference](../docs/config.md#owners),
 [example](.mainfast.example.yml)): `dormantDays` (180; audit only), `maxSearches`
@@ -176,17 +185,14 @@ hostile owners and GitHub errors.
 the default branch (audit) through the API; `config:` reads a workspace file
 instead.
 
-## CLI
+## Run it locally
 
 ```sh
-npx mainfast-owners lint --repo .                                   # offline, no token
-GITHUB_TOKEN=... npx mainfast-owners audit --github-repo owner/name [--ref main]
-GITHUB_TOKEN=... npx mainfast-owners pr --github-repo owner/name --pr 42 [--comment]
+npx mainfast audit owners             # full audit through the API with a GitHub origin and GITHUB_TOKEN or GH_TOKEN
+npx mainfast audit owners --offline   # lint CODEOWNERS offline, no token
 ```
 
-`audit` and `pr` read everything through the API like the Action. Org checks use
-`--org-token`, else the token itself (a personal token of an org member usually
-can). Exit 1 on an error-level finding.
+Without a token or a GitHub origin remote it lints offline. It only reads and posts nothing.
 
 ## REST endpoints (API version 2022-11-28)
 
@@ -208,6 +214,18 @@ npm run all        # at the suite root: brand check, typecheck, every test, buil
 npm test -w @mainfast/owners
 ```
 
+The package's own CLI, from your build (run in `owners/`):
+
+```sh
+node dist/cli.cjs lint --repo .                                     # offline, no token
+GITHUB_TOKEN=... node dist/cli.cjs audit --github-repo owner/name [--ref main]
+GITHUB_TOKEN=... node dist/cli.cjs pr --github-repo owner/name --pr 42 [--comment]
+```
+
+`audit` and `pr` read everything through the API like the Action. Org checks use
+`--org-token`, else the token itself (a personal token of an org member usually
+can). Exit 1 on an error-level finding.
+
 `test/fixtures/api.ts` is a fake org (`acme`) with one user or team per
 finding; `test/fixtures/CODEOWNERS` plants each file-level problem. Requests go
 through the shared `mockFetch`; `test/setup.ts` replaces the global `fetch` with
@@ -225,4 +243,4 @@ one that throws, so no test reaches the network.
 
 ## Report a problem
 
-Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. You don't need a key or a paid plan. Issues are public, so leave out private code and secrets.

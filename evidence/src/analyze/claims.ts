@@ -3,6 +3,8 @@ import type { ChecksEval } from "./checks.ts";
 import type { Finding } from "./finding.ts";
 import type { TamperEval } from "./tamper.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface Claim {
   kind: "tests_added" | "tests_pass";
   quote: string;
@@ -56,7 +58,7 @@ export function evaluateClaims(title: string, body: string, tamper: TamperEval, 
   for (const c of extractClaims(`${title}\n${body}`)) {
     if (c.kind === "tests_added") {
       const n = tamper.addedTestCases;
-      if (n > 0) claims.push({ ...c, verdict: "backed", why: `${n} test case(s) added` });
+      if (n > 0) claims.push({ ...c, verdict: "backed", why: `${plural(n, "test case")} added` });
       else {
         const why =
           tamper.testStats.length === 0

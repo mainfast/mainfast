@@ -100,7 +100,7 @@ export const alembic: Framework = {
         message:
           `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(', ')}. ` +
           '`alembic upgrade head` will refuse to run.' +
-          (labelled ? ' Some revisions carry branch_labels, so this may be an intentional multi-branch ledger.' : ''),
+          (labelled ? ' Some revisions set branch_labels, so the multiple heads may be intended.' : ''),
         files: heads.map((h) => h.path),
         hint: `alembic merge -m "merge heads" ${heads.map((h) => h.revision).join(' ')}  (or re-parent the branch's revision onto main's head)`,
         // keyed on the count so a PR that adds a third head to a two-head main is still reported

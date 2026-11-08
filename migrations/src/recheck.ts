@@ -9,6 +9,8 @@ import { publish, type PublishResult } from './publish.js';
 import { resolveCommentAuthor, type GitHub } from '@mainfast/shared/github';
 import { mdCode, mdText } from '@mainfast/shared/markdown';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface RecheckOptions {
   repoDir: string;
   gh: GitHub;
@@ -122,7 +124,7 @@ export function recheckMarkdown(entries: RecheckEntry[], mainBranch: string): st
   const lines = [
     `### Open PRs re-checked against ${mdCode(mainBranch)}`,
     '',
-    `${entries.length} open PR(s) checked, ${stale.length} stale.`,
+    `${plural(entries.length, "open PR")} checked, ${stale.length} stale.`,
     '',
   ];
   if (entries.length) {

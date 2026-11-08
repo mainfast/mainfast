@@ -80,7 +80,7 @@ describe('collect + audit against fixture API responses', () => {
     const { report } = await acme();
     const md = toMarkdown(report);
     expect(md).toContain('| `typecheck` | ruleset "main protection" | 7/8 | 1 |');
-    expect(md).toContain('5 error(s), 9 warning(s) in 6 required check(s)');
+    expect(md).toContain('5 errors, 9 warnings in 6 required checks');
     expect(JSON.parse(JSON.stringify(report)).findings).toHaveLength(14);
   });
 
@@ -312,7 +312,7 @@ describe('merged and open PRs', () => {
     expect(snap.pulls.map((p) => p.number)).toEqual([121, 120, 108, 107, 106, 105, 104, 103, 102, 101]);
     expect(report.sampledOpen).toEqual([121, 120]);
     expect(report.sampledPulls).toEqual([108, 107, 106, 105, 104, 103, 102, 101]);
-    expect(report.notes).toContain('1 open PR(s) had no check runs or statuses on their head yet and were not counted');
+    expect(report.notes).toContain('1 open PR had no check runs or statuses on its head yet and was not counted');
     const f = (code: string, ctx: string) => report.findings.find((x) => x.code === code && x.context === ctx);
     expect(f('skipped-as-success', 'typecheck')!.evidence).toEqual([120, 105]);
     expect(f('merged-with-failure', 'build')).toBeUndefined();

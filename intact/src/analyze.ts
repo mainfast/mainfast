@@ -13,6 +13,8 @@ import { MOVED_NOTE, SOFTEN_NOTE, isExemptFromSoftening, isGenerated, isMoved, i
 import { bagOf, significant, subtract, total } from "./tokens.ts";
 import type { Finding, FindingKind, MergeReport, Side } from "./types.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 /** Lines of surrounding context compared on both sides when judging a hunk. */
 const WINDOW = 2;
@@ -92,7 +94,7 @@ function analyzeTwoParent(git: Git, report: MergeReport, opts: AnalyzeOptions): 
   report.changedFromAutoMerge = relevant.map(filePath).sort();
   report.conflictedFiles = [...auto.conflicted].filter((p) => !isIgnored(config, p)).sort();
   const ignoredCount = auto.files.length - relevant.length;
-  if (ignoredCount > 0) report.notes.push(`${ignoredCount} file(s) differing from the automatic merge are ignored by config`);
+  if (ignoredCount > 0) report.notes.push(`${plural(ignoredCount, "file")} differing from the automatic merge are ignored by config`);
 
   if (relevant.length === 0) {
     report.status = "clean";

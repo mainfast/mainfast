@@ -38,17 +38,17 @@ function nextSteps(slugs: readonly ProductSlug[]): string[] {
   const steps = ["Review the new files, commit them and open a pull request. Nothing has been pushed."];
   const required = slugs.filter((s) => s !== "rollcall" && s !== "migrations").map((s) => `"${product(s).checkName}"`);
   if (slugs.includes("migrations")) required.push(`"${product("migrations").statusContext ?? "mainfast/migrations"}"`);
-  if (required.length) steps.push(`To let a finding block a merge, require ${required.join(", ")} in branch protection or a ruleset.`);
+  if (required.length) steps.push(`To block merges on findings, make ${required.join(", ")} required in branch protection or a ruleset.`);
   if (slugs.includes("evidence")) steps.push(`Evidence: set workflows: [CI] in ${workflowPath("evidence")} to the name of your test workflow.`);
-  if (slugs.includes("rollcall")) steps.push("Rollcall runs weekly and files one tracking issue; run it by hand from the Actions tab after a ruleset edit.");
-  if (slugs.includes("owners")) steps.push("Owners needs a CODEOWNERS file to judge; without one it reports that.");
+  if (slugs.includes("rollcall")) steps.push("Rollcall runs weekly and keeps one tracking issue open while it finds problems. After you change a ruleset, run it by hand from the Actions tab.");
+  if (slugs.includes("owners")) steps.push("Owners needs a CODEOWNERS file; until you add one, every run reports it as missing.");
   return steps;
 }
 
 export function runInit(opts: InitOptions): Result {
   const root = repoRoot(opts.dir);
   const wanted = opts.checks?.length ? opts.checks : PRODUCT_SLUGS;
-  for (const c of wanted) if (!PRODUCT_SLUGS.includes(c as ProductSlug)) throw new CliError(`unknown check: ${c}; one of ${PRODUCT_SLUGS.join(", ")}`);
+  for (const c of wanted) if (!PRODUCT_SLUGS.includes(c as ProductSlug)) throw new CliError(`unknown check: ${c} (expected one of ${PRODUCT_SLUGS.join(", ")})`);
   const slugs = [...new Set(wanted)] as ProductSlug[];
 
   const written: string[] = [];
@@ -61,7 +61,7 @@ export function runInit(opts: InitOptions): Result {
     const abs = join(root, rel);
     const exists = current !== undefined;
     if (current === content) return void unchanged.push(rel);
-    if (exists && !opts.force) return void skipped.push({ path: rel, reason: "exists with other content; use force to replace it" });
+    if (exists && !opts.force) return void skipped.push({ path: rel, reason: "exists with different content; use --force to replace it" });
     if (!opts.dryRun) {
       mkdirSync(dirname(abs), { recursive: true });
       writeFileSync(abs, content);

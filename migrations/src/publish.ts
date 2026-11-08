@@ -7,6 +7,8 @@ import { toMarkdown } from './report.js';
 import { findOwnComment, GitHub, GitHubError, resolveCommentAuthor, upsertSticky } from '@mainfast/shared/github';
 import { mdCode } from '@mainfast/shared/markdown';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface PublishOptions {
   gh: GitHub;
   owner: string;
@@ -74,7 +76,7 @@ export async function publish(report: MigrationsReport, o: PublishOptions): Prom
     await o.gh.request('POST', `${base}/statuses/${report.head.sha}`, {
       state,
       context: STATUS_CONTEXT,
-      description: (stale ? `${errors} migration error(s) against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
+      description: (stale ? `${plural(errors, "migration error")} against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
       target_url: o.targetUrl,
     });
     result.status = state;

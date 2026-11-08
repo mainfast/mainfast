@@ -41,7 +41,7 @@
     "intact": {
       "productName": "Mainfast Intact",
       "tagline": "prove merge commits did not silently drop changes from main",
-      "description": "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      "description": "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       "npmName": "@mainfast/intact",
       "cliName": "mainfast",
       "configSection": "intact",
@@ -67,7 +67,7 @@
     "rollcall": {
       "productName": "Mainfast Rollcall",
       "tagline": "required-check integrity audit",
-      "description": "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported — never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift — and keeps one tracking issue open while something is wrong.",
+      "description": "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       "npmName": "@mainfast/rollcall",
       "cliName": "mainfast-rollcall",
       "configSection": "rollcall",
@@ -79,7 +79,7 @@
     "owners": {
       "productName": "Mainfast Owners",
       "tagline": "CODEOWNERS drift check",
-      "description": "CODEOWNERS drift — unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      "description": "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       "npmName": "@mainfast/owners",
       "cliName": "mainfast-owners",
       "configSection": "owners",
@@ -91,7 +91,7 @@
     "evidence": {
       "productName": "Mainfast Evidence",
       "tagline": "proof, not review, for pull requests written by coding agents",
-      "description": "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      "description": "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       "npmName": "@mainfast/evidence",
       "cliName": "mainfast-evidence",
       "configSection": "evidence",

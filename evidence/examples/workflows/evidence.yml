@@ -1,4 +1,4 @@
-# Copy to .github/workflows/evidence.yml.
+# Copy to .github/workflows/mainfast-evidence.yml.
 #
 # Two jobs on purpose:
 #  - pr (pull_request, same-repository PRs): re-evaluates on every push, edit and label change.

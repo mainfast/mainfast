@@ -4,6 +4,8 @@ import type { EvidenceReport } from "./evaluate.ts";
 import { FLAG_FIXES } from "./fixes.ts";
 import { cap, mdCode, mdInline, mdText, oneLine, plainText, safeUrl } from "./markdown.ts";
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 const MAX_SUMMARY = 65_000; // check-run output.summary/text limit is 65535 chars
 const MAX_CELL_ITEM = 200; // one check name, claim quote, ... inside a table cell
 const MAX_LIST = 20; // items listed per cell before "+N more"
@@ -73,9 +75,9 @@ function testsCell(r: EvidenceReport, e: Esc = MD): string {
 function requiredCell(r: EvidenceReport, e: Esc = MD): string {
   const c = r.checks;
   if (!c.evaluated) return "not evaluated (offline)";
-  const unknown = c.notes.some((n) => /classic required checks unknown/.test(n)) ? " (classic protection unreadable; list them in `required_checks`)" : "";
+  const unknown = c.notes.some((n) => /classic required checks unknown/.test(n)) ? " (could not read branch protection; list the checks in `required_checks`)" : "";
   if (!c.required.length)
-    return c.requiredSources.length ? `none configured${unknown}` : "unknown (no ruleset/protection readable; set `required_checks`)";
+    return c.requiredSources.length ? `none configured${unknown}` : "unknown (could not read rulesets or branch protection; list the checks in `required_checks`)";
   const ok = c.required.filter((x) => x.state === "success").length;
   const bad = c.required.filter((x) => x.state !== "success").map((x) => `${e.t(x.context, MAX_CELL_ITEM)}: ${e.t(x.state, 40)}`);
   return `${ok}/${c.required.length} passed${bad.length ? ` — ${joinCapped(bad, ", ")}` : ""}${unknown}`;
@@ -87,7 +89,7 @@ function coverageCell(r: EvidenceReport, e: Esc = MD): string {
   if (!c.present) return "no report";
   const format = e.t(String(c.format), 40);
   if (c.pct === undefined) return `no instrumented changed lines (${format})`;
-  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${c.notInReport.length} changed file(s) not in report` : ""}`;
+  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${plural(c.notInReport.length, "changed file")} not in report` : ""}`;
 }
 
 function tamperCell(r: EvidenceReport): string {
@@ -107,7 +109,7 @@ function tamperCell(r: EvidenceReport): string {
   const w: string[] = [];
   const s = r.tamper.testStats;
   const skips = s.reduce((n, x) => n + x.skips.length + x.focus.length, 0);
-  if (skips) w.push(`${skips} skip/focus marker(s)`);
+  if (skips) w.push(`${plural(skips, "skip/focus marker")}`);
   if (r.tamper.net.assertions < 0) w.push(`assertions ${r.tamper.net.assertions}`);
   if (r.tamper.net.cases < 0) w.push(`test cases ${r.tamper.net.cases}`);
   return [...parts, ...w].join(", ") || "nothing sensitive touched";
@@ -127,7 +129,7 @@ export function renderCard(r: EvidenceReport, opts: { checkUrl?: string; marker?
   const checkUrl = safeUrl(opts.checkUrl);
   if (checkUrl) meta.push(`[check run](${checkUrl})`);
   lines.push(meta.join(" · "), "");
-  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy gates agent PRs only (${mdCode("apply_to: all")} gates every PR).`, "");
+  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy checks agent PRs only (set ${mdCode("apply_to: all")} to check every PR).`, "");
 
   if (r.applies) {
     lines.push("| Evidence | On this commit |", "|---|---|");
@@ -136,7 +138,7 @@ export function renderCard(r: EvidenceReport, opts: { checkUrl?: string; marker?
     lines.push(`| Changed-line coverage | ${coverageCell(r)} |`);
     lines.push(`| Sensitive files / test weakening | ${tamperCell(r)} |`);
     lines.push(`| Description claims | ${claimsCell(r)} |`);
-    lines.push(`| Diff size | +${r.size.additions} −${r.size.deletions} in ${r.size.files} file(s) |`);
+    lines.push(`| Diff size | +${r.size.additions} −${r.size.deletions} in ${plural(r.size.files, "file")} |`);
     lines.push(`| Secret-like strings | ${r.secrets.length ? `${r.secrets.length} found` : "none"} |`, "");
 
     const section = (sev: "fail" | "warn", heading: string) => {
@@ -173,7 +175,7 @@ export function renderCard(r: EvidenceReport, opts: { checkUrl?: string; marker?
     for (const w of r.policyWarnings.slice(0, 50)) lines.push(`- ${mdText(w)}`);
     lines.push("", "</details>", "");
   }
-  lines.push(`<sub>Evidence is for ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. Policy read from the base branch. [What is this?](${DOCS_URL})</sub>`);
+  lines.push(`<sub>This evidence covers ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. The policy is read from the base branch. [What is this?](${DOCS_URL})</sub>`);
   const out = lines.join("\n");
   return out.length > MAX_SUMMARY ? `${out.slice(0, MAX_SUMMARY - 40)}\n\n…(truncated)` : out;
 }
@@ -187,7 +189,7 @@ export function renderText(r: EvidenceReport): string {
   const out: string[] = [];
   out.push(`${PRODUCT_NAME}: ${badge(r)} — ${headline(r, (s) => e.t(s))}`);
   out.push(`head ${r.pr.headSha.slice(0, 7)} · ${r.provenance.agents.length ? r.provenance.agents.map((a) => e.t(a, 60)).join(", ") : "no agent detected"}`);
-  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy gates agent PRs only (apply_to: all gates every PR).`);
+  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy checks agent PRs only (set apply_to: all to check every PR).`);
   if (r.applies) {
     const rows: Array<[string, string]> = [
       ["Tests ran", testsCell(r, e)],
@@ -195,7 +197,7 @@ export function renderText(r: EvidenceReport): string {
       ["Changed-line coverage", coverageCell(r, e)],
       ["Sensitive files", tamperCell(r)],
       ["Description claims", claimsCell(r, e)],
-      ["Diff size", `+${r.size.additions} −${r.size.deletions} in ${r.size.files} file(s)`],
+      ["Diff size", `+${r.size.additions} −${r.size.deletions} in ${plural(r.size.files, "file")}`],
       ["Secret-like strings", r.secrets.length ? `${r.secrets.length} found` : "none"],
     ];
     out.push("");

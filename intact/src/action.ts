@@ -98,6 +98,8 @@ function annotationFor(f: Finding) {
   };
 }
 
+const count = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 /** Returns true when the check run was created. */
 async function postCheckRun(gh: GitHub, repo: string, headSha: string, report: CheckReport, failed: boolean, notice?: string): Promise<boolean> {
   const findings = allFindings(report).filter((f) => ANNOTATION_LEVEL[f.level]);
@@ -105,8 +107,8 @@ async function postCheckRun(gh: GitHub, repo: string, headSha: string, report: C
   const s = report.summary;
   const reportable = s.findings.error + s.findings.warning > 0;
   const title = failed || reportable
-    ? `${s.findings.error} error, ${s.findings.warning} warning in ${s.withFindings} merge commit(s)`
-    : `${s.merges} merge commit(s) intact`;
+    ? `${count(s.findings.error, "error")}, ${count(s.findings.warning, "warning")} in ${count(s.withFindings, "merge commit")}`
+    : `${count(s.merges, "merge commit")} intact`;
   const summary = (formatMarkdown(report) + (notice ? `\n\n${notice}\n` : "")).slice(0, 65000);
   const first = annotations.slice(0, 50);
   let created: { id: number; html_url?: string };
@@ -210,7 +212,7 @@ export async function runAction(): Promise<number> {
     try {
       posted = await postCheckRun(gh, repo, target.headSha, report, failed, [enforcement, plan?.notice].filter(Boolean).join("\n\n") || undefined);
     } catch (e) {
-      log(`check run failed: ${(e as Error).message}`);
+      log(`could not post the check run: ${(e as Error).message}`);
     }
   }
   if (!posted) workflowAnnotations(report);

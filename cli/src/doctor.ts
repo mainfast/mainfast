@@ -44,16 +44,16 @@ export function runDoctor(dir: string): Result {
   const repo = githubRepo(root) ?? null;
   const codeowners = [".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"].find((f) => kindOf(f) === "file") ?? null;
 
-  if (!installed.length && workflowsOk) missing.push("No check is installed. Run: mainfast init");
-  if (!repo) missing.push("No GitHub origin remote, so audit cannot read the repository through the API.");
-  if (!token) missing.push("No GITHUB_TOKEN or GH_TOKEN: audit rollcall needs one for private repositories, audit owners falls back to offline lint.");
-  if (installed.includes("owners") && !codeowners) missing.push("Owners is installed but there is no CODEOWNERS file.");
+  if (!installed.length && workflowsOk) missing.push("No checks are installed. Run: mainfast init");
+  if (!repo) missing.push("No GitHub origin remote, so audit cannot read the repository through the GitHub API.");
+  if (!token) missing.push("No GITHUB_TOKEN or GH_TOKEN: audit rollcall needs one for a private repository, and audit owners runs only the offline lint.");
+  if (installed.includes("owners") && !codeowners) missing.push("Owners is installed but there is no CODEOWNERS file. Add .github/CODEOWNERS.");
 
   const ok = config.ok && workflowsOk && installed.length > 0;
   const json = { schema: SCHEMA, command: "doctor", ok, repo: root, github_repo: repo, checks, config, codeowners, token: { present: Boolean(token), source: token?.name ?? null }, missing, hosted_app: hostedAppUrl() };
   const lines = [
     ...PRODUCT_SLUGS.map((s) => `${checks[s]!.installed ? "installed" : "missing  "}  ${s}${checks[s]!.installed ? `  (${checks[s]!.files.join(", ")})` : ""}`),
-    `config     ${path ? (config.ok ? `${path} parses` : `${path} does not parse`) : "none, defaults apply"}`,
+    `config     ${path ? (config.ok ? `${path} parses` : `${path} does not parse`) : "none (defaults apply)"}`,
     `token      ${token ? `set (${token.name})` : "not set"}`,
     ...(missing.length ? ["", "To do:", ...missing.map((m) => `- ${m}`)] : []),
   ];

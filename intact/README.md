@@ -5,7 +5,7 @@ Proves that a merge commit did not silently drop changes from main.
 When you merge `origin/main` into a feature branch, a conflict resolved by
 "taking ours", or a hand-merge that loses a line, reverts main's work without a
 trace. GitHub's PR diff compares the branch against main and never shows what
-the merge commit itself did. `mainfast check` re-runs each merge and reports:
+the merge commit itself did. Intact re-runs each merge and reports:
 
 - **dropped**: a hunk main added (or removed) since the merge base that the
   merge commit no longer carries, with the main commit that introduced it
@@ -13,30 +13,71 @@ the merge commit itself did. `mainfast check` re-runs each merge and reports:
 - **evil**: the merge commit contains changes found in neither parent and
   outside any conflict
 
-Part of the [Mainfast suite](../README.md). Free and MIT for public repositories and for
+Part of the [Mainfast suite](../README.md). MIT-licensed and free for public repositories and for
 private ones with up to 5 active contributors; see [Free and Pro](../README.md#free-and-pro).
 
-## Install
+## Quick start
 
-Requires Node 20+ and git (any version; 2.36+ is fastest).
+Add [`examples/mainfast-intact.yml`](examples/mainfast-intact.yml) as
+`.github/workflows/mainfast-intact.yml`:
 
-```bash
-cd mainfast && npm ci && npm run build -w intact     # npm workspaces at the suite root
-ln -s "$PWD/intact/dist/cli.cjs" ~/.local/bin/mainfast
+```yaml
+name: Mainfast Intact
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]   # your default branch: PR merges into it are clean by construction
+permissions:
+  contents: read
+  checks: write
+jobs:
+  intact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: mainfast/intact@v0
+        # with:
+        #   fail-on: warning                           # block instead of only reporting
+        #   license: ${{ secrets.MAINFAST_LICENSE }}   # Pro, private repos over 5 active contributors
 ```
 
-## Use
+- `pull_request`: checks the merge commits in `base.sha..head.sha`.
+- `push`: checks `before..after`; on a new branch, `<main>..after`.
+- Needs only `GITHUB_TOKEN`. With `checks: write` it posts a check run with
+  annotations; without it (fork PRs) it writes the job summary and
+  workflow-command annotations instead.
+- **Report-only by default.** Findings appear as annotations and a neutral check run, and
+  the job passes. Many flagged merges are harmless (code rewritten or moved in the same
+  file), so read a few before you block on them. `fail-on: error` fails the job on changes
+  dropped outright. `fail-on: warning` also fails it on evil merges, partial drops, and
+  dropped version bumps and generated files. A merge that could not be analysed fails
+  either way, and so does a `fail-on` value Intact doesn't recognise.
+- Inputs: `fail-on` (`off` by default), `main-branch`, `config` (a file from the checkout instead of the
+  base's `.mainfast.yml`), `config-token` (reads a private `extends:` repository),
+  `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`
+  (`pass`, `fail`, `error` or `skipped`), `findings` (the count, whatever `fail-on` is),
+  `report` (path to the JSON report). See [`action.yml`](action.yml).
+- On a private repository with more than 5 active contributors and no `license`, the job
+  summary and the check run get one notice about Pro. The result never changes.
+- A shallow checkout is unshallowed automatically; `fetch-depth: 0` is faster.
+
+## Run it locally
+
+Check your branch before you push. Needs Node 20+ and git (any version; 2.36+ is fastest).
 
 ```bash
-mainfast check                       # every merge commit in <main>..HEAD
-mainfast check HEAD                  # one merge commit
-mainfast check --range origin/main..feature
-mainfast check --json                # machine-readable
-mainfast check --fail-on error       # warnings do not fail
+npx mainfast check                       # every merge commit in <main>..HEAD
+npx mainfast check HEAD                  # one merge commit
+npx mainfast check --range origin/main..feature
+npx mainfast check --json                # machine-readable
+npx mainfast check --fail-on error       # warnings do not fail
 ```
 
-Exit codes: `0` intact, `1` findings at `--fail-on` level or above (default
-`warning` for the CLI; the Action defaults to `off`), `2` could not analyse.
+Exit codes: `0` nothing failed, `1` findings at the `--fail-on` level or above (the CLI defaults
+to `warning`; the Action defaults to `off`), `2` could not analyse.
 
 ```
 FAIL  d3be58f Merge branch 'main' into feat
@@ -57,11 +98,11 @@ FAIL  d3be58f Merge branch 'main' into feat
           + DEBUG = True
 ```
 
-### Config: `.mainfast.yml`, section `intact:`
+## Configuration
 
-One file for the whole suite ([reference](../docs/config.md),
-[schema](../schema/mainfast.schema.json)). Intact reads its `intact:` section and ignores the
-other products' sections; an unknown top-level key is an error.
+Intact reads the `intact:` section of `.mainfast.yml`, the one config file for the whole suite
+([reference](../docs/config.md), [schema](../schema/mainfast.schema.json)). It ignores the other
+checks' sections; an unknown top-level key is an error.
 
 ```yaml
 version: 1
@@ -81,8 +122,8 @@ Default levels: `dropped (main)` error, `partially-dropped (main)` warning,
 over your own change is usually deliberate).
 
 The Action reads `.mainfast.yml` as committed at the **base** of the change (the pull
-request's base commit, or the main branch for a push), so a pull request cannot ignore its
-own dropped change. The CLI reads your working tree. Full example:
+request's base commit, or the main branch for a push), so a pull request cannot hide its
+own dropped change. The CLI reads the file in your working tree. Full example:
 [`examples/.mainfast.yml`](examples/.mainfast.yml).
 
 ### Lockfiles are checked by default
@@ -141,46 +182,8 @@ Lists add up, mappings merge with the local keys first (local `severity` pattern
 scalars from the local file win; one level only. Another repository is read through the
 contents API at the given ref (default: its default branch) with the `config-token` input
 (default: `token`; `GITHUB_TOKEN` cannot read other private repositories). A `./path` is read
-at the same commit as `.mainfast.yml`. `extends` is a Pro feature: it works for everyone in
-the open-source Action, and the plan notice covers fairness.
-
-### GitHub Action
-
-[`examples/mainfast-intact.yml`](examples/mainfast-intact.yml):
-
-```yaml
-on: [pull_request, push]
-permissions: { contents: read, checks: write }
-jobs:
-  intact:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with: { fetch-depth: 0 }
-      - uses: mainfast/intact@v0
-        # with:
-        #   license: ${{ secrets.MAINFAST_LICENSE }}   # Pro, private repos over 5 active contributors
-```
-
-- `pull_request`: checks merge commits in `base.sha..head.sha`.
-- `push`: checks `before..after`; a new branch checks `<main>..after`.
-- Needs only `GITHUB_TOKEN`. With `checks: write` it posts a check run with
-  annotations; without it (fork PRs) it writes the job summary and
-  workflow-command annotations instead.
-- **Report-only by default.** Findings appear as annotations and a neutral check run, and
-  the job passes. Many flagged merges are harmless (code rewritten or moved in the same
-  file), so read a few before you block on them. `fail-on: error` fails the job on changes
-  dropped outright. `fail-on: warning` also fails it on evil merges, partial drops, and
-  dropped version bumps and generated files. A merge that could not be analysed fails
-  either way, and so does a `fail-on` value Intact doesn't recognise.
-- Inputs: `fail-on` (`off` by default), `main-branch`, `config` (a file from the checkout instead of the
-  base's `.mainfast.yml`), `config-token` (reads a private `extends:` repository),
-  `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`
-  (whether anything reached `fail-on`), `findings` (the count, whatever `fail-on` is),
-  `report` (JSON path).
-- On a private repository with more than 5 active contributors and no `license`, the job
-  summary and the check run get one notice about Pro. The result never changes.
-- A shallow checkout is unshallowed automatically; `fetch-depth: 0` is faster.
+at the same commit as `.mainfast.yml`. `extends` is a Pro feature, but it works for everyone in
+the open-source Action; larger private repositories only see the plan notice.
 
 ## How it works
 
@@ -238,8 +241,10 @@ main's line again is ordinary history and is not flagged.
 ## Development
 
 ```bash
+npm ci                 # at the suite root (npm workspaces)
 npm run all            # typecheck, tests, build (from intact/, or `npm run all` at the suite root)
 npm run brand:sync     # at the suite root, after editing ../brand.json
+node intact/dist/cli.cjs check   # the CLI from your build
 ```
 
 Bundles: `dist/index.cjs` (the Action), `dist/cli.cjs` (the CLI), `dist/lib.cjs` (the
@@ -247,8 +252,8 @@ library). Shared code (GitHub client, Actions I/O, globs, config loader, plan ga
 [`../packages/shared`](../packages/shared).
 
 Tests build real throwaway git repositories in temp dirs (`test/scenarios.test.ts`).
-Design note for the hosted App: [`docs/github-app.md`](docs/github-app.md).
+How the hosted App runs the checks: [`docs/github-app.md`](docs/github-app.md).
 
 ## Report a problem
 
-Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. Anyone can, free, with no key. Issues are public, so leave out private code and secrets.
+Found a bug or a false positive? [Open an issue](https://github.com/mainfast/mainfast/issues) in the main Mainfast repository. You don't need a key or a paid plan. Issues are public, so leave out private code and secrets.

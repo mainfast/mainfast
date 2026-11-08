@@ -16,14 +16,14 @@ usage:
 
 options:
   --range A..B        check every merge commit in the range
-  --main <branch>     main branch (default: config main_branch, origin/HEAD, main, master)
+  --main <branch>     the main branch (default: config main_branch, origin/HEAD, main, master)
   --config <path>     config file (default: ${BRAND.configFile} at the repo root). An
                       owner/repo extends is read with GITHUB_TOKEN or GH_TOKEN when set
   --json              machine-readable report on stdout
   --fail-on <level>   lowest level that makes the exit code 1: error, warning (default), notice
   --strategy <name>   force remerge-diff, merge-tree or worktree (default: by git version)
   -C <dir>            run in <dir>
-  -h, --help          this help
+  -h, --help          show this help
   -v, --version       print the version
 
 exit codes: 0 clean, 1 findings, 2 error
@@ -74,13 +74,13 @@ export function parseArgs(argv: string[]): Parsed {
       case "-C": p.dir = value(); break;
       case "--fail-on": {
         const v = value() as Level;
-        if (!LEVELS.includes(v) || v === "off") throw new UsageError(`--fail-on must be error, warning or notice`);
+        if (!LEVELS.includes(v) || v === "off") throw new UsageError(`--fail-on: expected error, warning or notice`);
         p.failOn = v;
         break;
       }
       case "--strategy": {
         const v = value();
-        if (v !== "remerge-diff" && v !== "merge-tree" && v !== "worktree") throw new UsageError(`unknown strategy: ${v}`);
+        if (v !== "remerge-diff" && v !== "merge-tree" && v !== "worktree") throw new UsageError(`unknown strategy: ${v} (expected remerge-diff, merge-tree or worktree)`);
         p.strategy = v;
         break;
       }

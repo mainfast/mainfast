@@ -146,7 +146,7 @@ export function polarValidator(opts: PolarValidatorOptions = {}): LicenseValidat
       return { valid: false, offline: false, reason: `Polar reports the key as ${JSON.stringify(String(lk.status))}` };
     }
     if (lk.organization_id && lk.organization_id !== org) {
-      return { valid: false, offline: false, reason: `the key belongs to another Polar organisation, not ${SUITE.name}` };
+      return { valid: false, offline: false, reason: `the key belongs to another Polar organization, not ${SUITE.name}` };
     }
     const plan = planForBenefit(lk.benefit_id, ids);
     if (!plan) return { valid: false, offline: false, reason: `the key is not a ${SUITE.name} key (unknown benefit)` };
@@ -398,7 +398,7 @@ export async function planGate(
       runId: env.GITHUB_RUN_ID,
     });
     if (result.key === "refused") {
-      process.stdout.write(`${SUITE.name}: the licence key was not accepted (${result.keyReason}); running as without a key. The check result is unaffected.\n`);
+      process.stdout.write(`${SUITE.name}: the license key was not accepted (${result.keyReason}); continuing without a key. The check result is unaffected.\n`);
     } else if (result.key === "free" && !result.notice) {
       appendSummary(`\n<sub>${SUITE.name}: Registered (free key).</sub>\n`, env);
     }

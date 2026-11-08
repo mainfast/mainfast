@@ -6,6 +6,8 @@ import { CHECK_NAME } from './brand.js';
 import type { AuditReport, CheckTally, Finding, PullObservation, RequiredCheck, Snapshot } from './types.js';
 import { branchAllowed, conditionOnPr, filtersOf, parseWorkflows, producersOf, type JobInfo, type WorkflowInfo } from './workflows.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 export interface AuditOptions {
   /** Required contexts to leave out of the audit. */
   ignore?: string[];
@@ -28,7 +30,7 @@ export const FIXES: Record<string, string> = {
   'stopped-reporting': 'Find the commit that removed or renamed the job, then restore it or update the required list.',
   'matrix-name-mismatch': 'Require each matrix leg by its full name, or add an `if: always()` gate job with the required name that fails unless every leg succeeded.',
   'skipped-as-success': 'Make the required check a gate job with `if: always()` that fails when its dependencies did not succeed, or move the condition from the job into its steps.',
-  'path-filtered': 'Drop the paths filter and skip inside the job (e.g. a paths-filter step + step conditions), or require a gate job that always runs.',
+  'path-filtered': 'Drop the paths filter and skip inside the job (for example, a paths-filter step with step conditions), or require a gate job that always runs.',
   'branch-filtered': 'Add this branch to the workflow\'s `pull_request` branches filter (or remove the filter).',
   'not-on-pull-request': 'Add a `pull_request` trigger (and `merge_group` if you use a merge queue).',
   'app-mismatch': 'Pin the requirement to the app that reports it (GitHub Actions is 15368 on github.com), or to any source.',
@@ -109,7 +111,7 @@ function mergedWithout(context: string, missing: number[]): Finding {
     code: 'merged-without',
     severity: 'warning',
     context,
-    message: `${missing.length} merged PR(s) have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
+    message: `${plural(missing.length, "merged PR")} have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
     evidence: missing.slice(0, 10),
   };
 }

@@ -938,8 +938,8 @@ var require_Collection = __commonJS({
         return this.items.every((node2) => {
           if (!identity.isPair(node2))
             return false;
-          const n = node2.value;
-          return n == null || allowScalar && identity.isScalar(n) && n.value == null && !n.commentBefore && !n.comment && !n.tag;
+          const n2 = node2.value;
+          return n2 == null || allowScalar && identity.isScalar(n2) && n2.value == null && !n2.commentBefore && !n2.comment && !n2.tag;
         });
       }
       /**
@@ -2382,18 +2382,18 @@ var require_stringifyNumber = __commonJS({
       const num2 = typeof value === "number" ? value : Number(value);
       if (!isFinite(num2))
         return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
-      let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
-      if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
-        let i = n.indexOf(".");
+      let n2 = Object.is(value, -0) ? "-0" : JSON.stringify(value);
+      if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n2) && !n2.includes("e")) {
+        let i = n2.indexOf(".");
         if (i < 0) {
-          i = n.length;
-          n += ".";
+          i = n2.length;
+          n2 += ".";
         }
-        let d = minFractionDigits - (n.length - i - 1);
+        let d = minFractionDigits - (n2.length - i - 1);
         while (d-- > 0)
-          n += "0";
+          n2 += "0";
       }
-      return n;
+      return n2;
     }
     exports2.stringifyNumber = stringifyNumber;
   }
@@ -2637,9 +2637,9 @@ var require_binary = __commonJS({
         type ?? (type = Scalar.Scalar.BLOCK_LITERAL);
         if (type !== Scalar.Scalar.QUOTE_DOUBLE) {
           const lineWidth = Math.max(ctx.options.lineWidth - ctx.indent.length, ctx.options.minContentWidth);
-          const n = Math.ceil(str2.length / lineWidth);
-          const lines = new Array(n);
-          for (let i = 0, o = 0; i < n; ++i, o += lineWidth) {
+          const n2 = Math.ceil(str2.length / lineWidth);
+          const lines = new Array(n2);
+          for (let i = 0, o = 0; i < n2; ++i, o += lineWidth) {
             lines[i] = str2.substr(o, lineWidth);
           }
           str2 = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
@@ -2911,11 +2911,11 @@ var require_int2 = __commonJS({
             str2 = `0x${str2}`;
             break;
         }
-        const n2 = BigInt(str2);
-        return sign === "-" ? BigInt(-1) * n2 : n2;
+        const n3 = BigInt(str2);
+        return sign === "-" ? BigInt(-1) * n3 : n3;
       }
-      const n = parseInt(str2, radix);
-      return sign === "-" ? -1 * n : n;
+      const n2 = parseInt(str2, radix);
+      return sign === "-" ? -1 * n2 : n2;
     }
     function intStringify(node2, radix, prefix) {
       const { value } = node2;
@@ -3064,15 +3064,15 @@ var require_timestamp = __commonJS({
     function parseSexagesimal(str2, asBigInt) {
       const sign = str2[0];
       const parts = sign === "-" || sign === "+" ? str2.substring(1) : str2;
-      const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const num2 = (n2) => asBigInt ? BigInt(n2) : Number(n2);
       const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
       return sign === "-" ? num2(-1) * res : res;
     }
     function stringifySexagesimal(node2) {
       let { value } = node2;
-      let num2 = (n) => n;
+      let num2 = (n2) => n2;
       if (typeof value === "bigint")
-        num2 = (n) => BigInt(n);
+        num2 = (n2) => BigInt(n2);
       else if (isNaN(value) || !isFinite(value))
         return stringifyNumber.stringifyNumber(node2);
       let sign = "";
@@ -3092,7 +3092,7 @@ var require_timestamp = __commonJS({
           parts.unshift(value);
         }
       }
-      return sign + parts.map((n) => String(n).padStart(2, "0")).join(":").replace(/000000\d*$/, "");
+      return sign + parts.map((n2) => String(n2).padStart(2, "0")).join(":").replace(/000000\d*$/, "");
     }
     var intTime = {
       identify: (value) => typeof value === "bigint" || Number.isInteger(value),
@@ -4563,9 +4563,9 @@ var require_resolve_block_scalar = __commonJS({
         if (!chomp && (ch === "-" || ch === "+"))
           chomp = ch;
         else {
-          const n = Number(ch);
-          if (!indent && n)
-            indent = n;
+          const n2 = Number(ch);
+          if (!indent && n2)
+            indent = n2;
           else if (error2 === -1)
             error2 = offset + i;
         }
@@ -5786,8 +5786,8 @@ var require_lexer = __commonJS({
           return this.buffer[i + 1] === "\n";
         return false;
       }
-      charAt(n) {
-        return this.buffer[this.pos + n];
+      charAt(n2) {
+        return this.buffer[this.pos + n2];
       }
       continueScalar(offset) {
         let ch = this.buffer[offset];
@@ -5821,8 +5821,8 @@ var require_lexer = __commonJS({
           end -= 1;
         return this.buffer.substring(this.pos, end);
       }
-      hasChars(n) {
-        return this.pos + n <= this.buffer.length;
+      hasChars(n2) {
+        return this.pos + n2 <= this.buffer.length;
       }
       setNext(state) {
         this.buffer = this.buffer.substring(this.pos);
@@ -5831,8 +5831,8 @@ var require_lexer = __commonJS({
         this.next = state;
         return null;
       }
-      peek(n) {
-        return this.buffer.substr(this.pos, n);
+      peek(n2) {
+        return this.buffer.substr(this.pos, n2);
       }
       *parseNext(next) {
         switch (next) {
@@ -5881,8 +5881,8 @@ var require_lexer = __commonJS({
             else
               break;
           }
-          const n = (yield* this.pushCount(dirEnd)) + (yield* this.pushSpaces(true));
-          yield* this.pushCount(line.length - n);
+          const n2 = (yield* this.pushCount(dirEnd)) + (yield* this.pushSpaces(true));
+          yield* this.pushCount(line.length - n2);
           this.pushNewline();
           return "stream";
         }
@@ -5920,9 +5920,9 @@ var require_lexer = __commonJS({
         if (!ch1 && !this.atEnd)
           return this.setNext("block-start");
         if ((ch0 === "-" || ch0 === "?" || ch0 === ":") && isEmpty(ch1)) {
-          const n = (yield* this.pushCount(1)) + (yield* this.pushSpaces(true));
+          const n2 = (yield* this.pushCount(1)) + (yield* this.pushSpaces(true));
           this.indentNext = this.indentValue + 1;
-          this.indentValue += n;
+          this.indentValue += n2;
           return "block-start";
         }
         return "doc";
@@ -5932,10 +5932,10 @@ var require_lexer = __commonJS({
         const line = this.getLine();
         if (line === null)
           return this.setNext("doc");
-        let n = yield* this.pushIndicators();
-        switch (line[n]) {
+        let n2 = yield* this.pushIndicators();
+        switch (line[n2]) {
           case "#":
-            yield* this.pushCount(line.length - n);
+            yield* this.pushCount(line.length - n2);
           // fallthrough
           case void 0:
             yield* this.pushNewline();
@@ -5958,9 +5958,9 @@ var require_lexer = __commonJS({
             return yield* this.parseQuotedScalar();
           case "|":
           case ">":
-            n += yield* this.parseBlockScalarHeader();
-            n += yield* this.pushSpaces(true);
-            yield* this.pushCount(line.length - n);
+            n2 += yield* this.parseBlockScalarHeader();
+            n2 += yield* this.pushSpaces(true);
+            yield* this.pushCount(line.length - n2);
             yield* this.pushNewline();
             return yield* this.parseBlockScalar();
           default:
@@ -5991,18 +5991,18 @@ var require_lexer = __commonJS({
             return yield* this.parseLineStart();
           }
         }
-        let n = 0;
-        while (line[n] === ",") {
-          n += yield* this.pushCount(1);
-          n += yield* this.pushSpaces(true);
+        let n2 = 0;
+        while (line[n2] === ",") {
+          n2 += yield* this.pushCount(1);
+          n2 += yield* this.pushSpaces(true);
           this.flowKey = false;
         }
-        n += yield* this.pushIndicators();
-        switch (line[n]) {
+        n2 += yield* this.pushIndicators();
+        switch (line[n2]) {
           case void 0:
             return "flow";
           case "#":
-            yield* this.pushCount(line.length - n);
+            yield* this.pushCount(line.length - n2);
             return "flow";
           case "{":
           case "[":
@@ -6046,10 +6046,10 @@ var require_lexer = __commonJS({
             end = this.buffer.indexOf("'", end + 2);
         } else {
           while (end !== -1) {
-            let n = 0;
-            while (this.buffer[end - 1 - n] === "\\")
-              n += 1;
-            if (n % 2 === 0)
+            let n2 = 0;
+            while (this.buffer[end - 1 - n2] === "\\")
+              n2 += 1;
+            if (n2 % 2 === 0)
               break;
             end = this.buffer.indexOf('"', end + 1);
           }
@@ -6203,11 +6203,11 @@ var require_lexer = __commonJS({
         yield* this.pushToIndex(end + 1, true);
         return inFlow ? "flow" : "doc";
       }
-      *pushCount(n) {
-        if (n > 0) {
-          yield this.buffer.substr(this.pos, n);
-          this.pos += n;
-          return n;
+      *pushCount(n2) {
+        if (n2 > 0) {
+          yield this.buffer.substr(this.pos, n2);
+          this.pos += n2;
+          return n2;
         }
         return 0;
       }
@@ -6222,16 +6222,16 @@ var require_lexer = __commonJS({
         return 0;
       }
       *pushIndicators() {
-        let n = 0;
+        let n2 = 0;
         loop: while (true) {
           switch (this.charAt(0)) {
             case "!":
-              n += yield* this.pushTag();
-              n += yield* this.pushSpaces(true);
+              n2 += yield* this.pushTag();
+              n2 += yield* this.pushSpaces(true);
               continue loop;
             case "&":
-              n += yield* this.pushUntil(isNotAnchorChar);
-              n += yield* this.pushSpaces(true);
+              n2 += yield* this.pushUntil(isNotAnchorChar);
+              n2 += yield* this.pushSpaces(true);
               continue loop;
             case "-":
             // this is an error
@@ -6245,15 +6245,15 @@ var require_lexer = __commonJS({
                   this.indentNext = this.indentValue + 1;
                 else if (this.flowKey)
                   this.flowKey = false;
-                n += yield* this.pushCount(1);
-                n += yield* this.pushSpaces(true);
+                n2 += yield* this.pushCount(1);
+                n2 += yield* this.pushSpaces(true);
                 continue loop;
               }
             }
           }
           break loop;
         }
-        return n;
+        return n2;
       }
       *pushTag() {
         if (this.charAt(1) === "<") {
@@ -6291,12 +6291,12 @@ var require_lexer = __commonJS({
         do {
           ch = this.buffer[++i];
         } while (ch === " " || allowTabs && ch === "	");
-        const n = i - this.pos;
-        if (n > 0) {
-          yield this.buffer.substr(this.pos, n);
+        const n2 = i - this.pos;
+        if (n2 > 0) {
+          yield this.buffer.substr(this.pos, n2);
           this.pos = i;
         }
-        return n;
+        return n2;
       }
       *pushUntil(test) {
         let i = this.pos;
@@ -6571,8 +6571,8 @@ var require_parser = __commonJS({
         }
         yield* this.pop();
       }
-      peek(n) {
-        return this.stack[this.stack.length - n];
+      peek(n2) {
+        return this.stack[this.stack.length - n2];
       }
       *pop(error2) {
         const token = error2 ?? this.stack.pop();
@@ -7840,17 +7840,17 @@ var require_codegen = __commonJS({
         this.nodes = nodes;
       }
       render(opts) {
-        return this.nodes.reduce((code, n) => code + n.render(opts), "");
+        return this.nodes.reduce((code, n2) => code + n2.render(opts), "");
       }
       optimizeNodes() {
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
-          const n = nodes[i].optimizeNodes();
-          if (Array.isArray(n))
-            nodes.splice(i, 1, ...n);
-          else if (n)
-            nodes[i] = n;
+          const n2 = nodes[i].optimizeNodes();
+          if (Array.isArray(n2))
+            nodes.splice(i, 1, ...n2);
+          else if (n2)
+            nodes[i] = n2;
           else
             nodes.splice(i, 1);
         }
@@ -7860,16 +7860,16 @@ var require_codegen = __commonJS({
         const { nodes } = this;
         let i = nodes.length;
         while (i--) {
-          const n = nodes[i];
-          if (n.optimizeNames(names, constants2))
+          const n2 = nodes[i];
+          if (n2.optimizeNames(names, constants2))
             continue;
-          subtractNames(names, n.names);
+          subtractNames(names, n2.names);
           nodes.splice(i, 1);
         }
         return nodes.length > 0 ? this : void 0;
       }
       get names() {
-        return this.nodes.reduce((names, n) => addNames(names, n.names), {});
+        return this.nodes.reduce((names, n2) => addNames(names, n2.names), {});
       }
     };
     var BlockNode = class extends ParentNode {
@@ -8280,8 +8280,8 @@ var require_codegen = __commonJS({
       endFunc() {
         return this._endBlockNode(Func);
       }
-      optimize(n = 1) {
-        while (n-- > 0) {
+      optimize(n2 = 1) {
+        while (n2-- > 0) {
           this._root.optimizeNodes();
           this._root.optimizeNames(this._root.names, this._constants);
         }
@@ -8295,19 +8295,19 @@ var require_codegen = __commonJS({
         this._nodes.push(node2);
       }
       _endBlockNode(N1, N2) {
-        const n = this._currNode;
-        if (n instanceof N1 || N2 && n instanceof N2) {
+        const n2 = this._currNode;
+        if (n2 instanceof N1 || N2 && n2 instanceof N2) {
           this._nodes.pop();
           return this;
         }
         throw new Error(`CodeGen: not in block "${N2 ? `${N1.kind}/${N2.kind}` : N1.kind}"`);
       }
       _elseNode(node2) {
-        const n = this._currNode;
-        if (!(n instanceof If)) {
+        const n2 = this._currNode;
+        if (!(n2 instanceof If)) {
           throw new Error('CodeGen: "else" without "if"');
         }
-        this._currNode = n.else = node2;
+        this._currNode = n2.else = node2;
         return this;
       }
       get _root() {
@@ -8324,8 +8324,8 @@ var require_codegen = __commonJS({
     };
     exports2.CodeGen = CodeGen;
     function addNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) + (from[n] || 0);
+      for (const n2 in from)
+        names[n2] = (names[n2] || 0) + (from[n2] || 0);
       return names;
     }
     function addExprNames(names, from) {
@@ -8345,11 +8345,11 @@ var require_codegen = __commonJS({
           items.push(c);
         return items;
       }, []));
-      function replaceName(n) {
-        const c = constants2[n.str];
-        if (c === void 0 || names[n.str] !== 1)
-          return n;
-        delete names[n.str];
+      function replaceName(n2) {
+        const c = constants2[n2.str];
+        if (c === void 0 || names[n2.str] !== 1)
+          return n2;
+        delete names[n2.str];
         return c;
       }
       function canOptimize(e) {
@@ -8357,8 +8357,8 @@ var require_codegen = __commonJS({
       }
     }
     function subtractNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) - (from[n] || 0);
+      for (const n2 in from)
+        names[n2] = (names[n2] || 0) - (from[n2] || 0);
     }
     function not(x) {
       return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -14646,7 +14646,7 @@ function git(cwd, args) {
 }
 function repoRoot(dir) {
   const root = git(dir, ["rev-parse", "--show-toplevel"]);
-  if (!root) throw new CliError(`not inside a git working tree: ${dir}`);
+  if (!root) throw new CliError(`not inside a git repository: ${dir}`);
   return root;
 }
 function githubRepo(root) {
@@ -14663,7 +14663,7 @@ function mainRef(root, given) {
   const head = git(root, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]);
   if (head) return head;
   for (const r of ["origin/main", "origin/master", "main", "master"]) if (git(root, ["rev-parse", "--verify", "--quiet", `${r}^{commit}`])) return r;
-  throw new CliError("cannot tell the main branch: pass --main");
+  throw new CliError("could not find the main branch; pass --main");
 }
 function githubToken(env = process.env) {
   for (const name of ["GITHUB_TOKEN", "GH_TOKEN"]) {
@@ -14736,7 +14736,7 @@ var brand_default = {
     intact: {
       productName: "Mainfast Intact",
       tagline: "prove merge commits did not silently drop changes from main",
-      description: "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      description: "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       npmName: "@mainfast/intact",
       cliName: "mainfast",
       configSection: "intact",
@@ -14762,7 +14762,7 @@ var brand_default = {
     rollcall: {
       productName: "Mainfast Rollcall",
       tagline: "required-check integrity audit",
-      description: "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported \u2014 never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift \u2014 and keeps one tracking issue open while something is wrong.",
+      description: "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       npmName: "@mainfast/rollcall",
       cliName: "mainfast-rollcall",
       configSection: "rollcall",
@@ -14774,7 +14774,7 @@ var brand_default = {
     owners: {
       productName: "Mainfast Owners",
       tagline: "CODEOWNERS drift check",
-      description: "CODEOWNERS drift \u2014 unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      description: "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       npmName: "@mainfast/owners",
       cliName: "mainfast-owners",
       configSection: "owners",
@@ -14786,7 +14786,7 @@ var brand_default = {
     evidence: {
       productName: "Mainfast Evidence",
       tagline: "proof, not review, for pull requests written by coding agents",
-      description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      description: "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       npmName: "@mainfast/evidence",
       cliName: "mainfast-evidence",
       configSection: "evidence",
@@ -15605,6 +15605,7 @@ function classifyRequired(context, c, sources = []) {
 }
 
 // ../evidence/src/analyze/checks.ts
+var plural = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 function keeper(policy) {
   const ignored = policy.ignoreChecks.map(nameMatcher);
   return (name) => name !== CHECK_NAME && !ignored.some((m) => m(name));
@@ -15677,7 +15678,7 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "tests_not_run_on_head",
       title: "No test check ran on the head commit",
-      detail: staleTestsOn ? `Tests ran on earlier commit ${staleTestsOn.sha.slice(0, 7)} (${staleTestsOn.tests.map((t) => `${t.name}: ${t.state}`).join(", ")}) but not on head ${short3}. Evidence from an earlier commit does not cover the code being merged.` : `No check run or status on ${short3} matches the test-check patterns (${policy.testChecks.join(", ")}).`
+      detail: staleTestsOn ? `Tests ran on earlier commit ${staleTestsOn.sha.slice(0, 7)} (${staleTestsOn.tests.map((t) => `${t.name}: ${t.state}`).join(", ")}) but not on head ${short3}. Evidence from an earlier commit does not cover the code being merged.` : `No check run or status on ${short3} matches the \`test_checks\` patterns (${policy.testChecks.join(", ")}).`
     });
   } else if (testsState === "failed") {
     const bad = tests.filter((t) => t.state !== "success");
@@ -15692,12 +15693,12 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "tests_skipped",
       title: ran ? "Some test checks were skipped on the head commit" : "Every test check was skipped on the head commit",
-      detail: `${skipped2.map((t) => `${t.name}: skipped`).join(", ")} \u2014 ${ran ? `${ran} other test check(s) passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`
+      detail: `${skipped2.map((t) => `${t.name}: skipped`).join(", ")} \u2014 ${ran ? `${plural(ran, "other test check")} passed, ` : "nothing was tested on this commit; "}a skipped job (an \`if:\` or path filter) verifies nothing.`
     });
   } else if (testsState === "empty") {
     findings.push({
       id: "tests_empty",
-      title: "Test checks passed but report running zero tests",
+      title: "Test checks passed but ran zero tests",
       detail: tests.map((t) => `${t.name}: "${t.summary}"`).join("; ")
     });
   }
@@ -15721,7 +15722,7 @@ function evaluateChecks(snap, policy) {
     findings.push({
       id: "required_check_missing",
       title: "Required check never reported on the head commit",
-      detail: `${missing.map((r) => r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`).join(", ")} \u2014 nothing that satisfies it ran on ${short3} under that name (renamed job, path filter, the workflow was edited out, or another app posted the name).`
+      detail: `${missing.map((r) => r.appSatisfied ? r.context : `${r.context} (reported by a different app than the one the rule requires)`).join(", ")} \u2014 no check under that name that satisfies the rule ran on ${short3}. Usual causes: a renamed job, a path filter, a removed workflow, or another app posting the name.`
     });
   if (skipped.length)
     findings.push({
@@ -15740,6 +15741,7 @@ function evaluateChecks(snap, policy) {
 }
 
 // ../evidence/src/analyze/claims.ts
+var plural2 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var NEGATION = /\b(no|not|n't|without|never|skip(?:ped)?|none)\b[^.\n]{0,25}$/i;
 var PATTERNS = {
   tests_added: [
@@ -15780,8 +15782,8 @@ function evaluateClaims(title2, body, tamper, checks) {
   for (const c of extractClaims(`${title2}
 ${body}`)) {
     if (c.kind === "tests_added") {
-      const n = tamper.addedTestCases;
-      if (n > 0) claims.push({ ...c, verdict: "backed", why: `${n} test case(s) added` });
+      const n2 = tamper.addedTestCases;
+      if (n2 > 0) claims.push({ ...c, verdict: "backed", why: `${plural2(n2, "test case")} added` });
       else {
         const why = tamper.testStats.length === 0 ? "the diff changes no test files" : `test files changed but no new test case was added (net assertions ${tamper.net.assertions >= 0 ? "+" : ""}${tamper.net.assertions})`;
         claims.push({ ...c, verdict: "unbacked", why });
@@ -15949,9 +15951,9 @@ function parseLcov(text) {
       files.set(path, cur);
     } else if (line.startsWith("DA:") && cur) {
       const [ln, hits] = line.slice(3).split(",");
-      const n = Number(ln);
+      const n2 = Number(ln);
       const h = Number(hits);
-      if (Number.isFinite(n) && Number.isFinite(h)) cur.lines.set(n, Math.max(cur.lines.get(n) ?? 0, h));
+      if (Number.isFinite(n2) && Number.isFinite(h)) cur.lines.set(n2, Math.max(cur.lines.get(n2) ?? 0, h));
     } else if (line === "end_of_record") cur = void 0;
   }
   return { format: "lcov", files };
@@ -15977,9 +15979,9 @@ function parseCobertura(xml) {
     files.set(path, cov);
     const body = m[2].replace(/<methods>[\s\S]*?<\/methods>/g, "");
     for (const l of body.matchAll(/<line\b([^>]*)\/?>/g)) {
-      const n = Number(attr(l[1], "number"));
+      const n2 = Number(attr(l[1], "number"));
       const h = Number(attr(l[1], "hits"));
-      if (Number.isFinite(n) && Number.isFinite(h)) cov.lines.set(n, Math.max(cov.lines.get(n) ?? 0, h));
+      if (Number.isFinite(n2) && Number.isFinite(h)) cov.lines.set(n2, Math.max(cov.lines.get(n2) ?? 0, h));
     }
   }
   return { format: "cobertura", files };
@@ -15995,7 +15997,7 @@ function mergeCoverage(reports) {
   for (const r of reports)
     for (const [p, c] of r.files) {
       const into = files.get(p) ?? { lines: /* @__PURE__ */ new Map() };
-      for (const [n, h] of c.lines) into.lines.set(n, Math.max(into.lines.get(n) ?? 0, h));
+      for (const [n2, h] of c.lines) into.lines.set(n2, Math.max(into.lines.get(n2) ?? 0, h));
       files.set(p, into);
     }
   return { format: reports[0].format, files };
@@ -16007,10 +16009,10 @@ function lookup(report, repoPath2) {
   const target = norm(repoPath2);
   let best;
   for (const [p, cov] of report.files) {
-    const n = norm(p);
-    if (n === target) return cov;
-    if (n.endsWith(`/${target}`) || target.endsWith(`/${n}`)) {
-      const len = Math.min(n.length, target.length);
+    const n2 = norm(p);
+    if (n2 === target) return cov;
+    if (n2.endsWith(`/${target}`) || target.endsWith(`/${n2}`)) {
+      const len = Math.min(n2.length, target.length);
       if (!best || len > best.len) best = { cov, len };
     }
   }
@@ -16072,6 +16074,7 @@ function compress(lines) {
 }
 
 // ../evidence/src/analyze/provenance.ts
+var plural3 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var AGENT_CATALOG = [
   {
     // Verified: claude[bot] and the claude/ prefix are the defaults of anthropics/claude-code-action
@@ -16175,13 +16178,13 @@ function displayName(id) {
   return AGENT_CATALOG.find((a) => a.id === id)?.name ?? id;
 }
 function countRanges(spec) {
-  let n = 0;
+  let n2 = 0;
   for (const part of spec.split(",")) {
     const m = /^(\d+)(?:-(\d+))?$/.exec(part.trim());
     if (!m) continue;
-    n += m[2] ? Number(m[2]) - Number(m[1]) + 1 : 1;
+    n2 += m[2] ? Number(m[2]) - Number(m[1]) + 1 : 1;
   }
-  return n;
+  return n2;
 }
 function parseGitAiNote(commit, note) {
   const lines = note.replace(/\r\n/g, "\n").split("\n");
@@ -16303,7 +16306,7 @@ function detectProvenance(snap, m) {
           add({
             agent: GIT_AI_TOOL_TO_AGENT[lc(t.tool)] ?? t.tool,
             source: "git_ai",
-            detail: `${short3}: git-ai note, ${s.aiLines} AI line(s)${"model" in t && t.model ? `, ${t.model}` : ""}`
+            detail: `${short3}: git-ai note, ${plural3(s.aiLines, "AI line")}${"model" in t && t.model ? `, ${t.model}` : ""}`
           });
         }
       }
@@ -16339,8 +16342,8 @@ function entropy(s) {
   const freq = /* @__PURE__ */ new Map();
   for (const ch of s) freq.set(ch, (freq.get(ch) ?? 0) + 1);
   let e = 0;
-  for (const n of freq.values()) {
-    const p = n / s.length;
+  for (const n2 of freq.values()) {
+    const p = n2 / s.length;
     e -= p * Math.log2(p);
   }
   return e;
@@ -16387,22 +16390,23 @@ function scanSecrets(files, policy) {
 function evaluateSize(files, policy) {
   const skip = [...policy.paths.lockfiles, ...policy.diff.exclude];
   const counted = files.filter((f) => !matchesAny(f.path, skip));
-  const lines = counted.reduce((n, f) => n + f.additions + f.deletions, 0);
+  const lines = counted.reduce((n2, f) => n2 + f.additions + f.deletions, 0);
   const findings = [];
   const over = [];
   if (policy.diff.maxLines > 0 && lines > policy.diff.maxLines) over.push(`${lines} changed lines (limit ${policy.diff.maxLines})`);
   if (policy.diff.maxFiles > 0 && counted.length > policy.diff.maxFiles) over.push(`${counted.length} files (limit ${policy.diff.maxFiles})`);
-  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Large agent PRs hide changes; split it.` });
+  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Split it so each part can be reviewed properly.` });
   return {
     files: files.length,
-    additions: files.reduce((n, f) => n + f.additions, 0),
-    deletions: files.reduce((n, f) => n + f.deletions, 0),
+    additions: files.reduce((n2, f) => n2 + f.additions, 0),
+    deletions: files.reduce((n2, f) => n2 + f.deletions, 0),
     counted: { files: counted.length, lines },
     findings
   };
 }
 
 // ../evidence/src/analyze/tamper.ts
+var plural4 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var LANG_RULES = {
   js: {
     testCase: /(?:^|[\s;(,])[xf]?(?:it|test)(?:\.[a-zA-Z]+)*\s*(?:\(|`)/,
@@ -16499,10 +16503,10 @@ function evaluateTamper(files, policy) {
   const unanalyzed = files.filter((f) => f.patch === void 0 && f.additions + f.deletions > 0).map((f) => f.path);
   const testStats = tests.map(analyzeTestFile).filter((s) => !!s);
   const net = {
-    assertions: testStats.reduce((n, s) => n + s.assertionsAdded - s.assertionsRemoved, 0),
-    cases: testStats.reduce((n, s) => n + s.casesAdded - s.casesRemoved, 0)
+    assertions: testStats.reduce((n2, s) => n2 + s.assertionsAdded - s.assertionsRemoved, 0),
+    cases: testStats.reduce((n2, s) => n2 + s.casesAdded - s.casesRemoved, 0)
   };
-  const addedTestCases = testStats.reduce((n, s) => n + s.casesAdded, 0);
+  const addedTestCases = testStats.reduce((n2, s) => n2 + s.casesAdded, 0);
   const findings = [];
   const list5 = (xs) => xs.map((x) => `\`${x}\``).join(", ");
   if (touched2.workflows.length)
@@ -16521,13 +16525,13 @@ function evaluateTamper(files, policy) {
     findings.push({
       id: "tests_removed",
       title: "Fewer test cases than before",
-      detail: `Net ${net.cases} test case(s) across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`
+      detail: `Net ${plural4(net.cases, "test case")} across the diff. Per file: ${perFile((s) => s.casesAdded - s.casesRemoved)}.`
     });
   if (net.assertions < 0)
     findings.push({
       id: "assertions_dropped",
       title: "Assertion count dropped",
-      detail: `Net ${net.assertions} assertion(s) across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`
+      detail: `Net ${plural4(net.assertions, "assertion")} across test files. Per file: ${perFile((s) => s.assertionsAdded - s.assertionsRemoved)}.`
     });
   const loc = (kind, pick2) => testStats.flatMap((s) => pick2(s).map((l) => ({ path: s.path, line: l.line, message: `${kind}: ${l.text.trim().slice(0, 160)}` })));
   const lineFinding = (id, title2, kind, pick2) => {
@@ -16536,14 +16540,14 @@ function evaluateTamper(files, policy) {
       findings.push({ id, title: title2, detail: locations.map((l) => `\`${l.path}:${l.line}\` ${l.message.slice(kind.length + 2)}`).join("\n"), locations });
   };
   lineFinding("skip_added", "Tests skipped", "skip added", (s) => s.skips);
-  lineFinding("focus_added", "Focused test added (.only / fit) \u2014 other tests in the file stop running", "focus added", (s) => s.focus);
+  lineFinding("focus_added", "Focused test added (.only / fit) \u2014 the other tests in the file are skipped", "focus added", (s) => s.focus);
   lineFinding("assertions_commented_out", "Assertions commented out", "commented-out assertion", (s) => s.commentedOut);
   lineFinding("trivial_assertion_added", "Assertion that cannot fail", "trivial assertion", (s) => s.trivial);
   if (unanalyzed.length)
     findings.push({
       id: "diff_unanalyzed",
-      title: "Some files could not be analysed",
-      detail: `GitHub returned no patch for ${list5(unanalyzed)} (diff too large). Run with a full checkout to analyse them locally.`
+      title: "Some files could not be analyzed",
+      detail: `GitHub returned no patch for ${list5(unanalyzed)} (diff too large). Run with a full checkout (\`fetch-depth: 0\`) to analyze them locally.`
     });
   return { touched: touched2, testStats, net, addedTestCases, unanalyzed, findings };
 }
@@ -16606,15 +16610,15 @@ var FLAG_FIXES = {
   touched_workflows: "Have a human review the CI change, or move it to its own PR; agents should not edit what judges them.",
   touched_codeowners: "Have a code owner review the CODEOWNERS change in a separate, human-authored PR.",
   touched_lockfiles: "Check the dependency change is intended (`npm ci` / lockfile diff), or set `touched_lockfiles: off`.",
-  touched_tests: "Check each removed or rewritten test line is intended; keep the old assertions unless the behaviour changed.",
+  touched_tests: "Check each removed or rewritten test line is intended; keep the old assertions unless the behavior changed.",
   touched_test_config: "Review the test-config change: coverage thresholds, excluded paths and test globs can switch tests off.",
   touched_policy: "Change `.mainfast.yml` in a separate, human-reviewed PR; this PR is judged by the base branch's policy anyway.",
-  tests_deleted: "Restore the deleted test file, or explain in the PR why the behaviour it covered is gone.",
+  tests_deleted: "Restore the deleted test file, or explain in the PR why the behavior it covered is gone.",
   tests_removed: "Restore the removed test cases, or replace them with equivalent ones.",
   assertions_dropped: "Restore the dropped assertions; a test without them passes whatever the code does.",
   assertions_commented_out: "Uncomment the assertion and fix the code it was catching, or delete it on purpose with a reason.",
   skip_added: "Remove the skip marker and fix the test, or open an issue and link it next to the skip.",
-  focus_added: "Remove `.only` / `fit` / `fdescribe`; they stop every other test in the file.",
+  focus_added: "Remove `.only` / `fit` / `fdescribe`; they make the runner skip every other test in the file.",
   trivial_assertion_added: "Replace the always-true assertion with one that checks the code's result.",
   claim_tests_added_unbacked: "Add the tests the description promises, or correct the description.",
   claim_tests_pass_unbacked: "Wait for the test checks on this commit to pass, or correct the description.",
@@ -16645,14 +16649,14 @@ var RestClient = class {
     }
     return out;
   }
-  getPull(o, r, n) {
-    return this.raw("GET", `/repos/${enc2(o)}/${enc2(r)}/pulls/${n}`).then((x) => x.data);
+  getPull(o, r, n2) {
+    return this.raw("GET", `/repos/${enc2(o)}/${enc2(r)}/pulls/${n2}`).then((x) => x.data);
   }
-  listPullCommits(o, r, n) {
-    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/pulls/${n}/commits`, void 0, 250);
+  listPullCommits(o, r, n2) {
+    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/pulls/${n2}/commits`, void 0, 250);
   }
-  listPullFiles(o, r, n) {
-    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/pulls/${n}/files`);
+  listPullFiles(o, r, n2) {
+    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/pulls/${n2}/files`);
   }
   listCheckRunsForRef(o, r, ref, checkName) {
     const q = checkName ? `?check_name=${enc2(checkName)}&filter=latest` : "?filter=latest";
@@ -16680,11 +16684,11 @@ var RestClient = class {
       return void 0;
     }
   }
-  listIssueComments(o, r, n) {
-    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/issues/${n}/comments`);
+  listIssueComments(o, r, n2) {
+    return this.paginate(`/repos/${enc2(o)}/${enc2(r)}/issues/${n2}/comments`);
   }
-  createIssueComment(o, r, n, body) {
-    return this.raw("POST", `/repos/${enc2(o)}/${enc2(r)}/issues/${n}/comments`, { body }).then((x) => x.data);
+  createIssueComment(o, r, n2, body) {
+    return this.raw("POST", `/repos/${enc2(o)}/${enc2(r)}/issues/${n2}/comments`, { body }).then((x) => x.data);
   }
   updateIssueComment(o, r, id, body) {
     return this.raw("PATCH", `/repos/${enc2(o)}/${enc2(r)}/issues/comments/${id}`, { body }).then((x) => x.data);
@@ -16776,7 +16780,7 @@ async function fetchRequired(api, owner, repo, branch) {
   const snap = await fetchRequiredSources(api.gh, owner, repo, branch, { rulesets: false });
   const set = resolveRequiredChecks({ classic: snap.classic, branchRules: snap.branchRules });
   const sources = [];
-  const rulesNote = snap.notes.some((n) => n.includes("/rules/branches/"));
+  const rulesNote = snap.notes.some((n2) => n2.includes("/rules/branches/"));
   if (!rulesNote) {
     const any = snap.branchRules.some((r) => r.type === "required_status_checks" && (r.parameters?.required_status_checks ?? []).length > 0);
     sources.push(any ? "rulesets" : "rulesets (none required)");
@@ -16798,7 +16802,7 @@ async function collectSnapshot(api, repoFull, prNumber, policy, opts = {}) {
     fetchRequired(api, owner, repo, pr.baseRef)
   ]);
   const isTest = policy.testChecks.map(nameMatcher);
-  const headHasTests = [...headChecks.checkRuns.map((r) => r.name), ...headChecks.statuses.map((s) => s.context)].some((n) => isTest.some((m) => m(n)));
+  const headHasTests = [...headChecks.checkRuns.map((r) => r.name), ...headChecks.statuses.map((s) => s.context)].some((n2) => isTest.some((m) => m(n2)));
   const previousChecks = [];
   if (!headHasTests) {
     const earlier = commits.filter((c) => c.sha !== pr.headSha).reverse().slice(0, opts.previousCommitsToCheck ?? 3);
@@ -16914,6 +16918,7 @@ function mdCell(s, max = MAX_INLINE) {
 }
 
 // ../evidence/src/render.ts
+var plural5 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var MAX_SUMMARY = 65e3;
 var MAX_CELL_ITEM = 200;
 var MAX_LIST = 20;
@@ -16961,9 +16966,9 @@ function testsCell(r, e = MD) {
 function requiredCell(r, e = MD) {
   const c = r.checks;
   if (!c.evaluated) return "not evaluated (offline)";
-  const unknown2 = c.notes.some((n) => /classic required checks unknown/.test(n)) ? " (classic protection unreadable; list them in `required_checks`)" : "";
+  const unknown2 = c.notes.some((n2) => /classic required checks unknown/.test(n2)) ? " (could not read branch protection; list the checks in `required_checks`)" : "";
   if (!c.required.length)
-    return c.requiredSources.length ? `none configured${unknown2}` : "unknown (no ruleset/protection readable; set `required_checks`)";
+    return c.requiredSources.length ? `none configured${unknown2}` : "unknown (could not read rulesets or branch protection; list the checks in `required_checks`)";
   const ok = c.required.filter((x) => x.state === "success").length;
   const bad = c.required.filter((x) => x.state !== "success").map((x) => `${e.t(x.context, MAX_CELL_ITEM)}: ${e.t(x.state, 40)}`);
   return `${ok}/${c.required.length} passed${bad.length ? ` \u2014 ${joinCapped(bad, ", ")}` : ""}${unknown2}`;
@@ -16974,7 +16979,7 @@ function coverageCell(r, e = MD) {
   if (!c.present) return "no report";
   const format = e.t(String(c.format), 40);
   if (c.pct === void 0) return `no instrumented changed lines (${format})`;
-  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${c.notInReport.length} changed file(s) not in report` : ""}`;
+  return `${c.pct}% (${c.covered}/${c.instrumented} changed lines, ${format})${c.notInReport.length ? `; ${plural5(c.notInReport.length, "changed file")} not in report` : ""}`;
 }
 function tamperCell(r) {
   const t = r.tamper.touched;
@@ -16988,8 +16993,8 @@ function tamperCell(r) {
   ].filter(([, v]) => v.length).map(([k, v]) => `${k} (${v.length})`);
   const w = [];
   const s = r.tamper.testStats;
-  const skips = s.reduce((n, x) => n + x.skips.length + x.focus.length, 0);
-  if (skips) w.push(`${skips} skip/focus marker(s)`);
+  const skips = s.reduce((n2, x) => n2 + x.skips.length + x.focus.length, 0);
+  if (skips) w.push(`${plural5(skips, "skip/focus marker")}`);
   if (r.tamper.net.assertions < 0) w.push(`assertions ${r.tamper.net.assertions}`);
   if (r.tamper.net.cases < 0) w.push(`test cases ${r.tamper.net.cases}`);
   return [...parts, ...w].join(", ") || "nothing sensitive touched";
@@ -17007,7 +17012,7 @@ function renderCard(r, opts = {}) {
   const checkUrl = safeUrl(opts.checkUrl);
   if (checkUrl) meta2.push(`[check run](${checkUrl})`);
   lines.push(meta2.join(" \xB7 "), "");
-  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy gates agent PRs only (${mdCode("apply_to: all")} gates every PR).`, "");
+  if (!r.applies) lines.push(`${mdText(r.appliesReason)}; this repository's policy checks agent PRs only (set ${mdCode("apply_to: all")} to check every PR).`, "");
   if (r.applies) {
     lines.push("| Evidence | On this commit |", "|---|---|");
     lines.push(`| Tests ran | ${testsCell(r)} |`);
@@ -17015,7 +17020,7 @@ function renderCard(r, opts = {}) {
     lines.push(`| Changed-line coverage | ${coverageCell(r)} |`);
     lines.push(`| Sensitive files / test weakening | ${tamperCell(r)} |`);
     lines.push(`| Description claims | ${claimsCell(r)} |`);
-    lines.push(`| Diff size | +${r.size.additions} \u2212${r.size.deletions} in ${r.size.files} file(s) |`);
+    lines.push(`| Diff size | +${r.size.additions} \u2212${r.size.deletions} in ${plural5(r.size.files, "file")} |`);
     lines.push(`| Secret-like strings | ${r.secrets.length ? `${r.secrets.length} found` : "none"} |`, "");
     const section = (sev, heading) => {
       const fs = r.flags.filter((f) => f.severity === sev);
@@ -17042,7 +17047,7 @@ function renderCard(r, opts = {}) {
   }
   if (r.checks.notes.length) {
     lines.push("<details><summary>Not readable with this token</summary>", "");
-    for (const n of r.checks.notes.slice(0, 20)) lines.push(`- ${mdText(n)}`);
+    for (const n2 of r.checks.notes.slice(0, 20)) lines.push(`- ${mdText(n2)}`);
     lines.push("", "</details>", "");
   }
   if (r.policyWarnings.length) {
@@ -17050,7 +17055,7 @@ function renderCard(r, opts = {}) {
     for (const w of r.policyWarnings.slice(0, 50)) lines.push(`- ${mdText(w)}`);
     lines.push("", "</details>", "");
   }
-  lines.push(`<sub>Evidence is for ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. Policy read from the base branch. [What is this?](${DOCS_URL})</sub>`);
+  lines.push(`<sub>This evidence covers ${mdCode(r.pr.headSha, 80)} only and is re-evaluated on every push. The policy is read from the base branch. [What is this?](${DOCS_URL})</sub>`);
   const out = lines.join("\n");
   return out.length > MAX_SUMMARY ? `${out.slice(0, MAX_SUMMARY - 40)}
 
@@ -17061,7 +17066,7 @@ function renderText(r) {
   const out = [];
   out.push(`${PRODUCT_NAME}: ${badge(r)} \u2014 ${headline(r, (s) => e.t(s))}`);
   out.push(`head ${r.pr.headSha.slice(0, 7)} \xB7 ${r.provenance.agents.length ? r.provenance.agents.map((a) => e.t(a, 60)).join(", ") : "no agent detected"}`);
-  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy gates agent PRs only (apply_to: all gates every PR).`);
+  if (!r.applies) out.push(`${e.t(r.appliesReason)}; the policy checks agent PRs only (set apply_to: all to check every PR).`);
   if (r.applies) {
     const rows = [
       ["Tests ran", testsCell(r, e)],
@@ -17069,7 +17074,7 @@ function renderText(r) {
       ["Changed-line coverage", coverageCell(r, e)],
       ["Sensitive files", tamperCell(r)],
       ["Description claims", claimsCell(r, e)],
-      ["Diff size", `+${r.size.additions} \u2212${r.size.deletions} in ${r.size.files} file(s)`],
+      ["Diff size", `+${r.size.additions} \u2212${r.size.deletions} in ${plural5(r.size.files, "file")}`],
       ["Secret-like strings", r.secrets.length ? `${r.secrets.length} found` : "none"]
     ];
     out.push("");
@@ -17093,7 +17098,7 @@ function renderText(r) {
     for (const s of p.signals.slice(0, 30)) out.push(`  ${s.source}: ${e.t(s.detail)}`);
     if (p.humanCommits.length) out.push(`  commits with no agent signal: ${joinCapped(p.humanCommits.map((s) => s.slice(0, 7)), ", ")}`);
   }
-  for (const n of r.checks.notes.slice(0, 20)) out.push(`note: ${e.t(n)}`);
+  for (const n2 of r.checks.notes.slice(0, 20)) out.push(`note: ${e.t(n2)}`);
   for (const w of r.policyWarnings.slice(0, 50)) out.push(`policy warning: ${e.t(w)}`);
   return out.join("\n");
 }
@@ -17237,8 +17242,8 @@ function readGitAiNotes(cwd, shas, opts = {}) {
   if (opts.fetch) git2(cwd, ["fetch", "--quiet", "origin", `+${GIT_AI_NOTES_REF}:${GIT_AI_NOTES_REF}`], { allowFail: true });
   const notes = {};
   for (const sha of shas) {
-    const n = git2(cwd, ["notes", `--ref=${GIT_AI_NOTES_REF}`, "show", sha], { allowFail: true });
-    if (n.trim()) notes[sha] = n;
+    const n2 = git2(cwd, ["notes", `--ref=${GIT_AI_NOTES_REF}`, "show", sha], { allowFail: true });
+    if (n2.trim()) notes[sha] = n2;
   }
   return notes;
 }
@@ -17765,10 +17770,10 @@ function blame(a, path, lines) {
     if (m && inRange.has(m[1])) counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
   }
   let best;
-  let n = 0;
-  for (const [sha, c] of counts) if (c > n) {
+  let n2 = 0;
+  for (const [sha, c] of counts) if (c > n2) {
     best = sha;
-    n = c;
+    n2 = c;
   }
   return best;
 }
@@ -18009,16 +18014,16 @@ function bagOf(lines) {
 }
 function subtract(a, b) {
   const out = /* @__PURE__ */ new Map();
-  for (const [t, n] of a) {
-    const d = n - (b.get(t) ?? 0);
+  for (const [t, n2] of a) {
+    const d = n2 - (b.get(t) ?? 0);
     if (d > 0) out.set(t, d);
   }
   return out;
 }
 function total(bag) {
-  let n = 0;
-  for (const v of bag.values()) n += v;
-  return n;
+  let n2 = 0;
+  for (const v of bag.values()) n2 += v;
+  return n2;
 }
 function significant(line) {
   return /[A-Za-z0-9]/.test(line);
@@ -18070,15 +18075,15 @@ function isVersionOnly(h) {
   if (h.added.length === 0 || h.removed.length === 0) return false;
   const counts = /* @__PURE__ */ new Map();
   for (const line of h.removed) {
-    const n = normalize2(line);
-    counts.set(n, (counts.get(n) ?? 0) + 1);
+    const n2 = normalize2(line);
+    counts.set(n2, (counts.get(n2) ?? 0) + 1);
   }
   let paired = 0;
   for (const line of h.added) {
-    const n = normalize2(line);
-    const left = counts.get(n) ?? 0;
-    if (left > 0 && n.includes(PLACEHOLDER2)) {
-      counts.set(n, left - 1);
+    const n2 = normalize2(line);
+    const left = counts.get(n2) ?? 0;
+    if (left > 0 && n2.includes(PLACEHOLDER2)) {
+      counts.set(n2, left - 1);
       paired++;
     }
   }
@@ -18106,6 +18111,7 @@ function isGenerated(git4, rev, path) {
 }
 
 // ../intact/src/analyze.ts
+var plural6 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 var WINDOW = 2;
 var PARTIAL_THRESHOLD = 0.2;
@@ -18168,7 +18174,7 @@ function analyzeTwoParent(git4, report, opts) {
   report.changedFromAutoMerge = relevant.map(filePath).sort();
   report.conflictedFiles = [...auto.conflicted].filter((p) => !isIgnored(config2, p)).sort();
   const ignoredCount = auto.files.length - relevant.length;
-  if (ignoredCount > 0) report.notes.push(`${ignoredCount} file(s) differing from the automatic merge are ignored by config`);
+  if (ignoredCount > 0) report.notes.push(`${plural6(ignoredCount, "file")} differing from the automatic merge are ignored by config`);
   if (relevant.length === 0) {
     report.status = "clean";
     return;
@@ -18359,9 +18365,9 @@ function judgeHunk(h, blocks, ps, mLines) {
   const psBag = bagOf(ps.slice(Math.max(0, psFrom - WINDOW), psTo + WINDOW));
   const mBag = bagOf(mLines.slice(Math.max(0, mFrom - WINDOW), mTo + WINDOW));
   let missing = 0;
-  for (const [t, n] of addTok) missing += Math.min(n, Math.max(0, (psBag.get(t) ?? 0) - (mBag.get(t) ?? 0)));
+  for (const [t, n2] of addTok) missing += Math.min(n2, Math.max(0, (psBag.get(t) ?? 0) - (mBag.get(t) ?? 0)));
   let restored = 0;
-  for (const [t, n] of remTok) restored += Math.min(n, Math.max(0, (mBag.get(t) ?? 0) - (psBag.get(t) ?? 0)));
+  for (const [t, n2] of remTok) restored += Math.min(n2, Math.max(0, (mBag.get(t) ?? 0) - (psBag.get(t) ?? 0)));
   const sigAdded = h.added.some(significant);
   const sigRemoved = h.removed.some(significant);
   if (A > 0 && sigAdded) {
@@ -18625,6 +18631,7 @@ var STATUS_LABEL = {
   "not-a-merge": "skip  not a merge commit",
   error: "ERROR analysis failed"
 };
+var n = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 function lineRef(f) {
   if (!f.mergeLines) return f.path;
   const { start, end } = f.mergeLines;
@@ -18674,14 +18681,14 @@ function formatMerge(m) {
   if (m.strategy) facts.push(`via ${m.strategy}`);
   out.push(`      ${facts.join(", ")}`);
   if (m.conflictedFiles.length) out.push(`      conflicted: ${m.conflictedFiles.join(", ")}`);
-  for (const n of m.notes) out.push(`      note: ${n}`);
+  for (const n2 of m.notes) out.push(`      note: ${n2}`);
   if (m.error) out.push(`      error: ${m.error}`);
   for (const g of groupFindings(m.findings)) {
     out.push(...formatFinding(g[0]));
     if (g.length > 1) {
       const refs = g.slice(1).map((f) => f.mergeLines ? String(f.mergeLines.start) : "file");
       const shown = refs.slice(0, 30).join(", ") + (refs.length > 30 ? `, ... (${refs.length - 30} more)` : "");
-      out.push(`          and ${g.length - 1} more ${g[0].kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0].path} at line ${shown}`);
+      out.push(`          and ${g.length - 1} more ${g[0].kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0].path} at line${refs.length === 1 ? "" : "s"} ${shown}`);
       out.push(`          (a resolution that took one side's whole file looks like this; --json lists every hunk)`);
     }
   }
@@ -18718,7 +18725,7 @@ function formatHuman(r) {
   }
   const s = r.summary;
   out.push(
-    `summary: ${s.clean} clean, ${s.conflictResolution} resolved, ${s.withFindings} with findings${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} errors` : ""} | ${s.findings.error} error, ${s.findings.warning} warning, ${s.findings.notice} notice`
+    `summary: ${s.clean} clean, ${s.conflictResolution} resolved, ${s.withFindings} with findings${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} failed to analyze` : ""} | ${n(s.findings.error, "error")}, ${n(s.findings.warning, "warning")}, ${n(s.findings.notice, "notice")}`
   );
   return out.join("\n") + "\n";
 }
@@ -18733,14 +18740,14 @@ usage:
 
 options:
   --range A..B        check every merge commit in the range
-  --main <branch>     main branch (default: config main_branch, origin/HEAD, main, master)
+  --main <branch>     the main branch (default: config main_branch, origin/HEAD, main, master)
   --config <path>     config file (default: ${BRAND.configFile} at the repo root). An
                       owner/repo extends is read with GITHUB_TOKEN or GH_TOKEN when set
   --json              machine-readable report on stdout
   --fail-on <level>   lowest level that makes the exit code 1: error, warning (default), notice
   --strategy <name>   force remerge-diff, merge-tree or worktree (default: by git version)
   -C <dir>            run in <dir>
-  -h, --help          this help
+  -h, --help          show this help
   -v, --version       print the version
 
 exit codes: 0 clean, 1 findings, 2 error
@@ -18786,13 +18793,13 @@ function parseArgs2(argv) {
         break;
       case "--fail-on": {
         const v = value();
-        if (!LEVELS.includes(v) || v === "off") throw new UsageError(`--fail-on must be error, warning or notice`);
+        if (!LEVELS.includes(v) || v === "off") throw new UsageError(`--fail-on: expected error, warning or notice`);
         p.failOn = v;
         break;
       }
       case "--strategy": {
         const v = value();
-        if (v !== "remerge-diff" && v !== "merge-tree" && v !== "worktree") throw new UsageError(`unknown strategy: ${v}`);
+        if (v !== "remerge-diff" && v !== "merge-tree" && v !== "worktree") throw new UsageError(`unknown strategy: ${v} (expected remerge-diff, merge-tree or worktree)`);
         p.strategy = v;
         break;
       }
@@ -19131,7 +19138,7 @@ var alembic = {
         root,
         code: "multiple-heads",
         severity: labelled ? "warning" : "error",
-        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labelled ? " Some revisions carry branch_labels, so this may be an intentional multi-branch ledger." : ""),
+        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labelled ? " Some revisions set branch_labels, so the multiple heads may be intended." : ""),
         files: heads.map((h) => h.path),
         hint: `alembic merge -m "merge heads" ${heads.map((h) => h.revision).join(" ")}  (or re-parent the branch's revision onto main's head)`,
         // keyed on the count so a PR that adds a third head to a two-head main is still reported
@@ -19203,7 +19210,7 @@ var django = {
     const migs = migrations(tree, root);
     const app = migs[0]?.app ?? basename(dirname(root));
     const findings = [];
-    const names = new Set(migs.flatMap((m) => [m.name, ...m.replaces.filter(([a]) => a === app).map(([, n]) => n)]));
+    const names = new Set(migs.flatMap((m) => [m.name, ...m.replaces.filter(([a]) => a === app).map(([, n2]) => n2)]));
     for (const [num2, list5] of groupBy(migs, (m) => m.number)) {
       if (list5.length > 1 && /^\d{4}$/.test(num2))
         findings.push({
@@ -19234,13 +19241,13 @@ var django = {
       }
     }
     const dependedOn = /* @__PURE__ */ new Set();
-    for (const m of migs) for (const [a, n] of m.deps) if (a === app) dependedOn.add(n);
+    for (const m of migs) for (const [a, n2] of m.deps) if (a === app) dependedOn.add(n2);
     for (const m of migs) {
       if (!m.replaces.length) continue;
-      const replaced = m.replaces.filter(([a]) => a === app).map(([, n]) => n);
-      if (replaced.some((n) => dependedOn.has(n))) dependedOn.add(m.name);
-      if (dependedOn.has(m.name)) replaced.forEach((n) => dependedOn.add(n));
-      replaced.forEach((n) => dependedOn.add(n));
+      const replaced = m.replaces.filter(([a]) => a === app).map(([, n2]) => n2);
+      if (replaced.some((n2) => dependedOn.has(n2))) dependedOn.add(m.name);
+      if (dependedOn.has(m.name)) replaced.forEach((n2) => dependedOn.add(n2));
+      replaced.forEach((n2) => dependedOn.add(n2));
     }
     const leaves = migs.filter((m) => !dependedOn.has(m.name));
     if (leaves.length > 1)
@@ -19259,6 +19266,7 @@ var django = {
 };
 
 // ../migrations/src/frameworks/drizzle.ts
+var plural7 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var ZERO_ID = "00000000-0000-0000-0000-000000000000";
 function parseJournal(text) {
   if (text === void 0) return void 0;
@@ -19298,7 +19306,7 @@ var drizzle = {
         root,
         code: "journal-unreadable",
         severity: "error",
-        message: `${jp} is missing or is not valid JSON (unresolved merge markers?)`,
+        message: `${jp} is missing or is not valid JSON (check for leftover merge conflict markers)`,
         files: [jp],
         hint: "Resolve the journal: union the entries by tag and re-index idx sequentially.",
         key: `drizzle:${root}:unreadable`
@@ -19426,7 +19434,7 @@ var drizzle = {
         root: ctx.root,
         code: "journal-fork",
         severity,
-        message: `main added ${mainAdded.length} migration(s) since this branch forked (${missingFromHead.map((e) => e.tag).join(", ")}) and the branch added ${headAdded.length} (${headAdded.map((e) => e.tag).join(", ")}). The branch's snapshot was generated against a schema that is no longer main's.`,
+        message: `main added ${plural7(mainAdded.length, "migration")} since this branch forked (${missingFromHead.map((e) => e.tag).join(", ")}) and the branch added ${headAdded.length} (${headAdded.map((e) => e.tag).join(", ")}). The branch's snapshot was generated against a schema that is no longer main's.`,
         files: [jp],
         hint: "Merge main, union the journal entries by tag, re-index idx sequentially, and fix the branch snapshot's single prevId (or delete the branch migration and re-run drizzle-kit generate).",
         key: `drizzle:${ctx.root}:journal-fork`
@@ -19557,17 +19565,17 @@ var rails = {
           key: `rails:${root}:dupver:${v}`
         });
     }
-    for (const [n, l] of groupBy(migs, (m) => m.name)) {
+    for (const [n2, l] of groupBy(migs, (m) => m.name)) {
       if (l.length > 1)
         findings.push({
           framework: "rails",
           root,
           code: "duplicate-name",
           severity: "error",
-          message: `${l.length} migrations are named ${n}; Rails raises DuplicateMigrationNameError`,
+          message: `${l.length} migrations are named ${n2}; Rails raises DuplicateMigrationNameError`,
           files: l.map((m) => m.path),
           hint: "Rename the branch migration (file and class).",
-          key: `rails:${root}:dupname:${n}`
+          key: `rails:${root}:dupname:${n2}`
         });
     }
     return findings;
@@ -19761,6 +19769,7 @@ function analyzeTrees(opts) {
 }
 
 // ../migrations/src/report.ts
+var plural8 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var short = (sha) => sha.slice(0, 7);
 var icon = (f) => f.severity === "error" ? "error" : "warning";
 function toMarkdown(r, opts = {}) {
@@ -19770,11 +19779,11 @@ function toMarkdown(r, opts = {}) {
   lines.push(`### ${opts.title ?? PRODUCT}`);
   lines.push("");
   if (!r.roots.length) {
-    lines.push("No migration ledgers found.");
+    lines.push("No migrations found for a supported framework.");
     return lines.join("\n");
   }
   lines.push(
-    r.findings.length ? `**${errors2} error(s), ${warnings} warning(s)** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).` : `Migration ledgers stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
+    r.findings.length ? `**${plural8(errors2, "error")}, ${plural8(warnings, "warning")}** merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).` : `Migrations stay consistent after merging ${mdCode(r.head.ref, 200)} (${short(r.head.sha)}) into ${mdCode(r.main.ref, 200)} (${short(r.main.sha)}).`
   );
   lines.push("");
   if (r.findings.length) {
@@ -19787,7 +19796,7 @@ function toMarkdown(r, opts = {}) {
     lines.push("");
   }
   lines.push(
-    `<details><summary>Ledgers checked (${r.roots.length})</summary>
+    `<details><summary>Migration directories checked (${r.roots.length})</summary>
 
 ` + r.roots.map((x) => `- ${x.framework}: ${mdCode(x.root, 200)}${x.touched ? " (changed in this PR)" : ""}`).join("\n") + (r.preExisting.length ? `
 
@@ -19813,6 +19822,7 @@ function toText(r) {
 }
 
 // ../migrations/src/publish.ts
+var plural9 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 async function publish2(report, o) {
   const stale = !report.ok;
   const base = `/repos/${o.owner}/${o.repo}`;
@@ -19854,7 +19864,7 @@ Resolved: migrations are consistent with ${mdCode(report.main.ref)} at ${report.
     await o.gh.request("POST", `${base}/statuses/${report.head.sha}`, {
       state,
       context: STATUS_CONTEXT,
-      description: (stale ? `${errors2} migration error(s) against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
+      description: (stale ? `${plural9(errors2, "migration error")} against ${report.main.ref}` : `Migrations consistent with ${report.main.ref}`).slice(0, 140),
       target_url: o.targetUrl
     });
     result.status = state;
@@ -19863,8 +19873,9 @@ Resolved: migrations are consistent with ${mdCode(report.main.ref)} at ${report.
 }
 
 // ../migrations/src/recheck.ts
+var plural10 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var MAIN_REF = "refs/mainfast/main";
-var prRef = (n) => `refs/mainfast/pr/${n}`;
+var prRef = (n2) => `refs/mainfast/pr/${n2}`;
 async function recheckOpenPrs(o) {
   const remote = o.remote ?? "origin";
   const pulls = (await o.gh.paginate(
@@ -19874,7 +19885,7 @@ async function recheckOpenPrs(o) {
   if (!o.noFetch) {
     const fetch2 = (specs) => git3(o.repoDir, ["fetch", "--no-tags", "--quiet", remote, ...specs]);
     const mainSpec = `+refs/heads/${o.mainBranch}:${MAIN_REF}`;
-    const prSpec = (n) => `+refs/pull/${n}/head:${prRef(n)}`;
+    const prSpec = (n2) => `+refs/pull/${n2}/head:${prRef(n2)}`;
     try {
       fetch2([mainSpec, ...pulls.map((p) => prSpec(p.number))]);
     } catch {
@@ -19931,7 +19942,7 @@ function recheckMarkdown(entries, mainBranch) {
   const lines = [
     `### Open PRs re-checked against ${mdCode(mainBranch)}`,
     "",
-    `${entries.length} open PR(s) checked, ${stale.length} stale.`,
+    `${plural10(entries.length, "open PR")} checked, ${stale.length} stale.`,
     ""
   ];
   if (entries.length) {
@@ -20013,7 +20024,7 @@ async function main3(argv) {
     console.log(values.format === "json" ? JSON.stringify(entries, null, 2) : recheckMarkdown(entries, values["main-branch"]));
     return 0;
   }
-  console.error(`unknown command ${cmd}
+  console.error(`unknown command: ${cmd}
 
 ${USAGE2}`);
   return 2;
@@ -20318,12 +20329,12 @@ var OwnersApi = class {
     });
   }
   /** GET /repos/{o}/{r}/pulls/{n}. */
-  pull(n) {
-    return this.memo(`pull:${n}`, () => this.gh.get(`${this.base}/pulls/${n}`));
+  pull(n2) {
+    return this.memo(`pull:${n2}`, () => this.gh.get(`${this.base}/pulls/${n2}`));
   }
   /** GET /repos/{o}/{r}/pulls/{n}/files (paginated, capped by GitHub at 3000 files). */
-  prFiles(n) {
-    return this.memo(`files:${n}`, () => this.gh.paginate(`${this.base}/pulls/${n}/files?per_page=100`));
+  prFiles(n2) {
+    return this.memo(`files:${n2}`, () => this.gh.paginate(`${this.base}/pulls/${n2}/files?per_page=100`));
   }
   /** GET /repos/{o}/{r}/git/trees/{ref}?recursive=1 -> blob paths. */
   treePaths(ref) {
@@ -20431,9 +20442,9 @@ function level(key2, v) {
   return s;
 }
 function wholeNumber(key2, v, min, max) {
-  const n = Number(v);
-  if (v === "" || v === null || typeof v === "boolean" || !Number.isInteger(n) || n < min || n > max) throw new Error(`${key2}: expected a whole number ${min}..${max}`);
-  return n;
+  const n2 = Number(v);
+  if (v === "" || v === null || typeof v === "boolean" || !Number.isInteger(n2) || n2 < min || n2 > max) throw new Error(`${key2}: expected a whole number ${min}..${max}`);
+  return n2;
 }
 function fromSection(raw) {
   const cfg = { ...DEFAULT_CONFIG2 };
@@ -20467,6 +20478,7 @@ function configFromDoc2(doc) {
 }
 
 // ../owners/src/audit.ts
+var plural11 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var FIXES = {
   "unowned-files": "Add a CODEOWNERS line for these paths (see the suggested lines), or list them under `owners.ignore`.",
   "unknown-user": "The account was deleted or renamed: put the current login or a team in its place.",
@@ -20664,7 +20676,7 @@ var ownersIn = (rules) => rules.flatMap((r) => r.owners);
 function orgNote(org, checker, api) {
   const { usersUnchecked: u, teamsUnchecked: t } = checker;
   if (!u && !t) return void 0;
-  const what = [t ? `${t} team owner(s) (existence and write access)` : "", u ? `org membership of ${u} user owner(s)` : ""].filter(Boolean).join(" and ");
+  const what = [t ? `${plural11(t, "team owner")} (existence and write access)` : "", u ? `org membership of ${plural11(u, "user owner")}` : ""].filter(Boolean).join(" and ");
   const why = org === "refused" ? `the \`org-token\` was refused (${api.orgRefusal ?? "error"}); it needs Organization \u2192 Members: read for ${api.owner}` : "this needs a token with Organization \u2192 Members: read, which GITHUB_TOKEN cannot have; pass one as `org-token`";
   return `Not checked: ${what}: ${why}. Unchecked teams count as valid owners; user owners were still checked for existence and write access.`;
 }
@@ -20682,9 +20694,9 @@ async function dormancy(statuses, api, cfg, days, now, org) {
       let total2 = 0;
       let complete = true;
       for (const m of members2) {
-        const n = await api.reviewsSince(m, since);
-        if (n === void 0) complete = false;
-        else total2 += n;
+        const n2 = await api.reviewsSince(m, since);
+        if (n2 === void 0) complete = false;
+        else total2 += n2;
         if (total2 > 0) break;
       }
       st.reviews = total2 > 0 || complete ? total2 : void 0;
@@ -20769,13 +20781,13 @@ async function auditOwners(input) {
           code: "unowned-files",
           severity: cfg.requireOwners ? "error" : "warning",
           scope: "current",
-          message: `${unowned.length} changed file(s) have no code owner in \`${co.path}\` on \`${input.ref ?? "the base branch"}\` (the file GitHub uses to request reviews)`,
+          message: `${plural11(unowned.length, "changed file")} ${unowned.length === 1 ? "has" : "have"} no code owner in \`${co.path}\` on \`${input.ref ?? "the base branch"}\` (the file GitHub uses to request reviews)`,
           paths: unowned
         } : {
           code: "unowned-files",
           severity: "warning",
           scope: "current",
-          message: `${unowned.length} of ${needOwners.length} tracked files have no code owner; largest gaps: ${dirsOf(unowned).slice(0, 5).map(([d, n]) => `\`${d}\` (${n})`).join(", ")}`,
+          message: `${unowned.length} of ${needOwners.length} tracked files have no code owner; largest gaps: ${dirsOf(unowned).slice(0, 5).map(([d, n2]) => `\`${d}\` (${n2})`).join(", ")}`,
           paths: unowned.slice(0, 200)
         }
       );
@@ -20826,14 +20838,14 @@ async function auditOwners(input) {
     report.orgChecks = "untrusted-pr";
     if (checker.publicOnly)
       notes.push(
-        `This PR comes from a fork or from an author without write access, so owners were checked for public account existence only: team, org membership and repository access checks (and GitHub's own CODEOWNERS errors) would show private org data to the PR author. ${checker.publicOnly} owner(s) count as valid here; the scheduled audit checks them in full.`
+        `This PR comes from a fork or from an author without write access, so owners were checked for public account existence only: team, org membership and repository access checks (and GitHub's own CODEOWNERS errors) would show private org data to the PR author. ${plural11(checker.publicOnly, "owner")} count as valid here; the scheduled audit checks them in full.`
       );
     report.owners = [...checker.statuses.values()];
   } else if (checker && api) {
     report.orgChecks = await api.orgChecks();
     const note = orgNote(report.orgChecks, checker, api);
     if (note) notes.push(note);
-    if (checker.permUnknown) notes.push(`Repository permission of ${checker.permUnknown} user owner(s) could not be read (403); they count as valid.`);
+    if (checker.permUnknown) notes.push(`Repository permission of ${plural11(checker.permUnknown, "user owner")} could not be read (403); they count as valid.`);
     if (co && days > 0) {
       const sts = [...new Set(ownersIn(co.rules).map(key))].map((k) => checker.statuses.get(k)).filter((s) => !!s);
       await dormancy(sts, api, cfg, days, now, report.orgChecks);
@@ -20842,7 +20854,7 @@ async function auditOwners(input) {
       if (report.dormancy.capped) {
         const total2 = sts.filter((s) => s.reviews !== void 0).length;
         notes.push(
-          `Dormancy checked for ${total2} of ${total2 + report.dormancy.skipped} owner(s): stopped after ${report.dormancy.searches} search request(s) (${api.searchStop ?? `owners.maxSearches is ${cfg.maxSearches}`}). The order rotates weekly, so the next runs cover the rest.`
+          `Dormancy checked for ${total2} of ${plural11(total2 + report.dormancy.skipped, "owner")}: stopped after ${plural11(report.dormancy.searches, "search request")} (${api.searchStop ?? `owners.maxSearches is ${cfg.maxSearches}`}). The order rotates weekly, so the next runs cover the rest.`
         );
       }
       if (cfg.expandTeams && report.orgChecks !== "enabled" && sts.some((s) => s.kind === "team"))
@@ -20913,6 +20925,7 @@ async function loadConfigFromRepo(gh, owner, repo, ref) {
 }
 
 // ../owners/src/report.ts
+var plural12 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var MAX_PATHS = 50;
 var MAX_ROWS = 100;
 var MAX_MD = 65e3;
@@ -20936,15 +20949,15 @@ function headline2(r) {
   const current = r.findings.filter((f) => f.scope === "current");
   const proposed = r.findings.filter((f) => f.scope === "proposed");
   if (r.mode === "pr") {
-    const files = r.unowned.length ? `${r.unowned.length} of ${r.checkedFiles} changed file(s) have no code owner` : "every changed file has a code owner";
+    const files = r.unowned.length ? `${r.unowned.length} of ${plural12(r.checkedFiles, "changed file")} ${r.unowned.length === 1 ? "has" : "have"} no code owner` : "every changed file has a code owner";
     const pe = errors(proposed);
     const pw = proposed.length - pe;
-    const p = r.proposed ? proposed.length ? `; this PR's CODEOWNERS: ${pe} error(s), ${pw} warning(s)` : "; this PR's CODEOWNERS looks right" : "";
+    const p = r.proposed ? proposed.length ? `; this PR's CODEOWNERS: ${plural12(pe, "error")}, ${plural12(pw, "warning")}` : "; this PR's CODEOWNERS looks right" : "";
     return plainText(`${files}${p}`, 255, true);
   }
   const e = errors(current);
   return plainText(
-    current.length ? `${e} error(s), ${current.length - e} warning(s) in ${r.codeownersPath ?? "CODEOWNERS"}` : `${r.codeownersPath ?? "CODEOWNERS"} is healthy`,
+    current.length ? `${plural12(e, "error")}, ${plural12(current.length - e, "warning")} in ${r.codeownersPath ?? "CODEOWNERS"}` : `${r.codeownersPath ?? "CODEOWNERS"} is healthy`,
     255,
     true
   );
@@ -20983,7 +20996,7 @@ function toMarkdown2(r, o = {}) {
     out.push(`#### This PR's CODEOWNERS (${where})`, "");
     out.push(...proposed.length ? table(proposed) : ["No problems found: valid syntax, every owner can review, no dead or shadowed lines."], "");
   }
-  if (r.notes.length) out.push("**Not checked / notes**", "", ...r.notes.map((n) => `- ${mdCell(n, 1e3)}`), "");
+  if (r.notes.length) out.push("**Notes**", "", ...r.notes.map((n2) => `- ${mdCell(n2, 1e3)}`), "");
   const run = safeUrl(o.runUrl);
   out.push(`${run ? `[run](${run}) \xB7 ` : ""}[docs](${DOCS_URL3})`);
   const md = out.join("\n");
@@ -20999,7 +21012,7 @@ function toText2(r) {
     if (f.code === "unowned-files" && f.paths) for (const p of f.paths.slice(0, MAX_PATHS)) out.push(`  ${t(p)}`);
     if (f.hint) out.push(t(`  fix: ${f.hint}`));
   }
-  for (const n of r.notes) out.push(t(`note: ${n}`));
+  for (const n2 of r.notes) out.push(t(`note: ${n2}`));
   out.push(r.ok ? "ok" : "FAILED");
   return out.join("\n");
 }
@@ -21083,9 +21096,9 @@ async function main4(argv) {
     const probe = new OwnersApi(gh, owner, repo);
     let loadedPr;
     if (cmd === "pr") {
-      const n = Number(values.pr);
-      if (!Number.isInteger(n) || n <= 0) throw new Error("pr needs --pr N");
-      loadedPr = await probe.pull(n);
+      const n2 = Number(values.pr);
+      if (!Number.isInteger(n2) || n2 <= 0) throw new Error("pr needs --pr N");
+      loadedPr = await probe.pull(n2);
     }
     const baseRef = loadedPr ? loadedPr.base.ref : values.ref ?? await probe.defaultBranch();
     config2 ??= (await loadConfigFromRepo(gh, owner, repo, baseRef)).cfg;
@@ -21382,6 +21395,7 @@ function branchAllowed(t, branch) {
 }
 
 // ../rollcall/src/audit.ts
+var plural13 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 function requiredSet(s) {
   return resolveRequiredChecks({ classic: s.classic, branchRules: s.branchRules, rulesets: s.rulesets });
 }
@@ -21391,7 +21405,7 @@ var FIXES2 = {
   "stopped-reporting": "Find the commit that removed or renamed the job, then restore it or update the required list.",
   "matrix-name-mismatch": "Require each matrix leg by its full name, or add an `if: always()` gate job with the required name that fails unless every leg succeeded.",
   "skipped-as-success": "Make the required check a gate job with `if: always()` that fails when its dependencies did not succeed, or move the condition from the job into its steps.",
-  "path-filtered": "Drop the paths filter and skip inside the job (e.g. a paths-filter step + step conditions), or require a gate job that always runs.",
+  "path-filtered": "Drop the paths filter and skip inside the job (for example, a paths-filter step with step conditions), or require a gate job that always runs.",
   "branch-filtered": "Add this branch to the workflow's `pull_request` branches filter (or remove the filter).",
   "not-on-pull-request": "Add a `pull_request` trigger (and `merge_group` if you use a merge queue).",
   "app-mismatch": "Pin the requirement to the app that reports it (GitHub Actions is 15368 on github.com), or to any source.",
@@ -21432,7 +21446,7 @@ function similarity(a, b) {
   const jac = shared / Math.max(1, (/* @__PURE__ */ new Set([...tx, ...ty])).size);
   return Math.max(lev, jac);
 }
-var prList = (ns) => ns.map((n) => `#${n}`).join(", ");
+var prList = (ns) => ns.map((n2) => `#${n2}`).join(", ");
 var ALWAYS = /\b(always|failure|cancelled)\s*\(\s*\)/;
 var isMerged = (p) => (p.state ?? "merged") === "merged";
 var STALLED_MERGES_DAYS = 7;
@@ -21458,7 +21472,7 @@ function mergedWithout(context, missing) {
     code: "merged-without",
     severity: "warning",
     context,
-    message: `${missing.length} merged PR(s) have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
+    message: `${plural13(missing.length, "merged PR")} have no \`${context}\` result on their head commit (${prList(missing.slice(0, 10))}): merged by bypass, or the requirement was added after them`,
     evidence: missing.slice(0, 10)
   };
 }
@@ -21479,7 +21493,7 @@ function audit(s, opts = {}) {
     return { p, c, names };
   });
   const seenNames = /* @__PURE__ */ new Map();
-  for (const { p, names } of obs) for (const n of names) seenNames.set(n, [...seenNames.get(n) ?? [], p.number]);
+  for (const { p, names } of obs) for (const n2 of names) seenNames.set(n2, [...seenNames.get(n2) ?? [], p.number]);
   for (const w of workflows)
     if (w.error) findings.push({ code: "workflow-unparsable", severity: "warning", message: `\`${w.path}\` is not valid YAML: ${w.error}` });
   for (const r of set.notEnforced) {
@@ -21568,22 +21582,22 @@ function audit(s, opts = {}) {
     });
     const seen = pulls.length - by.missing.length;
     if (pulls.length && seen === 0) {
-      const matrixLegs = [...seenNames.keys()].filter((n) => n.startsWith(`${r.context} (`) && !requiredNames.has(n));
+      const matrixLegs = [...seenNames.keys()].filter((n2) => n2.startsWith(`${r.context} (`) && !requiredNames.has(n2));
       const staticLegs = workflows.flatMap((w) => w.jobs).filter((j) => j.matrix && j.rawName === r.context);
       if (matrixLegs.length || staticLegs.length) {
         findings.push({
           code: "matrix-name-mismatch",
           severity: "error",
           context: r.context,
-          message: `\`${r.context}\` is required, but the job is a matrix and reports ${matrixLegs.length ? matrixLegs.slice(0, 4).map((n) => `\`${n}\``).join(", ") : `\`${r.context} (\u2026)\``}. No check is ever named exactly \`${r.context}\`, so PRs wait for it ("Expected \u2014 Waiting for status to be reported") or get merged by bypass.`,
+          message: `\`${r.context}\` is required, but the job is a matrix and reports ${matrixLegs.length ? matrixLegs.slice(0, 4).map((n2) => `\`${n2}\``).join(", ") : `\`${r.context} (\u2026)\``}. No check is ever named exactly \`${r.context}\`, so PRs wait for it ("Expected \u2014 Waiting for status to be reported") or get merged by bypass.`,
           hint: `Require each matrix leg by its full name, or add a gate job (needs: ${staticLegs[0]?.id ?? "the matrix job"}, if: always()) named \`${r.context}\` that fails unless every leg succeeded.`
         });
       } else {
         const candidates = /* @__PURE__ */ new Set([
-          ...[...seenNames.keys()].filter((n) => !requiredNames.has(n)),
-          ...workflows.flatMap((w) => w.jobs).filter((j) => !/\$\{\{/.test(j.rawName) && !j.matrix && !j.reusable).map((j) => j.rawName).filter((n) => !requiredNames.has(n))
+          ...[...seenNames.keys()].filter((n2) => !requiredNames.has(n2)),
+          ...workflows.flatMap((w) => w.jobs).filter((j) => !/\$\{\{/.test(j.rawName) && !j.matrix && !j.reusable).map((j) => j.rawName).filter((n2) => !requiredNames.has(n2))
         ]);
-        const best = [...candidates].map((n) => ({ n, s: similarity(r.context, n) })).sort((a, b) => b.s - a.s)[0];
+        const best = [...candidates].map((n2) => ({ n: n2, s: similarity(r.context, n2) })).sort((a, b) => b.s - a.s)[0];
         if (best && best.s >= 0.5) {
           const on = seenNames.get(best.n)?.length ?? 0;
           findings.push({
@@ -21605,12 +21619,12 @@ function audit(s, opts = {}) {
       }
     } else if (pulls.length) {
       const missingStreak = (list5) => {
-        let n = 0;
+        let n2 = 0;
         for (const x of list5) {
           if (!missingAt.has(x.p.number)) break;
-          n++;
+          n2++;
         }
-        return n;
+        return n2;
       };
       const mergedObs = obs.filter((x) => isMerged(x.p));
       const streak = missingStreak(mergedObs);
@@ -21625,8 +21639,8 @@ function audit(s, opts = {}) {
         const recent = streak >= stoppedAfter ? mergedObs.slice(0, streak) : openFirst.slice(0, blockedOpen);
         const older = streak >= stoppedAfter ? mergedObs.slice(streak) : mergedObs;
         const reportedBefore = older.filter((x) => !missingAt.has(x.p.number)).length;
-        const appeared = [...seenNames.keys()].filter((n) => !requiredNames.has(n) && recent.every((x) => x.names.has(n)) && !older.some((x) => x.names.has(n)));
-        const best = appeared.map((n) => ({ n, s: similarity(r.context, n) })).filter((x) => x.s >= 0.5).sort((a, b) => b.s - a.s)[0];
+        const appeared = [...seenNames.keys()].filter((n2) => !requiredNames.has(n2) && recent.every((x) => x.names.has(n2)) && !older.some((x) => x.names.has(n2)));
+        const best = appeared.map((n2) => ({ n: n2, s: similarity(r.context, n2) })).filter((x) => x.s >= 0.5).sort((a, b) => b.s - a.s)[0];
         const onlyOpen = streak < stoppedAfter;
         if (!best && onlyPathFiltered(producers, workflows)) {
           if (mergedBy.missing.length) findings.push(mergedWithout(r.context, mergedBy.missing));
@@ -21665,7 +21679,7 @@ function audit(s, opts = {}) {
         evidence: mergedBy.failed.slice(0, 10)
       });
     const notDone = /* @__PURE__ */ new Set([...mergedBy.pending, ...mergedBy.stale]);
-    const pendingAtMerge = obs.map((x) => x.p.number).filter((n) => notDone.has(n));
+    const pendingAtMerge = obs.map((x) => x.p.number).filter((n2) => notDone.has(n2));
     if (pendingAtMerge.length)
       findings.push({
         code: "merged-while-pending",
@@ -21788,6 +21802,7 @@ function producesRequired(j, required2) {
 }
 
 // ../rollcall/src/collect.ts
+var plural14 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 async function soft2(notes, what, fn, fallback) {
   try {
     return await fn();
@@ -21843,7 +21858,7 @@ async function collect(o) {
       if (!obs.checkRuns.length && !obs.statuses.length) silent++;
       else pulls.push(obs);
     }
-    if (silent) notes.push(`${silent} open PR(s) had no check runs or statuses on their head yet and were not counted`);
+    if (silent) notes.push(`${plural14(silent, "open PR")} ${silent === 1 ? "had no check runs or statuses on its head yet and was" : "had no check runs or statuses on their head yet and were"} not counted`);
   }
   pulls.sort((x, y) => String(y.mergedAt ?? y.updatedAt ?? "").localeCompare(String(x.mergedAt ?? x.updatedAt ?? "")));
   const workflows = o.workflows ?? await fetchWorkflows(gh, owner, repo, branch, notes);
@@ -21872,9 +21887,9 @@ function level2(key2, v) {
   return s;
 }
 function int(key2, v, min, max) {
-  const n = Number(v);
-  if (!Number.isInteger(n) || n < min || n > max) throw new Error(`${CONFIG_SECTION4}.${key2}: expected ${min}..${max}`);
-  return n;
+  const n2 = Number(v);
+  if (!Number.isInteger(n2) || n2 < min || n2 > max) throw new Error(`${CONFIG_SECTION4}.${key2}: expected ${min}..${max}`);
+  return n2;
 }
 function fromSection2(raw) {
   const cfg = { ...DEFAULT_CONFIG3 };
@@ -21902,7 +21917,7 @@ function readLocalWorkflows(repoDir) {
   const rel = ".github/workflows";
   if (repoPathKind(repoDir, rel) !== "directory") return void 0;
   const out = [];
-  for (const f of (0, import_node_fs9.readdirSync)((0, import_node_path7.join)(repoDir, rel)).filter((n) => /\.ya?ml$/.test(n)).sort()) {
+  for (const f of (0, import_node_fs9.readdirSync)((0, import_node_path7.join)(repoDir, rel)).filter((n2) => /\.ya?ml$/.test(n2)).sort()) {
     try {
       const text = readRepoFile(repoDir, `${rel}/${f}`);
       if (text !== void 0) out.push({ path: `${rel}/${f}`, text });
@@ -21914,23 +21929,25 @@ function readLocalWorkflows(repoDir) {
 }
 
 // ../rollcall/src/report.ts
+var plural15 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var cellCode = (s) => mdCode(s).replace(/\|/g, "\\|");
-var prRefs = (ns) => ns.map((n) => `#${n}`).join(", ");
+var prRefs = (ns) => ns.map((n2) => `#${n2}`).join(", ");
 function rulesUnread(r) {
-  return !r.required.length && r.notes.some((n) => /\/(rules\/branches\/|rulesets)[^:]*: 403/.test(n));
+  return !r.required.length && r.notes.some((n2) => /\/(rules\/branches\/|rulesets)[^:]*: 403/.test(n2));
 }
 function title(r) {
   if (rulesUnread(r)) return "Required checks could not be read";
   const e = r.findings.filter((f) => f.severity === "error").length;
   const w = r.findings.length - e;
   return plainText(
-    r.findings.length ? `${e} error(s), ${w} warning(s) in ${r.required.length} required check(s)` : `${r.required.length} required check(s) report as intended`,
+    r.findings.length ? `${plural15(e, "error")}, ${plural15(w, "warning")} in ${plural15(r.required.length, "required check")}` : `${plural15(r.required.length, "required check")} report as intended`,
     255,
     true
   );
 }
 function sampleLine(r) {
-  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ""} PR(s)`;
+  const total2 = r.sampledPulls.length + r.sampledOpen.length;
+  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ""} ${total2 === 1 ? "PR" : "PRs"}`;
 }
 function toMarkdown3(r, o = {}) {
   const h = o.heading ?? "###";
@@ -21954,7 +21971,7 @@ function toMarkdown3(r, o = {}) {
       );
     lines.push("");
   }
-  if (r.notes.length) lines.push("<details><summary>Notes</summary>", "", ...r.notes.map((n) => `- ${mdText(n, 1e3)}`), "", "</details>", "");
+  if (r.notes.length) lines.push("<details><summary>Notes</summary>", "", ...r.notes.map((n2) => `- ${mdText(n2, 1e3)}`), "", "</details>", "");
   const run = safeUrl(o.runUrl);
   lines.push(
     `Sampled merged: ${prRefs(r.sampledPulls) || "none"}${r.sampledOpen.length ? ` \xB7 open: ${prRefs(r.sampledOpen)}` : ""}${run ? ` \xB7 [run](${run})` : ""} \xB7 [docs](${DOCS_URL4})`
@@ -21974,7 +21991,7 @@ function toText3(r) {
     out.push(`${f.severity.toUpperCase()} [${f.code}] ${f.message}`);
     if (f.hint) out.push(`  fix: ${f.hint}`);
   }
-  for (const n of r.notes) out.push(`note: ${n}`);
+  for (const n2 of r.notes) out.push(`note: ${n2}`);
   out.push(r.ok ? "ok" : "FAILED");
   return out.map((l) => plainText(l, 4e3, true)).join("\n");
 }
@@ -22088,10 +22105,10 @@ function parseReport(r) {
 // src/commands.ts
 var AUDIT_CHECKS = ["rollcall", "owners", "migrations", "evidence"];
 var AUDIT_NEEDS = {
-  rollcall: "A GitHub origin remote, and GITHUB_TOKEN or GH_TOKEN for a private repository. Branch protection also needs Administration: read. No checkout needed.",
-  owners: "Nothing for offline lint. With a GitHub origin remote and a token: the full audit, including whether owners exist and have write access.",
-  migrations: "A checkout with the main branch fetched. No token.",
-  evidence: "A checkout with the main branch fetched for local mode, which skips check-based evidence. For pr mode: a GitHub origin remote and a token."
+  rollcall: "A GitHub origin remote. A private repository also needs GITHUB_TOKEN or GH_TOKEN, and reading branch protection needs Administration: read. No checkout needed.",
+  owners: "Nothing for the offline lint. With a GitHub origin remote and a token it runs the full audit, which also checks that each owner exists and has write access.",
+  migrations: "A checkout with the main branch fetched. No token needed.",
+  evidence: "A checkout with the main branch fetched; this local run skips the evidence that comes from CI checks. To evaluate a pull request: a GitHub origin remote and a token."
 };
 function assemble(command, extra, r, text) {
   if (text) {
@@ -22128,12 +22145,12 @@ function auditArgs(root, o) {
       return ["check", "--repo", root, "--main", mainRef(root, o.main), "--format", "json"];
     case "evidence":
       if (o.pr !== void 0) {
-        if (!Number.isInteger(o.pr) || o.pr <= 0) throw new CliError("pr: expected a pull request number");
+        if (!Number.isInteger(o.pr) || o.pr <= 0) throw new CliError("--pr: expected a pull request number");
         return ["pr", "--repo", needRepo(), "--pr", String(o.pr), "--json"];
       }
       return ["local", "--base", mainRef(root, o.main), "--repo", root, "--json"];
     default:
-      throw new CliError(`unknown check: ${o.check}; one of ${AUDIT_CHECKS.join(", ")}`);
+      throw new CliError(`unknown check: ${o.check} (expected one of ${AUDIT_CHECKS.join(", ")})`);
   }
 }
 async function runAudit(o) {
@@ -22148,19 +22165,19 @@ var import_node_fs11 = require("node:fs");
 var import_node_path8 = require("node:path");
 
 // raw:../evidence/examples/workflows/evidence.yml
-var evidence_default = '# Copy to .github/workflows/evidence.yml.\n#\n# Two jobs on purpose:\n#  - pr (pull_request, same-repository PRs): re-evaluates on every push, edit and label change.\n#    Runs with the PR\'s own workflow file and an ordinary token; checks out the PR head only to\n#    diff it locally (nothing from it is run).\n#  - ci (workflow_run): re-evaluates once your CI finishes, so "tests ran on THIS sha" sees the\n#    final result, and gives fork PRs a card. workflow_run always runs THIS file from the default\n#    branch with a write token, so it never checks out or runs PR code: the diff, the policy\n#    (.mainfast.yml at the PR\'s base commit) and the checks all come from the API. The coverage\n#    artifact is data the PR\'s CI run produced: parsed, never executed.\n# Make the "Mainfast Evidence" check required in your ruleset to gate merges on it.\n# Never put ${{ github.event.* }} text (branch names, titles, commit messages) into a `run:` step.\nname: Evidence\n\non:\n  pull_request:\n    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]\n  workflow_run:\n    workflows: [CI] # the name of your test workflow\n    types: [completed]\n\npermissions: {}\n\njobs:\n  pr:\n    # Fork PRs get a read-only token here and could not post; the ci job covers them.\n    if: github.event_name == \'pull_request\' && github.event.pull_request.head.repo.full_name == github.repository\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n      checks: write\n      pull-requests: write\n      statuses: read # commit statuses (e.g. ci/circleci: \u2026) count as checks\n    concurrency:\n      group: evidence-pr-${{ github.event.pull_request.number }}\n      cancel-in-progress: true\n    steps:\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n        with:\n          fetch-depth: 0 # full history: local diff without GitHub\'s patch truncation, plus git-ai notes\n          ref: ${{ github.event.pull_request.head.sha }}\n          # credentials stay so the Action can fetch refs/notes/ai (git-ai) in a private repo\n      - uses: mainfast/evidence@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n          # Give CI a few minutes so the first card is not "no tests ran".\n          wait-for-checks: "600"\n\n  ci:\n    if: github.event_name == \'workflow_run\'\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n      checks: write\n      pull-requests: write\n      statuses: read # commit statuses (e.g. ci/circleci: \u2026) count as checks\n      actions: read # download the coverage artifact from the CI run\n    concurrency:\n      group: evidence-ci-${{ github.event.workflow_run.head_sha }}\n      cancel-in-progress: true\n    steps:\n      # No actions/checkout: this job holds a write token, so PR code never lands on its disk.\n      # Optional: changed-line coverage from the CI run\'s artifact (data only).\n      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2\n        continue-on-error: true\n        with:\n          name: coverage\n          path: coverage\n          run-id: ${{ github.event.workflow_run.id }}\n          github-token: ${{ github.token }}\n\n      - uses: mainfast/evidence@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }}\n          coverage-files: coverage/lcov.info\n          local-diff: "false" # no checkout in this job: the diff comes from the API\n';
+var evidence_default = '# Copy to .github/workflows/mainfast-evidence.yml.\n#\n# Two jobs on purpose:\n#  - pr (pull_request, same-repository PRs): re-evaluates on every push, edit and label change.\n#    Runs with the PR\'s own workflow file and an ordinary token; checks out the PR head only to\n#    diff it locally (nothing from it is run).\n#  - ci (workflow_run): re-evaluates once your CI finishes, so "tests ran on THIS sha" sees the\n#    final result, and gives fork PRs a card. workflow_run always runs THIS file from the default\n#    branch with a write token, so it never checks out or runs PR code: the diff, the policy\n#    (.mainfast.yml at the PR\'s base commit) and the checks all come from the API. The coverage\n#    artifact is data the PR\'s CI run produced: parsed, never executed.\n# Make the "Mainfast Evidence" check required in your ruleset to gate merges on it.\n# Never put ${{ github.event.* }} text (branch names, titles, commit messages) into a `run:` step.\nname: Evidence\n\non:\n  pull_request:\n    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]\n  workflow_run:\n    workflows: [CI] # the name of your test workflow\n    types: [completed]\n\npermissions: {}\n\njobs:\n  pr:\n    # Fork PRs get a read-only token here and could not post; the ci job covers them.\n    if: github.event_name == \'pull_request\' && github.event.pull_request.head.repo.full_name == github.repository\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n      checks: write\n      pull-requests: write\n      statuses: read # commit statuses (e.g. ci/circleci: \u2026) count as checks\n    concurrency:\n      group: evidence-pr-${{ github.event.pull_request.number }}\n      cancel-in-progress: true\n    steps:\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n        with:\n          fetch-depth: 0 # full history: local diff without GitHub\'s patch truncation, plus git-ai notes\n          ref: ${{ github.event.pull_request.head.sha }}\n          # credentials stay so the Action can fetch refs/notes/ai (git-ai) in a private repo\n      - uses: mainfast/evidence@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n          # Give CI a few minutes so the first card is not "no tests ran".\n          wait-for-checks: "600"\n\n  ci:\n    if: github.event_name == \'workflow_run\'\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n      checks: write\n      pull-requests: write\n      statuses: read # commit statuses (e.g. ci/circleci: \u2026) count as checks\n      actions: read # download the coverage artifact from the CI run\n    concurrency:\n      group: evidence-ci-${{ github.event.workflow_run.head_sha }}\n      cancel-in-progress: true\n    steps:\n      # No actions/checkout: this job holds a write token, so PR code never lands on its disk.\n      # Optional: changed-line coverage from the CI run\'s artifact (data only).\n      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2\n        continue-on-error: true\n        with:\n          name: coverage\n          path: coverage\n          run-id: ${{ github.event.workflow_run.id }}\n          github-token: ${{ github.token }}\n\n      - uses: mainfast/evidence@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }}\n          coverage-files: coverage/lcov.info\n          local-diff: "false" # no checkout in this job: the diff comes from the API\n';
 
 // raw:../intact/examples/mainfast-intact.yml
-var mainfast_intact_default = "# Copy to .github/workflows/mainfast-intact.yml\nname: Mainfast Intact\n\non:\n  pull_request:\n  push:\n    branches-ignore:\n      - main            # your default branch: PR merges into it are clean by construction\n\npermissions:\n  contents: read\n  checks: write         # optional: without it the action reports via job summary + annotations\n\njobs:\n  intact:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n        with:\n          fetch-depth: 0                                   # the check needs both parents and the merge base\n          ref: ${{ github.event.pull_request.head.sha || github.sha }}\n      - uses: mainfast/intact@v0\n        # Report-only by default. To block, uncomment with: and fail-on (error fails on dropped\n        # changes; warning also fails on evil merges and partial drops).\n        # with:\n        #   fail-on: warning\n        #   license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n";
+var mainfast_intact_default = "# Copy to .github/workflows/mainfast-intact.yml\nname: Mainfast Intact\n\non:\n  pull_request:\n  push:\n    branches-ignore:\n      - main            # your default branch: PR merges into it are clean by construction\n\npermissions:\n  contents: read\n  checks: write         # optional: without it the action reports via job summary + annotations\n\njobs:\n  intact:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n        with:\n          fetch-depth: 0                                   # the check needs both parents and the merge base\n          ref: ${{ github.event.pull_request.head.sha || github.sha }}\n      - uses: mainfast/intact@v0\n        # Report-only by default. To fail the job, uncomment `with:` and `fail-on:` (error fails\n        # on dropped changes; warning also fails on evil merges and partial drops).\n        # with:\n        #   fail-on: warning\n        #   license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n";
 
 // raw:../migrations/examples/mainfast-migrations.yml
 var mainfast_migrations_default = '# Copy to .github/workflows/mainfast-migrations.yml.\n#\n# pull_request:   checks this PR\'s migrations against the current main.\n# push to main:   re-checks every open PR, because main moving can make a clean PR stale.\n# Both set the commit status `mainfast/migrations` on the PR head (failure = stale, success = clean).\n# Only that status blocks a merge, and only once branch protection (or a ruleset) requires it:\n#   Settings > Branches > main > Require status checks > add "mainfast/migrations".\nname: Mainfast Migrations\non:\n  pull_request:\n  push:\n    branches: [main]\n\npermissions:\n  contents: read\n  pull-requests: write # sticky comment + stale label on PRs\n  statuses: write # the blocking mainfast/migrations commit status\n\nconcurrency:\n  group: mainfast-migrations-${{ github.event.pull_request.number || github.ref }}\n  cancel-in-progress: true\n\njobs:\n  migrations:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n        with:\n          fetch-depth: 0 # the merge-base must be reachable\n      - uses: mainfast/migrations@v0\n        # with:\n        #   status: false   # no commit status: comment + label only (then nothing blocks the merge)\n        #   license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n';
 
 // raw:../owners/examples/owners.yml
-var owners_default = "# Copy to .github/workflows/owners.yml.\n# No checkout step: Owners reads CODEOWNERS, .mainfast.yml and the tree through the API at the\n# right refs (the PR's base branch, the PR's head when it edits CODEOWNERS, the default branch\n# for the weekly audit), never from a checkout.\nname: Code owners\non:\n  pull_request: # changed files judged with the base CODEOWNERS; a CODEOWNERS edit is linted on its own\n  schedule:\n    - cron: \"23 6 * * 1\" # weekly full audit, with dormant owners (180 days by default)\n  workflow_dispatch:\n\npermissions:\n  contents: read # CODEOWNERS, .mainfast.yml, git tree\n  pull-requests: write # PR files + the one sticky comment\n\nconcurrency:\n  group: mainfast-owners-${{ github.event.pull_request.number || github.ref }}\n  cancel-in-progress: true\n\njobs:\n  owners:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: mainfast/owners@v0\n        with:\n          # Optional: org membership, team existence and team access. GITHUB_TOKEN cannot read\n          # them; a fine-grained token (or GitHub App token) with Organization > Members: read\n          # can. Without it those checks are skipped with one note. Never used on fork PRs.\n          org-token: ${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n";
+var owners_default = "# Copy to .github/workflows/mainfast-owners.yml.\n# No checkout step: Owners reads CODEOWNERS, .mainfast.yml and the tree through the API at the\n# right refs (the PR's base branch, the PR's head when it edits CODEOWNERS, the default branch\n# for the weekly audit), never from a checkout.\nname: Code owners\non:\n  pull_request: # changed files judged with the base CODEOWNERS; a CODEOWNERS edit is linted on its own\n  schedule:\n    - cron: \"23 6 * * 1\" # weekly full audit, with dormant owners (180 days by default)\n  workflow_dispatch:\n\npermissions:\n  contents: read # CODEOWNERS, .mainfast.yml, git tree\n  pull-requests: write # PR files + the one sticky comment\n\nconcurrency:\n  group: mainfast-owners-${{ github.event.pull_request.number || github.ref }}\n  cancel-in-progress: true\n\njobs:\n  owners:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: mainfast/owners@v0\n        with:\n          # Optional: org membership, team existence and team access. GITHUB_TOKEN cannot read\n          # them; a fine-grained token (or GitHub App token) with Organization > Members: read\n          # can. Without it those checks are skipped with one note. Never used on fork PRs.\n          org-token: ${{ secrets.MAINFAST_OWNERS_ORG_TOKEN }}\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n";
 
 // raw:../rollcall/examples/rollcall.yml
-var rollcall_default = '# Copy to .github/workflows/rollcall.yml.\n# No checkout step: Rollcall reads .mainfast.yml (default branch) and .github/workflows (audited\n# branch) through the API, so a manual run from any branch audits exactly what the schedule does.\nname: Required-check audit\non:\n  schedule:\n    - cron: "17 6 * * 1" # Mondays: also catches ruleset changes, which trigger no workflow event\n  workflow_dispatch: # run it by hand after editing a ruleset\n  branch_protection_rule: # classic branch protection created / edited / deleted\n  push:\n    branches: [main]\n    paths: [".github/workflows/**", ".mainfast.yml"]\n\npermissions:\n  contents: read # .mainfast.yml, workflow files, "Get a branch" (classic required checks)\n  pull-requests: read # the merged and open PRs to sample\n  statuses: read # commit statuses on each sampled PR head\n  checks: write # read check runs, post the Rollcall check run\n  issues: write # the one tracking issue\n\nconcurrency:\n  group: mainfast-rollcall\n  cancel-in-progress: true\n\njobs:\n  rollcall:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: mainfast/rollcall@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n          pulls: 30\n';
+var rollcall_default = '# Copy to .github/workflows/mainfast-rollcall.yml.\n# No checkout step: Rollcall reads .mainfast.yml (default branch) and .github/workflows (audited\n# branch) through the API, so a manual run from any branch audits exactly what the schedule does.\nname: Required-check audit\non:\n  schedule:\n    - cron: "17 6 * * 1" # Mondays: also catches ruleset changes, which trigger no workflow event\n  workflow_dispatch: # run it by hand after editing a ruleset\n  branch_protection_rule: # classic branch protection created / edited / deleted\n  push:\n    branches: [main]\n    paths: [".github/workflows/**", ".mainfast.yml"]\n\npermissions:\n  contents: read # .mainfast.yml, workflow files, "Get a branch" (classic required checks)\n  pull-requests: read # the merged and open PRs to sample\n  statuses: read # commit statuses on each sampled PR head\n  checks: write # read check runs, post the Rollcall check run\n  issues: write # the one tracking issue\n\nconcurrency:\n  group: mainfast-rollcall\n  cancel-in-progress: true\n\njobs:\n  rollcall:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: mainfast/rollcall@v0\n        with:\n          # license: ${{ secrets.MAINFAST_LICENSE }} # Pro: private repos with more than 5 active contributors\n          pulls: 30\n';
 
 // src/templates.ts
 var WORKFLOWS = { intact: mainfast_intact_default, migrations: mainfast_migrations_default, rollcall: rollcall_default, owners: owners_default, evidence: evidence_default };
@@ -22189,16 +22206,16 @@ function nextSteps(slugs) {
   const steps = ["Review the new files, commit them and open a pull request. Nothing has been pushed."];
   const required2 = slugs.filter((s) => s !== "rollcall" && s !== "migrations").map((s) => `"${product(s).checkName}"`);
   if (slugs.includes("migrations")) required2.push(`"${product("migrations").statusContext ?? "mainfast/migrations"}"`);
-  if (required2.length) steps.push(`To let a finding block a merge, require ${required2.join(", ")} in branch protection or a ruleset.`);
+  if (required2.length) steps.push(`To block merges on findings, make ${required2.join(", ")} required in branch protection or a ruleset.`);
   if (slugs.includes("evidence")) steps.push(`Evidence: set workflows: [CI] in ${workflowPath("evidence")} to the name of your test workflow.`);
-  if (slugs.includes("rollcall")) steps.push("Rollcall runs weekly and files one tracking issue; run it by hand from the Actions tab after a ruleset edit.");
-  if (slugs.includes("owners")) steps.push("Owners needs a CODEOWNERS file to judge; without one it reports that.");
+  if (slugs.includes("rollcall")) steps.push("Rollcall runs weekly and keeps one tracking issue open while it finds problems. After you change a ruleset, run it by hand from the Actions tab.");
+  if (slugs.includes("owners")) steps.push("Owners needs a CODEOWNERS file; until you add one, every run reports it as missing.");
   return steps;
 }
 function runInit(opts) {
   const root = repoRoot(opts.dir);
   const wanted = opts.checks?.length ? opts.checks : PRODUCT_SLUGS;
-  for (const c of wanted) if (!PRODUCT_SLUGS.includes(c)) throw new CliError(`unknown check: ${c}; one of ${PRODUCT_SLUGS.join(", ")}`);
+  for (const c of wanted) if (!PRODUCT_SLUGS.includes(c)) throw new CliError(`unknown check: ${c} (expected one of ${PRODUCT_SLUGS.join(", ")})`);
   const slugs = [...new Set(wanted)];
   const written = [];
   const overwritten = [];
@@ -22209,7 +22226,7 @@ function runInit(opts) {
     const abs = (0, import_node_path8.join)(root, rel);
     const exists = current !== void 0;
     if (current === content) return void unchanged.push(rel);
-    if (exists && !opts.force) return void skipped.push({ path: rel, reason: "exists with other content; use force to replace it" });
+    if (exists && !opts.force) return void skipped.push({ path: rel, reason: "exists with different content; use --force to replace it" });
     if (!opts.dryRun) {
       (0, import_node_fs11.mkdirSync)((0, import_node_path8.dirname)(abs), { recursive: true });
       (0, import_node_fs11.writeFileSync)(abs, content);
@@ -22280,15 +22297,15 @@ function runDoctor(dir) {
   const token = githubToken();
   const repo = githubRepo(root) ?? null;
   const codeowners = [".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"].find((f) => kindOf(f) === "file") ?? null;
-  if (!installed.length && workflowsOk) missing.push("No check is installed. Run: mainfast init");
-  if (!repo) missing.push("No GitHub origin remote, so audit cannot read the repository through the API.");
-  if (!token) missing.push("No GITHUB_TOKEN or GH_TOKEN: audit rollcall needs one for private repositories, audit owners falls back to offline lint.");
-  if (installed.includes("owners") && !codeowners) missing.push("Owners is installed but there is no CODEOWNERS file.");
+  if (!installed.length && workflowsOk) missing.push("No checks are installed. Run: mainfast init");
+  if (!repo) missing.push("No GitHub origin remote, so audit cannot read the repository through the GitHub API.");
+  if (!token) missing.push("No GITHUB_TOKEN or GH_TOKEN: audit rollcall needs one for a private repository, and audit owners runs only the offline lint.");
+  if (installed.includes("owners") && !codeowners) missing.push("Owners is installed but there is no CODEOWNERS file. Add .github/CODEOWNERS.");
   const ok = config2.ok && workflowsOk && installed.length > 0;
   const json = { schema: SCHEMA, command: "doctor", ok, repo: root, github_repo: repo, checks, config: config2, codeowners, token: { present: Boolean(token), source: token?.name ?? null }, missing, hosted_app: hostedAppUrl() };
   const lines = [
     ...PRODUCT_SLUGS.map((s) => `${checks[s].installed ? "installed" : "missing  "}  ${s}${checks[s].installed ? `  (${checks[s].files.join(", ")})` : ""}`),
-    `config     ${path ? config2.ok ? `${path} parses` : `${path} does not parse` : "none, defaults apply"}`,
+    `config     ${path ? config2.ok ? `${path} parses` : `${path} does not parse` : "none (defaults apply)"}`,
     `token      ${token ? `set (${token.name})` : "not set"}`,
     ...missing.length ? ["", "To do:", ...missing.map((m) => `- ${m}`)] : []
   ];
@@ -24543,10 +24560,10 @@ function capSize(inst, size) {
   const cap2 = Math.min(...caps.map((c) => c[0]));
   const parse4 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
-    const n = size(payload.value);
-    if (n > cap2 && !ctx?.skipChecks && ctx?.direction !== "backward") {
+    const n2 = size(payload.value);
+    if (n2 > cap2 && !ctx?.skipChecks && ctx?.direction !== "backward") {
       for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {
-        if (n > max && ch._zod.def.when(payload)) {
+        if (n2 > max && ch._zod.def.when(payload)) {
           const start = payload.issues.length;
           ch._zod.check(payload);
           payload.issues[start].continue = false;
@@ -28340,17 +28357,17 @@ var ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json, params) => arrayProcessor(inst, ctx, json, params);
   inst.element = def.element;
 }, {
-  min(n, params) {
-    return this.check(_minLength(n, params));
+  min(n2, params) {
+    return this.check(_minLength(n2, params));
   },
   nonempty(params) {
     return this.check(_minLength(1, params));
   },
-  max(n, params) {
-    return this.check(_maxLength(n, params));
+  max(n2, params) {
+    return this.check(_maxLength(n2, params));
   },
-  length(n, params) {
-    return this.check(_length(n, params));
+  length(n2, params) {
+    return this.check(_length(n2, params));
   },
   unwrap() {
     return this.element;
@@ -32090,14 +32107,14 @@ var str = (v) => typeof v === "string" && v ? v : void 0;
 var TOOLS = [
   {
     name: "init",
-    description: `WRITES FILES in the repository: the workflow of each chosen check under .github/workflows and a starter ${SUITE.configFile}. Never replaces a file with other content unless force is true. Does not commit, push or change branch protection. Pass dry_run: true to see what it would do without writing.`,
+    description: `WRITES FILES in the repository: the workflow of each chosen check under .github/workflows and a starter ${SUITE.configFile}. Never replaces a file that has different content unless force is true. Does not commit, push or change branch protection. Pass dry_run: true to see what it would do without writing.`,
     inputSchema: {
       type: "object",
       properties: {
         repo_path: repoPath,
         checks: { type: "array", items: { type: "string", enum: [...PRODUCT_SLUGS] }, description: "Default: all five." },
-        dry_run: { type: "boolean", description: "Report only, write nothing. Default: false." },
-        force: { type: "boolean", description: "Replace files that have other content. Default: false." }
+        dry_run: { type: "boolean", description: "Show what would change without writing anything. Default: false." },
+        force: { type: "boolean", description: "Replace files that have different content. Default: false." }
       },
       additionalProperties: false
     },
@@ -32112,7 +32129,7 @@ var TOOLS = [
   },
   {
     name: "check",
-    description: "Reads only. Runs Mainfast Intact locally on the merge commits in this branch: did a merge silently drop main's changes or add an unrelated edit? Run it before pushing a merge. ok is false when there are findings.",
+    description: "Reads only. Runs Mainfast Intact locally on the merge commits in this branch: did a merge silently drop main's changes or add an unrelated edit? Run it before pushing a merge. ok is false when a finding is at or above fail_on.",
     inputSchema: {
       type: "object",
       properties: {
@@ -32120,7 +32137,7 @@ var TOOLS = [
         commit: { type: "string", description: "One merge commit. Default: every merge commit in main..HEAD." },
         range: { type: "string", description: "A range, A..B." },
         main: { type: "string", description: "The main branch. Default: from the config or origin." },
-        fail_on: { type: "string", enum: ["error", "warning", "notice"], description: "Lowest level that counts as a finding. Default: warning." }
+        fail_on: { type: "string", enum: ["error", "warning", "notice"], description: "Lowest level that fails the check (ok false). Default: warning." }
       },
       additionalProperties: false
     },
@@ -32136,7 +32153,7 @@ var TOOLS = [
         check: { type: "string", enum: [...AUDIT_CHECKS] },
         main: { type: "string", description: "The main branch, for migrations and evidence." },
         pr: { type: "integer", description: "For evidence: evaluate this pull request through the API." },
-        offline: { type: "boolean", description: "For owners: lint offline even with a token." }
+        offline: { type: "boolean", description: "For owners: run the offline lint even when a token is set." }
       },
       required: ["check"],
       additionalProperties: false
@@ -32212,35 +32229,36 @@ async function runMcp() {
 }
 
 // src/main.ts
-var COMMON = "  -C <dir>     run in <dir> (default: the current directory)\n  --json       one JSON object on stdout\n  -h, --help   this help\n";
+var COMMON = "  -C <dir>     run in <dir> (default: the current directory)\n  --json       one JSON object on stdout\n  -h, --help   show this help\n";
 var HELP2 = {
   "": `mainfast ${VERSION}: set up and run GitHub checks that stop merges from silently breaking main.
 
 usage: mainfast <command> [options]
 
   init     write the workflows and a starter config into this repository
-  doctor   what is installed, whether the config parses, what is missing
+  doctor   show which checks are installed, check the config, list what is missing
   check    run Intact on the merge commits in this branch
-  audit    run rollcall, owners, migrations or evidence now; reads only
+  audit    run Rollcall, Owners, Migrations or Evidence once; posts nothing
   mcp      serve these commands as MCP tools over stdio
 
 Run mainfast <command> --help for its options. Every command takes --json.
 Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error.
-Token: GITHUB_TOKEN or GH_TOKEN, never printed.
+Token: read from GITHUB_TOKEN or GH_TOKEN, never printed.
 `,
   init: `usage: mainfast init [--checks intact,owners,...] [--dry-run] [--force]
 
-Writes .github/workflows/mainfast-<check>.yml for each check and a starter config. Replaces a file
-with other content only with --force. Does not commit, push or change branch protection.
+Writes .github/workflows/mainfast-<check>.yml for each check and a starter config. Leaves a file
+that already has different content alone unless you pass --force. Does not commit, push or change
+branch protection.
 
   --checks <a,b>  intact, migrations, rollcall, owners, evidence (default: all)
-  --dry-run       report what would change, write nothing
-  --force         replace files that have other content
+  --dry-run       show what would change without writing anything
+  --force         replace files that have different content
 ${COMMON}`,
   doctor: `usage: mainfast doctor
 
-Which checks are installed, whether the config parses, whether a token is set. Exit 1 if nothing is
-installed or the config does not parse.
+Shows which checks are installed, whether the config parses and whether a token is set. Exits 1 if no
+check is installed or the config does not parse.
 
 ${COMMON}`,
   check: `usage: mainfast check [<merge-commit>] [--range A..B] [--main <branch>] [--fail-on error|warning|notice]
@@ -32248,16 +32266,21 @@ ${COMMON}`,
 Runs Intact locally. With no commit or range, checks every merge commit in <main>..HEAD.
 Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail, 2 error.
 
+  <merge-commit>      check this one merge commit
+  --range A..B        check every merge commit in the range
+  --main <branch>     the main branch (default: from the config, else origin's default branch)
+  --fail-on <level>   lowest level that fails: error, warning (default) or notice
 ${COMMON}`,
   audit: `usage: mainfast audit <${AUDIT_CHECKS.join("|")}> [--main <branch>] [--pr <n>] [--offline]
 
-Runs one check now. Reads only: it posts nothing to GitHub.
+Runs one check once and prints the result. Posts nothing to GitHub.
 
+What each check needs:
 ${AUDIT_CHECKS.map((c) => `  ${c}: ${AUDIT_NEEDS[c]}`).join("\n")}
 
-  --main <branch>  the main branch, for migrations and evidence
-  --pr <n>         evidence: evaluate this pull request through the API
-  --offline        owners: lint offline even with a token
+  --main <branch>  the main branch (migrations and evidence)
+  --pr <n>         evidence: evaluate this pull request through the GitHub API
+  --offline        owners: run the offline lint even when a token is set
 ${COMMON}`,
   mcp: `usage: mainfast mcp
 
@@ -32303,8 +32326,8 @@ ${HELP2[""]}`);
     json = values.json ?? false;
     if (values.help) return process.stdout.write(HELP2[command]), 0;
     const dir = values.C ?? process.cwd();
-    const tooMany = (n) => {
-      if (positionals.length > n) throw new CliError(`unexpected argument: ${positionals[n]}`);
+    const tooMany = (n2) => {
+      if (positionals.length > n2) throw new CliError(`unexpected argument: ${positionals[n2]}`);
     };
     switch (command) {
       case "init":
@@ -32318,7 +32341,7 @@ ${HELP2[""]}`);
         return emit(await runCheck2({ dir, commit: positionals[0], range: values.range, main: values.main, failOn: values["fail-on"], text: !json }), json);
       case "audit": {
         tooMany(1);
-        if (!positionals[0]) throw new CliError(`audit needs a check: ${AUDIT_CHECKS.join(", ")}`);
+        if (!positionals[0]) throw new CliError(`audit needs a check name: ${AUDIT_CHECKS.join(", ")}`);
         return emit(await runAudit({ dir, check: positionals[0], main: values.main, pr: values.pr === void 0 ? void 0 : Number(values.pr), offline: values.offline, text: !json }), json);
       }
       case "mcp":
