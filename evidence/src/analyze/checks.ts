@@ -152,7 +152,7 @@ export function evaluateChecks(snap: PrSnapshot, policy: EvidencePolicy): Checks
   const contexts = [...new Set([...(snap.required?.contexts ?? []), ...policy.requiredChecks])].filter((c) => c !== CHECK_NAME);
   const requiredSources = [...(snap.required?.sources ?? []), ...(policy.requiredChecks.length ? [".mainfast.yml required_checks"] : [])];
   // What head reported for each required context: the shared classification (latest run per name
-  // on this sha, worst of run + status, app pins honoured), the same Mainfast Rollcall uses.
+  // on this sha, worst of run + status, app pins honored), the same Mainfast Rollcall uses.
   const keep = keeper(policy);
   const commit: CommitChecks = {
     sha: headSha,

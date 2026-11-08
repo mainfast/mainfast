@@ -88,7 +88,7 @@ Each flag that fires is one line on the card, with its fix.
 | Flag | Default | Fires when | Fix |
 |---|---|---|---|
 | `tests_not_run_on_head` | fail | no check run / status matching `test_checks` exists **for the head sha**. If tests ran on an earlier push, the card says which commit. Check data for any other sha is ignored. | Run the test workflow on this commit (push again or re-run CI); evidence from an earlier push does not count. |
-| `tests_failed` | fail | a test check on head failed, was cancelled, timed out or needs action | Fix the failing tests on this commit, or have the agent fix them, then push. |
+| `tests_failed` | fail | a test check on head failed, was canceled, timed out or needs action | Fix the failing tests on this commit, or have the agent fix them, then push. |
 | `tests_skipped` | warn | no test check on head failed or is running, but one or more concluded `skipped` (an `if:` or path filter); a skipped *required* check also fires `required_check_skipped` | Make the test job run on this commit (check its `if:` and path filters), or set `tests_skipped: fail` to require it. |
 | `tests_empty` | fail | test checks are green but their output says 0 tests / no test files | Point the test job at the real tests (glob, working directory, test discovery) so it runs more than zero. |
 | `required_check_missing` | fail | a required check (rulesets, classic protection if readable, `required_checks`) never reported on head | Restore the job name the ruleset requires (or update the ruleset after a rename), and drop path filters on required jobs. |
@@ -274,7 +274,7 @@ Output is plain text in a terminal and the Markdown card when piped; `--format` 
 codes: 0 pass or warn, 1 fail, 2 usage, 3 pending.
 
 The library (`dist/lib.cjs`) exports `parsePolicy`, `collectSnapshot`, `evaluate`, `renderCard` and
-`RestClient`. Every analyser is pure over a `PrSnapshot` (`src/types.ts`); `collectSnapshot` builds
+`RestClient`. Every analyzer is pure over a `PrSnapshot` (`src/types.ts`); `collectSnapshot` builds
 one from the REST API and `localSnapshot` from git. No `.d.ts` is shipped yet.
 
 `dist/` is committed for the Action (`dist/index.cjs` = the Action, `dist/cli.cjs`, `dist/lib.cjs`). Tests

@@ -130,18 +130,18 @@ The five GitHub Actions are **free and open source (MIT)** for everyone, at any 
   pushers only. If the API refuses, there is no notice.
 - If you have a key, save it as the `MAINFAST_LICENSE` secret and pass
   `license: ${{ secrets.MAINFAST_LICENSE }}` to each step. The key is checked once per run with
-  Polar's public licence-key endpoint (only the key and the organisation id are sent, with a
+  Polar's public license-key endpoint (only the key and the organization id are sent, with a
   3-second timeout); if Polar cannot be reached the key counts as valid. A key Polar reports as
   unknown, revoked or expired is ignored with one log line, as if no key were set.
 
 **Mainfast Pro is the hosted GitHub App**, at **$4 per active contributor per month**, for private
-organisations above 5 active contributors. It is free for public repositories and for private
-organisations up to that limit. You buy it from the [dashboard](https://app.mainfast.dev), through Polar.
+organizations above 5 active contributors. It is free for public repositories and for private
+organizations up to that limit. You buy it from the [dashboard](https://app.mainfast.dev), through Polar.
 
 | Pro includes | |
 | --- | --- |
 | **One install** | No workflow files; config from the base branch |
-| **Dashboard** | Findings and trends per organisation and repository |
+| **Dashboard** | Findings and trends per organization and repository |
 | **Alerts** | Slack and email for a drop on main, a stale migration ledger, a required check that stopped reporting, or a dormant code owner |
 | **Cached results** | A merge commit found clean is not checked twice |
 | **Support** | Answers to issues within one business day |
@@ -189,4 +189,4 @@ npm run brand:sync     # after editing brand.json
 npm run lint:actions   # actionlint on every example workflow
 ```
 
-Licences: [`LICENSES.md`](LICENSES.md).
+Licenses: [`LICENSES.md`](LICENSES.md).

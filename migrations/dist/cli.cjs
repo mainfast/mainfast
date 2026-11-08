@@ -7399,14 +7399,14 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
+      _benefitIds: "Polar license-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
         free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
         pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      _comment: "License keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
@@ -7823,13 +7823,13 @@ var alembic = {
     const referenced = new Set(revs.flatMap((r) => r.parents));
     const heads = revs.filter((r) => !referenced.has(r.revision));
     if (heads.length > 1) {
-      const labelled = revs.some((r) => r.branchLabels);
+      const labeled = revs.some((r) => r.branchLabels);
       findings.push({
         framework: "alembic",
         root,
         code: "multiple-heads",
-        severity: labelled ? "warning" : "error",
-        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labelled ? " Some revisions set branch_labels, so the multiple heads may be intended." : ""),
+        severity: labeled ? "warning" : "error",
+        message: `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(", ")}. \`alembic upgrade head\` will refuse to run.` + (labeled ? " Some revisions set branch_labels, so the multiple heads may be intended." : ""),
         files: heads.map((h) => h.path),
         hint: `alembic merge -m "merge heads" ${heads.map((h) => h.revision).join(" ")}  (or re-parent the branch's revision onto main's head)`,
         // keyed on the count so a PR that adds a third head to a two-head main is still reported

@@ -12,4 +12,4 @@ npm run lint:actions   # actionlint on the example workflows (needs actionlint)
 - Commit the rebuilt `dist/` bundles with your source change; CI fails if they differ.
 - Every brand string lives in `brand.json`. After editing it, run `npm run brand:sync`.
 - Tests never touch the network: global `fetch` throws unless a test mocks it.
-- Contributions are licensed under the MIT licence of this repository.
+- Contributions are licensed under the MIT license of this repository.

@@ -159,7 +159,7 @@ describe("runAction", () => {
       }
     });
 
-    it("still fails when a merge could not be analysed", () => {
+    it("still fails when a merge could not be analyzed", () => {
       const report = { summary: { errors: 1, findings: { error: 0, warning: 0, notice: 0 } } } as any;
       expect(exitCodeFor(report, "off")).toBe(2);
     });

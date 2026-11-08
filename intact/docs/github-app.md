@@ -65,9 +65,9 @@ results keyed by commit sha.
 
 The Actions stay free and never block over licensing. The App is what Pro sells.
 
-- Free: public repositories, and private organisations with up to 5 active contributors
+- Free: public repositories, and private organizations with up to 5 active contributors
   (opened a PR or pushed in the last 30 days; bots excluded).
-- Pro: private organisations above that, $4 per active contributor per month, billed through
+- Pro: private organizations above that, $4 per active contributor per month, billed through
   Polar. You buy it from the dashboard.
 - Over the limit without a subscription: 14 days in full, with a warning and the date from day 7.
   After that each hosted check fails as "Mainfast Pro needed" and checks nothing, and the dashboard

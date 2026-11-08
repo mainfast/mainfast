@@ -1,4 +1,4 @@
-// Token bags: how a hunk is recognised in a resolved file even when the
+// Token bags: how a hunk is recognized in a resolved file even when the
 // resolution reshaped the line (e.g. main's `timeout = 30` survives as
 // `timeout = 30  # per tenant`). The signal is the hunk's *delta tokens*: what it
 // added that was not there before, and what it removed.

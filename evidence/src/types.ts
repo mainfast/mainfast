@@ -1,7 +1,7 @@
 import type { RequiredCheck } from "@mainfast/shared/required-checks";
 
-// Normalised inputs and outputs. GitHub payloads are mapped into these in github/collect.ts,
-// and the local git path (diff/git.ts) produces the same shapes, so every analyser is pure.
+// Normalized inputs and outputs. GitHub payloads are mapped into these in github/collect.ts,
+// and the local git path (diff/git.ts) produces the same shapes, so every analyzer is pure.
 
 export type Severity = "fail" | "warn" | "off";
 

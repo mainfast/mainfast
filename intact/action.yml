@@ -19,16 +19,16 @@ inputs:
     description: "Token that can read the repository named in `extends:` (Pro) when it is private and not this repository. Default: token."
     default: ""
   fail-on:
-    description: "Lowest finding level that fails the step: error, warning, notice or off. With off, findings show as annotations and a neutral check run and the step passes; a merge that could not be analysed still fails."
+    description: "Lowest finding level that fails the step: error, warning, notice or off. With off, findings show as annotations and a neutral check run and the step passes; a merge that could not be analyzed still fails."
     default: "off"
   check-run:
     description: "auto (post a check run, or fall back to annotations if that is not allowed) or false (annotations only)."
     default: "auto"
   working-directory:
-    description: "Path of the repository checkout to analyse. Default: GITHUB_WORKSPACE."
+    description: "Path of the repository checkout to analyze. Default: GITHUB_WORKSPACE."
     default: ""
   license:
-    description: "Your Mainfast licence key (Pro, or the optional free key), from the MAINFAST_LICENSE secret. Optional: no feature needs it, and public repositories and private ones with up to 5 active contributors never need it. Checked once per run with Polar (only the key and the organisation id are sent; if Polar cannot be reached, the key counts as valid). Without a Pro key, a larger private repository gets one notice in the job summary; the result never changes."
+    description: "Your Mainfast license key (Pro, or the optional free key), from the MAINFAST_LICENSE secret. Optional: no feature needs it, and public repositories and private ones with up to 5 active contributors never need it. Checked once per run with Polar (only the key and the organization id are sent; if Polar cannot be reached, the key counts as valid). Without a Pro key, a larger private repository gets one notice in the job summary; the result never changes."
     default: ""
 outputs:
   status:

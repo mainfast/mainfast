@@ -392,7 +392,7 @@ describe('pr mode', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('honours owners.ignore and passes when everything is owned', async () => {
+  it('honors owners.ignore and passes when everything is owned', async () => {
     const { api: a } = api();
     const r = await auditOwners({
       repository: 'acme/app',

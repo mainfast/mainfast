@@ -18,7 +18,7 @@ export interface GitResult {
   status: number;
 }
 
-/** Config that keeps git output stable and free of user-specific behaviour. */
+/** Config that keeps git output stable and free of user-specific behavior. */
 const BASE_CONFIG = [
   "-c", "core.quotePath=false",
   "-c", "diff.noprefix=false",

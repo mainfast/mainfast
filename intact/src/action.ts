@@ -149,7 +149,7 @@ function workflowAnnotations(report: CheckReport): void {
 export async function runAction(): Promise<number> {
   const workspace = input("working-directory", process.env.GITHUB_WORKSPACE ?? process.cwd());
   const token = input("token", process.env.GITHUB_TOKEN ?? "");
-  // Report-only unless asked to block. A value we don't recognise blocks: a typo must not switch it off.
+  // Report-only unless asked to block. A value we don't recognize blocks: a typo must not switch it off.
   const failOnRaw = input("fail-on", "off") as Level;
   const failOn: Level = LEVELS.includes(failOnRaw) ? failOnRaw : "warning";
   const useCheckRun = input("check-run", "auto");

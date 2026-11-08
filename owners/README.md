@@ -122,7 +122,7 @@ instead of the API), `ref` (audit), `comment`, `comment-author`, `dormant-days`
 | search (any token) | dormancy, audit only, at most `maxSearches` requests | — |
 | **`org-token`** with Organization → Members: read | org membership (`owner-left-org`), team existence and access, team-member dormancy | skipped with **one note** ("needs a token with Organization → Members: read"); teams count as valid, users are still checked for existence and write access |
 
-`GITHUB_TOKEN` cannot have any organisation permission, so it can never see
+`GITHUB_TOKEN` cannot have any organization permission, so it can never see
 private org membership or teams. Owners does not guess (no per-owner "missing"
 findings); it says once what it did not check.
 
@@ -132,7 +132,7 @@ Either works; store the result as a secret (`MAINFAST_OWNERS_ORG_TOKEN`).
 
 - **Fine-grained personal access token** (github.com → Settings → Developer
   settings → Fine-grained tokens → Generate): *Resource owner* = the
-  organisation; *Repository access* = the repositories Owners runs in;
+  organization; *Repository access* = the repositories Owners runs in;
   *Repository permissions* → Metadata: Read-only (set automatically);
   *Organization permissions* → **Members: Read-only**. Nothing else. The org may
   need to approve it (Settings → Personal access tokens). It expires and is tied

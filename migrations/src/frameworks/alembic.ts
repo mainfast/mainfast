@@ -91,16 +91,16 @@ export const alembic: Framework = {
     const referenced = new Set(revs.flatMap((r) => r.parents));
     const heads = revs.filter((r) => !referenced.has(r.revision));
     if (heads.length > 1) {
-      const labelled = revs.some((r) => r.branchLabels);
+      const labeled = revs.some((r) => r.branchLabels);
       findings.push({
         framework: 'alembic',
         root,
         code: 'multiple-heads',
-        severity: labelled ? 'warning' : 'error',
+        severity: labeled ? 'warning' : 'error',
         message:
           `${heads.length} heads: ${heads.map((h) => `${h.revision} (${basename(h.path)})`).join(', ')}. ` +
           '`alembic upgrade head` will refuse to run.' +
-          (labelled ? ' Some revisions set branch_labels, so the multiple heads may be intended.' : ''),
+          (labeled ? ' Some revisions set branch_labels, so the multiple heads may be intended.' : ''),
         files: heads.map((h) => h.path),
         hint: `alembic merge -m "merge heads" ${heads.map((h) => h.revision).join(' ')}  (or re-parent the branch's revision onto main's head)`,
         // keyed on the count so a PR that adds a third head to a two-head main is still reported

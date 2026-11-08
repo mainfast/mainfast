@@ -7403,14 +7403,14 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
+      _benefitIds: "Polar license-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
         free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
         pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      _comment: "License keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",

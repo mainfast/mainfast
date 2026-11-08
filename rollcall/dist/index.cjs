@@ -7398,14 +7398,14 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
+      _benefitIds: "Polar license-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
         free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
         pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      _comment: "License keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
@@ -8975,7 +8975,7 @@ function polarValidator(opts = {}) {
     try {
       const res = await doFetch(`${api}/v1/customer-portal/license-keys/validate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-licence` },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-license` },
         body: JSON.stringify({ key, organization_id: org }),
         signal: ctrl.signal
       });
@@ -9104,8 +9104,8 @@ async function checkPlan(opts) {
       return { status: "unknown", reason: describe(e) };
     }
   }
-  const licence = opts.license?.trim() ?? "";
-  if (isPrivate !== true) return withKey({ status: "public" }, licence ? await checkKey(opts, licence) : void 0);
+  const license = opts.license?.trim() ?? "";
+  if (isPrivate !== true) return withKey({ status: "public" }, license ? await checkKey(opts, license) : void 0);
   const limit = SUITE.plan.freeActiveContributors;
   const key = `${owner}/${repo}`.toLowerCase();
   let active = memo.get(key);
@@ -9133,7 +9133,7 @@ async function checkPlan(opts) {
       }
     }
   }
-  const check = licence ? await checkKey(opts, licence, active) : void 0;
+  const check = license ? await checkKey(opts, license, active) : void 0;
   const state = keyState(check);
   if (state === "pro" || state === "unverified" && active > limit) return withKey({ status: "licensed", activeContributors: active }, check);
   if (active <= limit) return withKey({ status: "free", activeContributors: active }, check);
@@ -9150,11 +9150,11 @@ function withKey(result, check) {
   if (!state) return result;
   return state === "refused" ? { ...result, key: state, keyReason: check?.reason ?? "refused" } : { ...result, key: state };
 }
-async function checkKey(opts, licence, activeContributors) {
-  const h = keyHash(licence);
+async function checkKey(opts, license, activeContributors) {
+  const h = keyHash(license);
   const hit = keyMemo.get(h);
   if (hit) return hit;
-  const file = opts.cacheDir ? (0, import_node_path.join)(opts.cacheDir, `mainfast-licence-${h}.json`) : void 0;
+  const file = opts.cacheDir ? (0, import_node_path.join)(opts.cacheDir, `mainfast-license-${h}.json`) : void 0;
   if (file && (0, import_node_fs2.existsSync)(file)) {
     try {
       const c = JSON.parse((0, import_node_fs2.readFileSync)(file, "utf8"));
@@ -9165,7 +9165,7 @@ async function checkKey(opts, licence, activeContributors) {
     } catch {
     }
   }
-  const check = await (opts.validate ?? polarValidator())(licence, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
+  const check = await (opts.validate ?? polarValidator())(license, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
     () => ({ valid: true, offline: true })
   );
   keyMemo.set(h, check);

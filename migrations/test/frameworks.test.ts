@@ -196,7 +196,7 @@ describe('prisma', () => {
     expect(rep.findings[0]!.files).toEqual([`${M}/20260201000000_branch`, `${M}/20260301000000_main`]);
   });
 
-  it('passes when the branch migration is newer, and honours outOfOrder from .mainfast.yml on main', () => {
+  it('passes when the branch migration is newer, and honors outOfOrder from .mainfast.yml on main', () => {
     const ok = race(base, { [`${M}/20260201000000_main/migration.sql`]: 'x' }, { [`${M}/20260301000000_branch/migration.sql`]: 'y' });
     expect(analyze({ repo: ok.dir, mainRef: 'main', headRef: 'feature' }).findings).toEqual([]);
 
@@ -401,7 +401,7 @@ describe('outOfOrder severity per framework', () => {
 });
 
 describe('detection and config', () => {
-  it('finds several frameworks in one repo and honours ignore + explicit paths', () => {
+  it('finds several frameworks in one repo and honors ignore + explicit paths', () => {
     const r = race(
       {
         'api/alembic/env.py': '',

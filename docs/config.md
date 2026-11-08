@@ -132,5 +132,5 @@ run on a feature branch audits with the same policy as the scheduled run. `exten
 
 ## Not configuration
 
-The licence key is not in `.mainfast.yml` (the file is committed). Pass it as an action
+The license key is not in `.mainfast.yml` (the file is committed). Pass it as an action
 input from a secret: `license: ${{ secrets.MAINFAST_LICENSE }}`.

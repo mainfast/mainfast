@@ -53,8 +53,8 @@ jobs:
   the job passes. Many flagged merges are harmless (code rewritten or moved in the same
   file), so read a few before you block on them. `fail-on: error` fails the job on changes
   dropped outright. `fail-on: warning` also fails it on evil merges, partial drops, and
-  dropped version bumps and generated files. A merge that could not be analysed fails
-  either way, and so does a `fail-on` value Intact doesn't recognise.
+  dropped version bumps and generated files. A merge that could not be analyzed fails
+  either way, and so does a `fail-on` value Intact doesn't recognize.
 - Inputs: `fail-on` (`off` by default), `main-branch`, `config` (a file from the checkout instead of the
   base's `.mainfast.yml`), `config-token` (reads a private `extends:` repository),
   `check-run` (`auto`/`false`), `working-directory`, `license`. Outputs: `status`
@@ -77,7 +77,7 @@ npx mainfast check --fail-on error       # warnings do not fail
 ```
 
 Exit codes: `0` nothing failed, `1` findings at the `--fail-on` level or above (the CLI defaults
-to `warning`; the Action defaults to `off`), `2` could not analyse.
+to `warning`; the Action defaults to `off`), `2` could not analyze.
 
 ```
 FAIL  d3be58f Merge branch 'main' into feat
@@ -129,7 +129,7 @@ own dropped change. The CLI reads the file in your working tree. Full example:
 ### Lockfiles are checked by default
 
 `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Cargo.lock`, `go.sum` and the other
-lockfiles are analysed like any file. A merge that takes the branch's lockfile wholesale
+lockfiles are analyzed like any file. A merge that takes the branch's lockfile wholesale
 (`git checkout --ours package-lock.json`) can silently undo main's dependency bump, and that
 bump is often a security fix. The finding names the main commit that made it.
 

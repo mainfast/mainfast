@@ -143,7 +143,7 @@ describe("check evidence", () => {
     expect(report.flags.find((f) => f.id === "required_check_missing")!.detail).toMatch(/lint.*different app/);
   });
 
-  it("excludes its own check run from judgement", async () => {
+  it("excludes its own check run from judgment", async () => {
     const { report } = await runVariant({ checkRuns: (runs) => runs.push(checkRun("Mainfast Evidence", "failure")) });
     expect(report.checks.all.map((c) => c.name)).not.toContain("Mainfast Evidence");
   });
@@ -291,10 +291,10 @@ describe("policy from base branch", () => {
   it("turns a fail into a warning and lists unknown keys", async () => {
     const { report } = await runVariant({
       files: (fs) => fs.push(file(".github/workflows/ci.yml", [], ["# note"])),
-      config: "evidence:\n  flags:\n    touched_workflows: warn\n    made_up_flag: fail\n  colour: blue\n",
+      config: "evidence:\n  flags:\n    touched_workflows: warn\n    made_up_flag: fail\n  color: blue\n",
     });
     expect(report.flags.map((f) => `${f.id}:${f.severity}`)).toEqual(["touched_workflows:warn"]);
-    expect(report.policyWarnings).toEqual(["evidence.colour: unknown key, ignored", "evidence.flags.made_up_flag: unknown flag, ignored"]);
+    expect(report.policyWarnings).toEqual(["evidence.color: unknown key, ignored", "evidence.flags.made_up_flag: unknown flag, ignored"]);
   });
 
   it("non-agent PR: no flags, success", async () => {
