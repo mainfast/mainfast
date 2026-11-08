@@ -147,7 +147,7 @@ describe("plan gate", () => {
   });
 });
 
-// --- Polar licence-key validation (fake Polar; no real network) ----------------------------
+// --- Polar license-key validation (fake Polar; no real network) ----------------------------
 
 const ORG = "11111111-2222-3333-4444-555555555555";
 const IDS = { free: "ben-free", pro: "ben-pro" };
@@ -187,10 +187,10 @@ const lk = (over: Record<string, unknown> = {}) => ({
 
 const validator = (f: PolarFetch, timeoutMs = 50) => polarValidator({ fetch: f, api: API, organizationId: ORG, benefitIds: IDS, timeoutMs, now: () => NOW });
 
-describe("Polar licence validation", () => {
+describe("Polar license validation", () => {
   const ctx = { owner: "acme", repo: "app" };
 
-  it("sends only the key and the organisation id to the customer-portal validate endpoint", async () => {
+  it("sends only the key and the organization id to the customer-portal validate endpoint", async () => {
     const { f, calls } = fakePolar({ status: 200, body: lk() });
     expect(await validator(f)(`  ${KEY} `, ctx)).toEqual({ valid: true, offline: false, plan: "pro" });
     expect(calls).toHaveLength(1);
@@ -200,7 +200,7 @@ describe("Polar licence validation", () => {
     expect(Object.keys(calls[0]!.headers).some((h) => h.toLowerCase() === "authorization")).toBe(false);
   });
 
-  it("api and organisation come from MAINFAST_POLAR_API / MAINFAST_POLAR_ORG, else brand.json", async () => {
+  it("api and organization come from MAINFAST_POLAR_API / MAINFAST_POLAR_ORG, else brand.json", async () => {
     const { f, calls } = fakePolar({ status: 200, body: lk() });
     await polarValidator({ fetch: f, benefitIds: IDS, env: { MAINFAST_POLAR_API: `${API}/`, MAINFAST_POLAR_ORG: ORG } })(KEY, ctx);
     expect(calls[0]!.url).toBe(`${API}/v1/customer-portal/license-keys/validate`);
@@ -209,13 +209,13 @@ describe("Polar licence validation", () => {
     expect([SUITE.polar.apiEnv, SUITE.polar.orgEnv]).toEqual(["MAINFAST_POLAR_API", "MAINFAST_POLAR_ORG"]);
   });
 
-  it("the all-zeros placeholder organisation: nothing is sent, the key is accepted offline", async () => {
+  it("the all-zeros placeholder organization: nothing is sent, the key is accepted offline", async () => {
     const { f, calls } = fakePolar({ status: 404 });
     expect(await polarValidator({ fetch: f, env: { MAINFAST_POLAR_ORG: "00000000-0000-0000-0000-000000000000" } })(KEY, ctx)).toEqual({ valid: true, offline: true });
     expect(calls).toEqual([]);
   });
 
-  it("without an env override the brand.json organisation and api are used", async () => {
+  it("without an env override the brand.json organization and api are used", async () => {
     const { f, calls } = fakePolar({ status: 200, body: lk({ organization_id: SUITE.polar.organizationId, benefit_id: SUITE.plan.benefitIds.pro }) });
     expect(await polarValidator({ fetch: f, env: {} })(KEY, ctx)).toMatchObject({ valid: true, offline: false, plan: "pro" });
     expect(calls[0]!.url).toBe(`${SUITE.polar.api}/v1/customer-portal/license-keys/validate`);
@@ -235,13 +235,13 @@ describe("Polar licence validation", () => {
     expect(await validator(f)(KEY, ctx)).toEqual({ valid: true, offline: false, plan: "free" });
   });
 
-  it("refused: 404, revoked, disabled, expired, wrong organisation, unknown benefit", async () => {
+  it("refused: 404, revoked, disabled, expired, wrong organization, unknown benefit", async () => {
     const refused = async (a: Answer) => validator(fakePolar(a).f)(KEY, ctx);
     expect(await refused({ status: 404, body: { detail: "Not found" } })).toMatchObject({ valid: false, offline: false });
     expect((await refused({ status: 200, body: lk({ status: "revoked" }) })).reason).toContain('"revoked"');
     expect((await refused({ status: 200, body: lk({ status: "disabled" }) })).reason).toContain('"disabled"');
     expect((await refused({ status: 200, body: lk({ expires_at: "2026-10-01T00:00:00Z" }) })).reason).toContain("expired on 2026-10-01");
-    expect((await refused({ status: 200, body: lk({ organization_id: "99999999-0000-0000-0000-000000000000" }) })).reason).toContain("another Polar organisation");
+    expect((await refused({ status: 200, body: lk({ organization_id: "99999999-0000-0000-0000-000000000000" }) })).reason).toContain("another Polar organization");
     expect((await refused({ status: 200, body: lk({ benefit_id: "someone-elses-benefit" }) })).reason).toContain("unknown benefit");
     // a future expiry is fine
     expect(await refused({ status: 200, body: lk({ expires_at: "2027-01-01T00:00:00Z" }) })).toMatchObject({ valid: true, plan: "pro" });
@@ -263,7 +263,7 @@ describe("Polar licence validation", () => {
   });
 });
 
-describe("plan gate with licence keys", () => {
+describe("plan gate with license keys", () => {
   const priv = { repository: { private: true } };
   const run = (answer: Answer, pulls: unknown[], extra: Partial<Parameters<typeof checkPlan>[0]> = {}) => {
     const polar = fakePolar(answer);
@@ -356,7 +356,7 @@ describe("plan gate with licence keys", () => {
     const r3 = await planGate({ ...base, gh: client(routes({ pulls: six.map((l) => pr(l)) })).gh, event: priv, env, validate: validator(revoked.f) });
     expect(r3).toMatchObject({ status: "over-limit", key: "refused" });
     const logs = out.join("");
-    expect(logs.match(/licence key was not accepted/g)).toHaveLength(1);
+    expect(logs.match(/license key was not accepted/g)).toHaveLength(1);
     expect(logs).toContain("revoked");
     expect(readFileSync(summary, "utf8")).toContain("Mainfast Pro is $4");
 

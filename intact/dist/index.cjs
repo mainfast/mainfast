@@ -602,8 +602,8 @@ var require_Node = __commonJS({
         };
         const res = toJS.toJS(this, "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
     };
@@ -711,13 +711,13 @@ var require_Alias = __commonJS({
         const anchor = anchors2 && source && anchors2.get(source);
         return anchor ? anchor.count * anchor.aliasCount : 0;
       } else if (identity.isCollection(node)) {
-        let count = 0;
+        let count2 = 0;
         for (const item of node.items) {
           const c = getAliasCount(doc, item, anchors2);
-          if (c > count)
-            count = c;
+          if (c > count2)
+            count2 = c;
         }
-        return count;
+        return count2;
       } else if (identity.isPair(node)) {
         const kc = getAliasCount(doc, node.key, anchors2);
         const vc = getAliasCount(doc, node.value, anchors2);
@@ -938,8 +938,8 @@ var require_Collection = __commonJS({
         return this.items.every((node) => {
           if (!identity.isPair(node))
             return false;
-          const n = node.value;
-          return n == null || allowScalar && identity.isScalar(n) && n.value == null && !n.commentBefore && !n.comment && !n.tag;
+          const n2 = node.value;
+          return n2 == null || allowScalar && identity.isScalar(n2) && n2.value == null && !n2.commentBefore && !n2.comment && !n2.tag;
         });
       }
       /**
@@ -2382,18 +2382,18 @@ var require_stringifyNumber = __commonJS({
       const num = typeof value === "number" ? value : Number(value);
       if (!isFinite(num))
         return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
-      let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
-      if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
-        let i = n.indexOf(".");
+      let n2 = Object.is(value, -0) ? "-0" : JSON.stringify(value);
+      if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n2) && !n2.includes("e")) {
+        let i = n2.indexOf(".");
         if (i < 0) {
-          i = n.length;
-          n += ".";
+          i = n2.length;
+          n2 += ".";
         }
-        let d = minFractionDigits - (n.length - i - 1);
+        let d = minFractionDigits - (n2.length - i - 1);
         while (d-- > 0)
-          n += "0";
+          n2 += "0";
       }
-      return n;
+      return n2;
     }
     exports2.stringifyNumber = stringifyNumber;
   }
@@ -2637,9 +2637,9 @@ var require_binary = __commonJS({
         type ?? (type = Scalar.Scalar.BLOCK_LITERAL);
         if (type !== Scalar.Scalar.QUOTE_DOUBLE) {
           const lineWidth = Math.max(ctx.options.lineWidth - ctx.indent.length, ctx.options.minContentWidth);
-          const n = Math.ceil(str.length / lineWidth);
-          const lines = new Array(n);
-          for (let i = 0, o = 0; i < n; ++i, o += lineWidth) {
+          const n2 = Math.ceil(str.length / lineWidth);
+          const lines = new Array(n2);
+          for (let i = 0, o = 0; i < n2; ++i, o += lineWidth) {
             lines[i] = str.substr(o, lineWidth);
           }
           str = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
@@ -2911,11 +2911,11 @@ var require_int2 = __commonJS({
             str = `0x${str}`;
             break;
         }
-        const n2 = BigInt(str);
-        return sign === "-" ? BigInt(-1) * n2 : n2;
+        const n3 = BigInt(str);
+        return sign === "-" ? BigInt(-1) * n3 : n3;
       }
-      const n = parseInt(str, radix);
-      return sign === "-" ? -1 * n : n;
+      const n2 = parseInt(str, radix);
+      return sign === "-" ? -1 * n2 : n2;
     }
     function intStringify(node, radix, prefix) {
       const { value } = node;
@@ -3064,15 +3064,15 @@ var require_timestamp = __commonJS({
     function parseSexagesimal(str, asBigInt) {
       const sign = str[0];
       const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-      const num = (n) => asBigInt ? BigInt(n) : Number(n);
+      const num = (n2) => asBigInt ? BigInt(n2) : Number(n2);
       const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
       return sign === "-" ? num(-1) * res : res;
     }
     function stringifySexagesimal(node) {
       let { value } = node;
-      let num = (n) => n;
+      let num = (n2) => n2;
       if (typeof value === "bigint")
-        num = (n) => BigInt(n);
+        num = (n2) => BigInt(n2);
       else if (isNaN(value) || !isFinite(value))
         return stringifyNumber.stringifyNumber(node);
       let sign = "";
@@ -3092,7 +3092,7 @@ var require_timestamp = __commonJS({
           parts.unshift(value);
         }
       }
-      return sign + parts.map((n) => String(n).padStart(2, "0")).join(":").replace(/000000\d*$/, "");
+      return sign + parts.map((n2) => String(n2).padStart(2, "0")).join(":").replace(/000000\d*$/, "");
     }
     var intTime = {
       identify: (value) => typeof value === "bigint" || Number.isInteger(value),
@@ -3670,8 +3670,8 @@ var require_Document = __commonJS({
         };
         const res = toJS.toJS(this.contents, jsonArg ?? "", ctx);
         if (typeof onAnchor === "function")
-          for (const { count, res: res2 } of ctx.anchors.values())
-            onAnchor(res2, count);
+          for (const { count: count2, res: res2 } of ctx.anchors.values())
+            onAnchor(res2, count2);
         return typeof reviver === "function" ? applyReviver.applyReviver(reviver, { "": res }, "", res) : res;
       }
       /**
@@ -3748,12 +3748,12 @@ var require_errors = __commonJS({
         lineStr = prev + lineStr;
       }
       if (/[^ ]/.test(lineStr)) {
-        let count = 1;
+        let count2 = 1;
         const end = error.linePos[1];
         if (end?.line === line && end.col > col) {
-          count = Math.max(1, Math.min(end.col - col, 80 - ci));
+          count2 = Math.max(1, Math.min(end.col - col, 80 - ci));
         }
-        const pointer = " ".repeat(ci) + "^".repeat(count);
+        const pointer = " ".repeat(ci) + "^".repeat(count2);
         error.message += `:
 
 ${lineStr}
@@ -4563,9 +4563,9 @@ var require_resolve_block_scalar = __commonJS({
         if (!chomp && (ch === "-" || ch === "+"))
           chomp = ch;
         else {
-          const n = Number(ch);
-          if (!indent && n)
-            indent = n;
+          const n2 = Number(ch);
+          if (!indent && n2)
+            indent = n2;
           else if (error === -1)
             error = offset + i;
         }
@@ -5786,8 +5786,8 @@ var require_lexer = __commonJS({
           return this.buffer[i + 1] === "\n";
         return false;
       }
-      charAt(n) {
-        return this.buffer[this.pos + n];
+      charAt(n2) {
+        return this.buffer[this.pos + n2];
       }
       continueScalar(offset) {
         let ch = this.buffer[offset];
@@ -5821,8 +5821,8 @@ var require_lexer = __commonJS({
           end -= 1;
         return this.buffer.substring(this.pos, end);
       }
-      hasChars(n) {
-        return this.pos + n <= this.buffer.length;
+      hasChars(n2) {
+        return this.pos + n2 <= this.buffer.length;
       }
       setNext(state) {
         this.buffer = this.buffer.substring(this.pos);
@@ -5831,8 +5831,8 @@ var require_lexer = __commonJS({
         this.next = state;
         return null;
       }
-      peek(n) {
-        return this.buffer.substr(this.pos, n);
+      peek(n2) {
+        return this.buffer.substr(this.pos, n2);
       }
       *parseNext(next) {
         switch (next) {
@@ -5881,8 +5881,8 @@ var require_lexer = __commonJS({
             else
               break;
           }
-          const n = (yield* this.pushCount(dirEnd)) + (yield* this.pushSpaces(true));
-          yield* this.pushCount(line.length - n);
+          const n2 = (yield* this.pushCount(dirEnd)) + (yield* this.pushSpaces(true));
+          yield* this.pushCount(line.length - n2);
           this.pushNewline();
           return "stream";
         }
@@ -5920,9 +5920,9 @@ var require_lexer = __commonJS({
         if (!ch1 && !this.atEnd)
           return this.setNext("block-start");
         if ((ch0 === "-" || ch0 === "?" || ch0 === ":") && isEmpty(ch1)) {
-          const n = (yield* this.pushCount(1)) + (yield* this.pushSpaces(true));
+          const n2 = (yield* this.pushCount(1)) + (yield* this.pushSpaces(true));
           this.indentNext = this.indentValue + 1;
-          this.indentValue += n;
+          this.indentValue += n2;
           return "block-start";
         }
         return "doc";
@@ -5932,10 +5932,10 @@ var require_lexer = __commonJS({
         const line = this.getLine();
         if (line === null)
           return this.setNext("doc");
-        let n = yield* this.pushIndicators();
-        switch (line[n]) {
+        let n2 = yield* this.pushIndicators();
+        switch (line[n2]) {
           case "#":
-            yield* this.pushCount(line.length - n);
+            yield* this.pushCount(line.length - n2);
           // fallthrough
           case void 0:
             yield* this.pushNewline();
@@ -5958,9 +5958,9 @@ var require_lexer = __commonJS({
             return yield* this.parseQuotedScalar();
           case "|":
           case ">":
-            n += yield* this.parseBlockScalarHeader();
-            n += yield* this.pushSpaces(true);
-            yield* this.pushCount(line.length - n);
+            n2 += yield* this.parseBlockScalarHeader();
+            n2 += yield* this.pushSpaces(true);
+            yield* this.pushCount(line.length - n2);
             yield* this.pushNewline();
             return yield* this.parseBlockScalar();
           default:
@@ -5991,18 +5991,18 @@ var require_lexer = __commonJS({
             return yield* this.parseLineStart();
           }
         }
-        let n = 0;
-        while (line[n] === ",") {
-          n += yield* this.pushCount(1);
-          n += yield* this.pushSpaces(true);
+        let n2 = 0;
+        while (line[n2] === ",") {
+          n2 += yield* this.pushCount(1);
+          n2 += yield* this.pushSpaces(true);
           this.flowKey = false;
         }
-        n += yield* this.pushIndicators();
-        switch (line[n]) {
+        n2 += yield* this.pushIndicators();
+        switch (line[n2]) {
           case void 0:
             return "flow";
           case "#":
-            yield* this.pushCount(line.length - n);
+            yield* this.pushCount(line.length - n2);
             return "flow";
           case "{":
           case "[":
@@ -6046,10 +6046,10 @@ var require_lexer = __commonJS({
             end = this.buffer.indexOf("'", end + 2);
         } else {
           while (end !== -1) {
-            let n = 0;
-            while (this.buffer[end - 1 - n] === "\\")
-              n += 1;
-            if (n % 2 === 0)
+            let n2 = 0;
+            while (this.buffer[end - 1 - n2] === "\\")
+              n2 += 1;
+            if (n2 % 2 === 0)
               break;
             end = this.buffer.indexOf('"', end + 1);
           }
@@ -6203,11 +6203,11 @@ var require_lexer = __commonJS({
         yield* this.pushToIndex(end + 1, true);
         return inFlow ? "flow" : "doc";
       }
-      *pushCount(n) {
-        if (n > 0) {
-          yield this.buffer.substr(this.pos, n);
-          this.pos += n;
-          return n;
+      *pushCount(n2) {
+        if (n2 > 0) {
+          yield this.buffer.substr(this.pos, n2);
+          this.pos += n2;
+          return n2;
         }
         return 0;
       }
@@ -6222,16 +6222,16 @@ var require_lexer = __commonJS({
         return 0;
       }
       *pushIndicators() {
-        let n = 0;
+        let n2 = 0;
         loop: while (true) {
           switch (this.charAt(0)) {
             case "!":
-              n += yield* this.pushTag();
-              n += yield* this.pushSpaces(true);
+              n2 += yield* this.pushTag();
+              n2 += yield* this.pushSpaces(true);
               continue loop;
             case "&":
-              n += yield* this.pushUntil(isNotAnchorChar);
-              n += yield* this.pushSpaces(true);
+              n2 += yield* this.pushUntil(isNotAnchorChar);
+              n2 += yield* this.pushSpaces(true);
               continue loop;
             case "-":
             // this is an error
@@ -6245,15 +6245,15 @@ var require_lexer = __commonJS({
                   this.indentNext = this.indentValue + 1;
                 else if (this.flowKey)
                   this.flowKey = false;
-                n += yield* this.pushCount(1);
-                n += yield* this.pushSpaces(true);
+                n2 += yield* this.pushCount(1);
+                n2 += yield* this.pushSpaces(true);
                 continue loop;
               }
             }
           }
           break loop;
         }
-        return n;
+        return n2;
       }
       *pushTag() {
         if (this.charAt(1) === "<") {
@@ -6291,12 +6291,12 @@ var require_lexer = __commonJS({
         do {
           ch = this.buffer[++i];
         } while (ch === " " || allowTabs && ch === "	");
-        const n = i - this.pos;
-        if (n > 0) {
-          yield this.buffer.substr(this.pos, n);
+        const n2 = i - this.pos;
+        if (n2 > 0) {
+          yield this.buffer.substr(this.pos, n2);
           this.pos = i;
         }
-        return n;
+        return n2;
       }
       *pushUntil(test) {
         let i = this.pos;
@@ -6571,8 +6571,8 @@ var require_parser = __commonJS({
         }
         yield* this.pop();
       }
-      peek(n) {
-        return this.stack[this.stack.length - n];
+      peek(n2) {
+        return this.stack[this.stack.length - n2];
       }
       *pop(error) {
         const token = error ?? this.stack.pop();
@@ -7563,14 +7563,14 @@ var brand_default = {
       freeActiveContributors: 5,
       windowDays: 30,
       proPricePerContributorMonth: "$4",
-      _benefitIds: "Polar licence-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
+      _benefitIds: "Polar license-key benefit id of each plan: a key whose benefit_id is `pro` is Mainfast Pro; `free` is the optional free key (registered user, not Pro).",
       benefitIds: {
         free: "656e762a-ec6e-4e94-b7fd-f7ff879061ca",
         pro: "ea9b4fcb-3659-404e-bb62-9bec84fb119a"
       }
     },
     polar: {
-      _comment: "Licence keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
+      _comment: "License keys are checked with Polar's public customer-portal endpoint POST {api}/v1/customer-portal/license-keys/validate {key, organization_id}: no merchant secret. These are the live Polar values. While organizationId is all zeros no key is sent anywhere. apiEnv / orgEnv override both, e.g. the sandbox.",
       api: "https://api.polar.sh",
       organizationId: "3a0d763f-8fac-4df0-898a-a59eb60d3506",
       apiEnv: "MAINFAST_POLAR_API",
@@ -7582,7 +7582,7 @@ var brand_default = {
     intact: {
       productName: "Mainfast Intact",
       tagline: "prove merge commits did not silently drop changes from main",
-      description: "Prove merge commits did not silently drop changes from main (dropped hunks, evil merges).",
+      description: "Checks that merge commits did not silently drop changes from main (dropped hunks, evil merges).",
       npmName: "@mainfast/intact",
       cliName: "mainfast",
       configSection: "intact",
@@ -7608,7 +7608,7 @@ var brand_default = {
     rollcall: {
       productName: "Mainfast Rollcall",
       tagline: "required-check integrity audit",
-      description: "Audits required status checks (branch protection and rulesets) against what recent merged and open PRs actually reported \u2014 never-ran, skipped-as-success, renamed, path-filtered, merged while pending, drift \u2014 and keeps one tracking issue open while something is wrong.",
+      description: "Finds required status checks that do not protect anything (never ran, skipped but counted as passing, renamed, path-filtered, merged while pending, drift) by comparing branch protection and rulesets with what recent PRs reported. Keeps one tracking issue open while something is wrong.",
       npmName: "@mainfast/rollcall",
       cliName: "mainfast-rollcall",
       configSection: "rollcall",
@@ -7620,7 +7620,7 @@ var brand_default = {
     owners: {
       productName: "Mainfast Owners",
       tagline: "CODEOWNERS drift check",
-      description: "CODEOWNERS drift \u2014 unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns, dormant owners.",
+      description: "Finds CODEOWNERS drift: unowned files a PR touches, owners who left the org or lost write access, missing teams, dead patterns and dormant owners.",
       npmName: "@mainfast/owners",
       cliName: "mainfast-owners",
       configSection: "owners",
@@ -7632,7 +7632,7 @@ var brand_default = {
     evidence: {
       productName: "Mainfast Evidence",
       tagline: "proof, not review, for pull requests written by coding agents",
-      description: "Proof, not review, for pull requests written by coding agents. Posts an evidence card per head commit.",
+      description: "Proof, not review, for pull requests written by coding agents: checks that tests ran on the head commit, required checks passed and tests were not weakened. Posts an evidence card per head commit.",
       npmName: "@mainfast/evidence",
       cliName: "mainfast-evidence",
       configSection: "evidence",
@@ -7686,7 +7686,7 @@ function polarValidator(opts = {}) {
     try {
       const res = await doFetch(`${api}/v1/customer-portal/license-keys/validate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-licence` },
+        headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": `${SUITE.name.toLowerCase()}-license` },
         body: JSON.stringify({ key, organization_id: org }),
         signal: ctrl.signal
       });
@@ -7711,7 +7711,7 @@ function polarValidator(opts = {}) {
       return { valid: false, offline: false, reason: `Polar reports the key as ${JSON.stringify(String(lk.status))}` };
     }
     if (lk.organization_id && lk.organization_id !== org) {
-      return { valid: false, offline: false, reason: `the key belongs to another Polar organisation, not ${SUITE.name}` };
+      return { valid: false, offline: false, reason: `the key belongs to another Polar organization, not ${SUITE.name}` };
     }
     const plan = planForBenefit(lk.benefit_id, ids);
     if (!plan) return { valid: false, offline: false, reason: `the key is not a ${SUITE.name} key (unknown benefit)` };
@@ -7815,8 +7815,8 @@ async function checkPlan(opts) {
       return { status: "unknown", reason: describe(e) };
     }
   }
-  const licence = opts.license?.trim() ?? "";
-  if (isPrivate !== true) return withKey({ status: "public" }, licence ? await checkKey(opts, licence) : void 0);
+  const license = opts.license?.trim() ?? "";
+  if (isPrivate !== true) return withKey({ status: "public" }, license ? await checkKey(opts, license) : void 0);
   const limit = SUITE.plan.freeActiveContributors;
   const key = `${owner}/${repo}`.toLowerCase();
   let active = memo.get(key);
@@ -7844,7 +7844,7 @@ async function checkPlan(opts) {
       }
     }
   }
-  const check = licence ? await checkKey(opts, licence, active) : void 0;
+  const check = license ? await checkKey(opts, license, active) : void 0;
   const state = keyState(check);
   if (state === "pro" || state === "unverified" && active > limit) return withKey({ status: "licensed", activeContributors: active }, check);
   if (active <= limit) return withKey({ status: "free", activeContributors: active }, check);
@@ -7861,11 +7861,11 @@ function withKey(result, check) {
   if (!state) return result;
   return state === "refused" ? { ...result, key: state, keyReason: check?.reason ?? "refused" } : { ...result, key: state };
 }
-async function checkKey(opts, licence, activeContributors) {
-  const h = keyHash(licence);
+async function checkKey(opts, license, activeContributors) {
+  const h = keyHash(license);
   const hit = keyMemo.get(h);
   if (hit) return hit;
-  const file = opts.cacheDir ? (0, import_node_path.join)(opts.cacheDir, `mainfast-licence-${h}.json`) : void 0;
+  const file = opts.cacheDir ? (0, import_node_path.join)(opts.cacheDir, `mainfast-license-${h}.json`) : void 0;
   if (file && (0, import_node_fs2.existsSync)(file)) {
     try {
       const c = JSON.parse((0, import_node_fs2.readFileSync)(file, "utf8"));
@@ -7876,7 +7876,7 @@ async function checkKey(opts, licence, activeContributors) {
     } catch {
     }
   }
-  const check = await (opts.validate ?? polarValidator())(licence, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
+  const check = await (opts.validate ?? polarValidator())(license, { owner: opts.owner, repo: opts.repo, activeContributors }).catch(
     () => ({ valid: true, offline: true })
   );
   keyMemo.set(h, check);
@@ -7903,7 +7903,7 @@ async function planGate(opts) {
       runId: env.GITHUB_RUN_ID
     });
     if (result.key === "refused") {
-      process.stdout.write(`${SUITE.name}: the licence key was not accepted (${result.keyReason}); running as without a key. The check result is unaffected.
+      process.stdout.write(`${SUITE.name}: the license key was not accepted (${result.keyReason}); continuing without a key. The check result is unaffected.
 `);
     } else if (result.key === "free" && !result.notice) {
       appendSummary(`
@@ -8239,10 +8239,10 @@ function blame(a, path, lines) {
     if (m && inRange.has(m[1])) counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
   }
   let best;
-  let n = 0;
-  for (const [sha, c] of counts) if (c > n) {
+  let n2 = 0;
+  for (const [sha, c] of counts) if (c > n2) {
     best = sha;
-    n = c;
+    n2 = c;
   }
   return best;
 }
@@ -8670,16 +8670,16 @@ function bagOf(lines) {
 }
 function subtract(a, b) {
   const out = /* @__PURE__ */ new Map();
-  for (const [t, n] of a) {
-    const d = n - (b.get(t) ?? 0);
+  for (const [t, n2] of a) {
+    const d = n2 - (b.get(t) ?? 0);
     if (d > 0) out.set(t, d);
   }
   return out;
 }
 function total(bag) {
-  let n = 0;
-  for (const v of bag.values()) n += v;
-  return n;
+  let n2 = 0;
+  for (const v of bag.values()) n2 += v;
+  return n2;
 }
 function significant(line) {
   return /[A-Za-z0-9]/.test(line);
@@ -8731,15 +8731,15 @@ function isVersionOnly(h) {
   if (h.added.length === 0 || h.removed.length === 0) return false;
   const counts = /* @__PURE__ */ new Map();
   for (const line of h.removed) {
-    const n = normalize2(line);
-    counts.set(n, (counts.get(n) ?? 0) + 1);
+    const n2 = normalize2(line);
+    counts.set(n2, (counts.get(n2) ?? 0) + 1);
   }
   let paired = 0;
   for (const line of h.added) {
-    const n = normalize2(line);
-    const left = counts.get(n) ?? 0;
-    if (left > 0 && n.includes(PLACEHOLDER)) {
-      counts.set(n, left - 1);
+    const n2 = normalize2(line);
+    const left = counts.get(n2) ?? 0;
+    if (left > 0 && n2.includes(PLACEHOLDER)) {
+      counts.set(n2, left - 1);
       paired++;
     }
   }
@@ -8767,6 +8767,7 @@ function isGenerated(git, rev, path) {
 }
 
 // src/analyze.ts
+var plural = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 var WINDOW = 2;
 var PARTIAL_THRESHOLD = 0.2;
@@ -8829,7 +8830,7 @@ function analyzeTwoParent(git, report, opts) {
   report.changedFromAutoMerge = relevant.map(filePath).sort();
   report.conflictedFiles = [...auto.conflicted].filter((p) => !isIgnored(config, p)).sort();
   const ignoredCount = auto.files.length - relevant.length;
-  if (ignoredCount > 0) report.notes.push(`${ignoredCount} file(s) differing from the automatic merge are ignored by config`);
+  if (ignoredCount > 0) report.notes.push(`${plural(ignoredCount, "file")} differing from the automatic merge are ignored by config`);
   if (relevant.length === 0) {
     report.status = "clean";
     return;
@@ -9020,9 +9021,9 @@ function judgeHunk(h, blocks, ps, mLines) {
   const psBag = bagOf(ps.slice(Math.max(0, psFrom - WINDOW), psTo + WINDOW));
   const mBag = bagOf(mLines.slice(Math.max(0, mFrom - WINDOW), mTo + WINDOW));
   let missing = 0;
-  for (const [t, n] of addTok) missing += Math.min(n, Math.max(0, (psBag.get(t) ?? 0) - (mBag.get(t) ?? 0)));
+  for (const [t, n2] of addTok) missing += Math.min(n2, Math.max(0, (psBag.get(t) ?? 0) - (mBag.get(t) ?? 0)));
   let restored = 0;
-  for (const [t, n] of remTok) restored += Math.min(n, Math.max(0, (mBag.get(t) ?? 0) - (psBag.get(t) ?? 0)));
+  for (const [t, n2] of remTok) restored += Math.min(n2, Math.max(0, (mBag.get(t) ?? 0) - (psBag.get(t) ?? 0)));
   const sigAdded = h.added.some(significant);
   const sigRemoved = h.removed.some(significant);
   if (A > 0 && sigAdded) {
@@ -9282,6 +9283,7 @@ async function loadConfigAtRev(git, root, rev, gh) {
 }
 
 // src/report.ts
+var plural2 = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 var LEVEL_LABEL = { error: "ERROR", warning: "WARN ", notice: "NOTE ", off: "OFF  " };
 var STATUS_LABEL = {
   clean: "ok    clean (identical to the automatic merge)",
@@ -9291,6 +9293,7 @@ var STATUS_LABEL = {
   "not-a-merge": "skip  not a merge commit",
   error: "ERROR analysis failed"
 };
+var n = (count2, word) => `${count2} ${word}${count2 === 1 ? "" : "s"}`;
 function lineRef(f) {
   if (!f.mergeLines) return f.path;
   const { start, end } = f.mergeLines;
@@ -9340,14 +9343,14 @@ function formatMerge(m) {
   if (m.strategy) facts.push(`via ${m.strategy}`);
   out.push(`      ${facts.join(", ")}`);
   if (m.conflictedFiles.length) out.push(`      conflicted: ${m.conflictedFiles.join(", ")}`);
-  for (const n of m.notes) out.push(`      note: ${n}`);
+  for (const n2 of m.notes) out.push(`      note: ${n2}`);
   if (m.error) out.push(`      error: ${m.error}`);
   for (const g of groupFindings(m.findings)) {
     out.push(...formatFinding(g[0]));
     if (g.length > 1) {
       const refs = g.slice(1).map((f) => f.mergeLines ? String(f.mergeLines.start) : "file");
       const shown = refs.slice(0, 30).join(", ") + (refs.length > 30 ? `, ... (${refs.length - 30} more)` : "");
-      out.push(`          and ${g.length - 1} more ${g[0].kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0].path} at line ${shown}`);
+      out.push(`          and ${g.length - 1} more ${g[0].kind} hunk${g.length === 2 ? "" : "s"} like it in ${g[0].path} at line${refs.length === 1 ? "" : "s"} ${shown}`);
       out.push(`          (a resolution that took one side's whole file looks like this; --json lists every hunk)`);
     }
   }
@@ -9384,7 +9387,7 @@ function formatHuman(r) {
   }
   const s = r.summary;
   out.push(
-    `summary: ${s.clean} clean, ${s.conflictResolution} resolved, ${s.withFindings} with findings${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} errors` : ""} | ${s.findings.error} error, ${s.findings.warning} warning, ${s.findings.notice} notice`
+    `summary: ${s.clean} clean, ${s.conflictResolution} resolved, ${s.withFindings} with findings${s.unsupported ? `, ${s.unsupported} unsupported` : ""}${s.errors ? `, ${s.errors} failed to analyze` : ""} | ${n(s.findings.error, "error")}, ${n(s.findings.warning, "warning")}, ${n(s.findings.notice, "notice")}`
   );
   return out.join("\n") + "\n";
 }
@@ -9392,14 +9395,14 @@ function formatMarkdown(r) {
   const s = r.summary;
   const out = [];
   const failed = s.findings.error + s.findings.warning > 0 || s.errors > 0;
-  out.push(`## ${BRAND.productName}: ${failed ? "merge dropped or invented changes" : "merges intact"}`);
+  out.push(`## ${BRAND.productName}: ${failed ? "a merge dropped changes or added unexpected ones" : "merges intact"}`);
   out.push("");
-  out.push(`${r.merges.length} merge commit(s) checked${r.range ? ` in \`${r.range}\`` : ""}. ${s.findings.error} error, ${s.findings.warning} warning, ${s.findings.notice} notice.`);
+  out.push(`${plural2(r.merges.length, "merge commit")} checked${r.range ? ` in \`${r.range}\`` : ""}. ${n(s.findings.error, "error")}, ${n(s.findings.warning, "warning")}, ${n(s.findings.notice, "notice")}.`);
   out.push("");
   for (const m of r.merges) {
     out.push(`### \`${m.merge.short}\` ${escapeMd(m.merge.subject)}: ${m.status}`);
     if (m.conflictedFiles.length) out.push(`Conflicted: ${m.conflictedFiles.map((p) => `\`${p}\``).join(", ")}`);
-    for (const n of m.notes) out.push(`> ${escapeMd(n)}`);
+    for (const n2 of m.notes) out.push(`> ${escapeMd(n2)}`);
     if (m.error) out.push(`> error: ${escapeMd(m.error)}`);
     if (m.findings.length) {
       out.push("");
@@ -9415,7 +9418,7 @@ function formatMarkdown(r) {
         }
         if (g.length > 1) {
           const refs = g.slice(1).map((x) => x.mergeLines ? String(x.mergeLines.start) : "file").slice(0, 30);
-          out.push(`  - and ${g.length - 1} more like it at line ${refs.join(", ")}${g.length - 1 > 30 ? ", ..." : ""}`);
+          out.push(`  - and ${g.length - 1} more like it at line${refs.length === 1 ? "" : "s"} ${refs.join(", ")}${g.length - 1 > 30 ? ", ..." : ""}`);
         }
       }
     }
@@ -9483,12 +9486,13 @@ function annotationFor(f) {
     raw_details: [...(f.added ?? []).map((l) => `+ ${l}`), ...(f.removed ?? []).map((l) => `- ${l}`)].join("\n").slice(0, 6e4) || void 0
   };
 }
+var count = (n2, noun) => `${n2} ${noun}${n2 === 1 ? "" : "s"}`;
 async function postCheckRun(gh, repo, headSha, report, failed, notice) {
   const findings = allFindings(report).filter((f) => ANNOTATION_LEVEL[f.level]);
   const annotations = findings.map(annotationFor);
   const s = report.summary;
   const reportable = s.findings.error + s.findings.warning > 0;
-  const title = failed || reportable ? `${s.findings.error} error, ${s.findings.warning} warning in ${s.withFindings} merge commit(s)` : `${s.merges} merge commit(s) intact`;
+  const title = failed || reportable ? `${count(s.findings.error, "error")}, ${count(s.findings.warning, "warning")} in ${count(s.withFindings, "merge commit")}` : `${count(s.merges, "merge commit")} intact`;
   const summary = (formatMarkdown(report) + (notice ? `
 
 ${notice}
@@ -9581,7 +9585,7 @@ ${enforcement}
     try {
       posted = await postCheckRun(gh, repo, target.headSha, report, failed, [enforcement, plan?.notice].filter(Boolean).join("\n\n") || void 0);
     } catch (e) {
-      log(`check run failed: ${e.message}`);
+      log(`could not post the check run: ${e.message}`);
     }
   }
   if (!posted) workflowAnnotations(report);

@@ -7,47 +7,53 @@ import { runInit } from "./init.ts";
 import { runMcp } from "./mcp.ts";
 import { PRODUCT_ARG, runProductInProcess } from "./products.ts";
 
-const COMMON = "  -C <dir>     run in <dir> (default: the current directory)\n  --json       one JSON object on stdout\n  -h, --help   this help\n";
+const COMMON = "  -C <dir>     run in <dir> (default: the current directory)\n  --json       one JSON object on stdout\n  -h, --help   show this help\n";
 const HELP: Record<string, string> = {
   "": `mainfast ${VERSION}: set up and run GitHub checks that stop merges from silently breaking main.
 
 usage: mainfast <command> [options]
 
   init     write the workflows and a starter config into this repository
-  doctor   what is installed, whether the config parses, what is missing
+  doctor   show which checks are installed, check the config, list what is missing
   check    run Intact on the merge commits in this branch
-  audit    run rollcall, owners, migrations or evidence now; reads only
+  audit    run Rollcall, Owners, Migrations or Evidence once; posts nothing
   mcp      serve these commands as MCP tools over stdio
 
 Run mainfast <command> --help for its options. Every command takes --json.
 Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail or something missing, 2 error.
-Token: GITHUB_TOKEN or GH_TOKEN, never printed.
+Token: read from GITHUB_TOKEN or GH_TOKEN, never printed.
 `,
   init: `usage: mainfast init [--checks intact,owners,...] [--dry-run] [--force]
 
-Writes .github/workflows/mainfast-<check>.yml for each check and a starter config. Replaces a file
-with other content only with --force. Does not commit, push or change branch protection.
+Writes .github/workflows/mainfast-<check>.yml for each check and a starter config. Leaves a file
+that already has different content alone unless you pass --force. Does not commit, push or change
+branch protection.
 
   --checks <a,b>  intact, migrations, rollcall, owners, evidence (default: all)
-  --dry-run       report what would change, write nothing
-  --force         replace files that have other content
+  --dry-run       show what would change without writing anything
+  --force         replace files that have different content
 ${COMMON}`,
-  doctor: `usage: mainfast doctor\n\nWhich checks are installed, whether the config parses, whether a token is set. Exit 1 if nothing is\ninstalled or the config does not parse.\n\n${COMMON}`,
+  doctor: `usage: mainfast doctor\n\nShows which checks are installed, whether the config parses and whether a token is set. Exits 1 if no\ncheck is installed or the config does not parse.\n\n${COMMON}`,
   check: `usage: mainfast check [<merge-commit>] [--range A..B] [--main <branch>] [--fail-on error|warning|notice]
 
 Runs Intact locally. With no commit or range, checks every merge commit in <main>..HEAD.
 Exit codes: 0 nothing failed (warnings can still be listed), 1 findings that fail, 2 error.
 
+  <merge-commit>      check this one merge commit
+  --range A..B        check every merge commit in the range
+  --main <branch>     the main branch (default: from the config, else origin's default branch)
+  --fail-on <level>   lowest level that fails: error, warning (default) or notice
 ${COMMON}`,
   audit: `usage: mainfast audit <${AUDIT_CHECKS.join("|")}> [--main <branch>] [--pr <n>] [--offline]
 
-Runs one check now. Reads only: it posts nothing to GitHub.
+Runs one check once and prints the result. Posts nothing to GitHub.
 
+What each check needs:
 ${AUDIT_CHECKS.map((c) => `  ${c}: ${AUDIT_NEEDS[c]}`).join("\n")}
 
-  --main <branch>  the main branch, for migrations and evidence
-  --pr <n>         evidence: evaluate this pull request through the API
-  --offline        owners: lint offline even with a token
+  --main <branch>  the main branch (migrations and evidence)
+  --pr <n>         evidence: evaluate this pull request through the GitHub API
+  --offline        owners: run the offline lint even when a token is set
 ${COMMON}`,
   mcp: `usage: mainfast mcp\n\nAn MCP server over stdio, with the tools init, doctor, check and audit.\n`,
 };
@@ -104,7 +110,7 @@ export async function main(argv: string[]): Promise<number> {
         return emit(await runCheck({ dir, commit: positionals[0], range: values.range, main: values.main, failOn: values["fail-on"], text: !json }), json);
       case "audit": {
         tooMany(1);
-        if (!positionals[0]) throw new CliError(`audit needs a check: ${AUDIT_CHECKS.join(", ")}`);
+        if (!positionals[0]) throw new CliError(`audit needs a check name: ${AUDIT_CHECKS.join(", ")}`);
         return emit(await runAudit({ dir, check: positionals[0], main: values.main, pr: values.pr === undefined ? undefined : Number(values.pr), offline: values.offline, text: !json }), json);
       }
       case "mcp":

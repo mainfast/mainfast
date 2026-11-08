@@ -76,7 +76,7 @@ describe('action: pull_request', () => {
     await run();
     expect(written()).toContain('::error file=alembic/versions/');
     expect(process.exitCode).toBe(1);
-    expect(readFileSync(files.summary, 'utf8')).toContain('1 error(s)');
+    expect(readFileSync(files.summary, 'utf8')).toContain('1 error,');
     expect(readFileSync(files.out, 'utf8')).toMatch(/^ok<<ghadelim_[^\n]+\nfalse\n/);
     const status = fetch.calls.find((c) => c.path.endsWith('/statuses'))!;
     expect(status.body).toMatchObject({ state: 'failure', context: STATUS_CONTEXT });
@@ -124,8 +124,8 @@ describe('action: pull_request', () => {
     api({ 'GET /repos/acme/app/issues/1/comments': { body: [] }, 'POST /repos/acme/app/issues/1/comments': { status: 403, body: { message: 'Resource not accessible by integration' } } });
     const written = quiet();
     await run();
-    expect(written()).toMatch(/::warning::could not comment, label or set the commit status on the PR \(403\)/);
-    expect(readFileSync(files.summary, 'utf8')).toContain('1 error(s)');
+    expect(written()).toMatch(/::warning::Could not comment, label or set the commit status on the PR \(403\)/);
+    expect(readFileSync(files.summary, 'utf8')).toContain('1 error,');
     expect(process.exitCode).toBe(1);
   });
 

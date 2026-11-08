@@ -6,6 +6,8 @@ import { mdCell, mdCode, mdText, plainText, safeUrl } from '@mainfast/shared/mar
 import { DOCS_URL, PRODUCT } from './brand.js';
 import type { AuditReport, Finding } from './types.js';
 
+const plural = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
 /** A code span that is safe inside a GFM table cell. */
 const cellCode = (s: string) => mdCode(s).replace(/\|/g, '\\|');
 const prRefs = (ns: number[]) => ns.map((n) => `#${n}`).join(', ');
@@ -20,14 +22,15 @@ export function title(r: AuditReport): string {
   const e = r.findings.filter((f) => f.severity === 'error').length;
   const w = r.findings.length - e;
   return plainText(
-    r.findings.length ? `${e} error(s), ${w} warning(s) in ${r.required.length} required check(s)` : `${r.required.length} required check(s) report as intended`,
+    r.findings.length ? `${plural(e, "error")}, ${plural(w, "warning")} in ${plural(r.required.length, "required check")}` : `${plural(r.required.length, "required check")} report as intended`,
     255,
     true,
   );
 }
 
 function sampleLine(r: AuditReport): string {
-  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ''} PR(s)`;
+  const total = r.sampledPulls.length + r.sampledOpen.length;
+  return `across the last ${r.sampledPulls.length} merged${r.sampledOpen.length ? ` and ${r.sampledOpen.length} open` : ''} ${total === 1 ? 'PR' : 'PRs'}`;
 }
 
 export interface MarkdownOptions {

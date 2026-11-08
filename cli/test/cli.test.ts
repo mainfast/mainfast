@@ -143,7 +143,7 @@ describe("doctor", () => {
     const d = repo();
     const before = run(d, ["doctor", "--json"]);
     expect(before.code).toBe(1);
-    expect(before.json().missing.join(" ")).toMatch(/No check is installed/);
+    expect(before.json().missing.join(" ")).toMatch(/No checks are installed/);
     run(d, ["init", "--checks", "intact,rollcall"]);
     const after = run(d, ["doctor", "--json"]);
     expect(after.code).toBe(0);

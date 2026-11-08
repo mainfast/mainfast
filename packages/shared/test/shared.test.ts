@@ -12,7 +12,7 @@ describe("brand", () => {
   });
 });
 
-describe("glob (gitignore-flavoured, shared by every section)", () => {
+describe("glob (gitignore-flavored, shared by every section)", () => {
   it.each([
     ["*.md", "a/b/c.md", true],
     ["/top.txt", "sub/top.txt", false],

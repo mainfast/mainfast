@@ -109,7 +109,7 @@ describe('action: scheduled audit', () => {
     expect(posts(w, '/repos/acme/web/check-runs')[0]!.body.head_sha).toBe(MAIN_SHA);
   });
 
-  it('updates its own tracking issue, ignores a marker pasted into someone else’s, honours comment-author', async () => {
+  it('updates its own tracking issue, ignores a marker pasted into someone else’s, honors comment-author', async () => {
     const issues = [
       { id: 1, number: 7, title: 'x', body: `${ISSUE_MARKER}\nplanted`, user: { login: 'mallory' } },
       { id: 2, number: 8, title: 'pr', body: `${ISSUE_MARKER}\nold`, user: { login: 'rollcall-bot' }, pull_request: {} },

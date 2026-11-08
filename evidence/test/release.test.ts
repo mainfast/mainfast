@@ -63,7 +63,7 @@ describe("tests_skipped", () => {
     expect(report.checks.testsState).toBe("skipped");
     expect(ids(report)).toEqual(["tests_skipped"]);
     expect(report.flags[0]!.severity).toBe("warn");
-    expect(report.flags[0]!.detail).toMatch(/e2e: skipped — \d+ other test check\(s\) passed/);
+    expect(report.flags[0]!.detail).toMatch(/e2e: skipped — \d+ other test checks? passed/);
     expect(report.conclusion).toBe("success");
   });
   it("a skipped REQUIRED test job also fires required_check_skipped (fail)", async () => {

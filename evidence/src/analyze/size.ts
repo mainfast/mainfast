@@ -21,7 +21,7 @@ export function evaluateSize(files: FileChange[], policy: EvidencePolicy): SizeE
   const over: string[] = [];
   if (policy.diff.maxLines > 0 && lines > policy.diff.maxLines) over.push(`${lines} changed lines (limit ${policy.diff.maxLines})`);
   if (policy.diff.maxFiles > 0 && counted.length > policy.diff.maxFiles) over.push(`${counted.length} files (limit ${policy.diff.maxFiles})`);
-  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Large agent PRs hide changes; split it.` });
+  if (over.length) findings.push({ id: "diff_too_large", title: "Diff is larger than the policy allows", detail: `${over.join(", ")}. Split it so each part can be reviewed properly.` });
   return {
     files: files.length,
     additions: files.reduce((n, f) => n + f.additions, 0),
